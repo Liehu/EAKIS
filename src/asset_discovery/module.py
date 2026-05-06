@@ -1,0 +1,2 @@
+class AssetDiscoveryModule:
+    pass

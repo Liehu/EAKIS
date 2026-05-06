@@ -1,0 +1,2 @@
+class KeywordModule:
+    pass

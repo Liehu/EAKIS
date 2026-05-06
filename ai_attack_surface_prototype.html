@@ -1,0 +1,230 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.app { display: flex; height: 100vh; min-height: 700px; background: var(--color-background-tertiary); }
+.sidebar { width: 220px; flex-shrink: 0; background: var(--color-background-primary); border-right: 0.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; padding: 16px 0; }
+.logo { padding: 0 16px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 12px; }
+.logo-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.logo-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+.nav-section { padding: 0 8px; margin-bottom: 8px; }
+.nav-label { font-size: 10px; color: var(--color-text-tertiary); padding: 4px 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 2px; transition: background 0.15s; }
+.nav-item:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+.nav-item.active { background: var(--color-background-info); color: var(--color-text-info); font-weight: 500; }
+.nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-blue { background: #378ADD; }
+.dot-green { background: #639922; }
+.dot-amber { background: #BA7517; }
+.dot-purple { background: #534AB7; }
+.dot-gray { background: #888780; }
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.page-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+.badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+.badge-running { background: var(--color-background-success); color: var(--color-text-success); }
+.badge-idle { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+.btn { font-size: 12px; padding: 5px 12px; border-radius: 6px; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; font-family: var(--font-sans); }
+.btn:hover { background: var(--color-background-secondary); }
+.btn-primary { background: var(--color-background-info); color: var(--color-text-info); border-color: transparent; }
+.btn-primary:hover { opacity: 0.85; }
+.content { flex: 1; overflow-y: auto; padding: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.metric-card { background: var(--color-background-secondary); border-radius: 8px; padding: 14px 16px; }
+.metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+.metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.metric-delta { font-size: 11px; margin-top: 4px; }
+.delta-up { color: var(--color-text-success); }
+.delta-dn { color: var(--color-text-danger); }
+.section-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 12px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 10px; padding: 16px; }
+.pipeline { display: flex; flex-direction: column; gap: 8px; }
+.pipeline-step { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; border: 0.5px solid var(--color-border-tertiary); }
+.step-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.step-info { flex: 1; }
+.step-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.step-desc { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+.step-status { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 500; flex-shrink: 0; }
+.status-done { background: var(--color-background-success); color: var(--color-text-success); }
+.status-running { background: var(--color-background-info); color: var(--color-text-info); }
+.status-pending { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+.assets-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+.assets-table th { text-align: left; padding: 8px 10px; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); font-weight: 400; }
+.assets-table td { padding: 9px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); }
+.assets-table tr:last-child td { border-bottom: none; }
+.risk-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+.risk-high { background: var(--color-background-danger); color: var(--color-text-danger); }
+.risk-med { background: var(--color-background-warning); color: var(--color-text-warning); }
+.risk-low { background: var(--color-background-success); color: var(--color-text-success); }
+.progress-bar { height: 4px; background: var(--color-border-tertiary); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+.agent-log { font-size: 11px; font-family: var(--font-mono); color: var(--color-text-secondary); max-height: 160px; overflow-y: auto; line-height: 1.8; }
+.log-line { display: flex; gap: 8px; }
+.log-time { color: var(--color-text-tertiary); flex-shrink: 0; }
+.log-ok { color: var(--color-text-success); }
+.log-info { color: var(--color-text-info); }
+.log-warn { color: var(--color-text-warning); }
+</style>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-title">AttackScope AI</div>
+      <div class="logo-sub">攻击面探测平台</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">核心流程</div>
+      <div class="nav-item active"><span class="nav-dot dot-blue"></span>总览仪表盘</div>
+      <div class="nav-item"><span class="nav-dot dot-blue"></span>关键词生成</div>
+      <div class="nav-item"><span class="nav-dot dot-green"></span>资产关联</div>
+      <div class="nav-item"><span class="nav-dot dot-amber"></span>接口爬取</div>
+      <div class="nav-item"><span class="nav-dot dot-purple"></span>自动渗透</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">输出管理</div>
+      <div class="nav-item"><span class="nav-dot dot-gray"></span>报告中心</div>
+      <div class="nav-item"><span class="nav-dot dot-gray"></span>漏洞库</div>
+      <div class="nav-item"><span class="nav-dot dot-gray"></span>系统设置</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">任务概览 — 靶标: 某金融科技公司</div>
+      <div class="topbar-actions">
+        <span class="badge badge-running">● 执行中</span>
+        <button class="btn">暂停</button>
+        <button class="btn btn-primary">导出报告</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="grid-4">
+        <div class="metric-card">
+          <div class="metric-label">发现资产数</div>
+          <div class="metric-value">247</div>
+          <div class="metric-delta delta-up">↑ 较传统方法 +70%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">接口爬取数</div>
+          <div class="metric-value">1,832</div>
+          <div class="metric-delta delta-up">↑ 漏爬率降至 8%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">检出漏洞</div>
+          <div class="metric-value">43</div>
+          <div class="metric-delta delta-dn">● 高危 12 / 中危 21</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">探测进度</div>
+          <div class="metric-value">68%</div>
+          <div class="metric-delta">预计剩余 4.2 小时</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title">五层流程 Agent 状态</div>
+          <div class="pipeline">
+            <div class="pipeline-step">
+              <div class="step-icon" style="background:var(--color-background-info)">🔍</div>
+              <div class="step-info">
+                <div class="step-name">关键词生成 Agent</div>
+                <div class="step-desc">已生成 5 类关键词 · 覆盖率 94%</div>
+                <div class="progress-bar"><div class="progress-fill" style="width:100%;background:#378ADD"></div></div>
+              </div>
+              <span class="step-status status-done">完成</span>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-icon" style="background:var(--color-background-success)">🏷</div>
+              <div class="step-info">
+                <div class="step-name">资产关联 Agent</div>
+                <div class="step-desc">Fofa/Hunter 检索 · 筛选精度 88%</div>
+                <div class="progress-bar"><div class="progress-fill" style="width:100%;background:#639922"></div></div>
+              </div>
+              <span class="step-status status-done">完成</span>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-icon" style="background:var(--color-background-warning)">🕷</div>
+              <div class="step-info">
+                <div class="step-name">接口爬取 Agent</div>
+                <div class="step-desc">动态交互识别中 · 已采集 1,832 接口</div>
+                <div class="progress-bar"><div class="progress-fill" style="width:76%;background:#BA7517"></div></div>
+              </div>
+              <span class="step-status status-running">运行中</span>
+            </div>
+            <div class="pipeline-step" style="opacity:0.55">
+              <div class="step-icon" style="background:var(--color-background-secondary)">⚡</div>
+              <div class="step-info">
+                <div class="step-name">自动渗透 Agent</div>
+                <div class="step-desc">等待接口爬取完成</div>
+                <div class="progress-bar"><div class="progress-fill" style="width:0%;background:#534AB7"></div></div>
+              </div>
+              <span class="step-status status-pending">等待</span>
+            </div>
+            <div class="pipeline-step" style="opacity:0.45">
+              <div class="step-icon" style="background:var(--color-background-secondary)">📄</div>
+              <div class="step-info">
+                <div class="step-name">报告生成 Agent</div>
+                <div class="step-desc">LLM 自动结构化输出</div>
+              </div>
+              <span class="step-status status-pending">等待</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">高风险资产清单（部分）</div>
+          <table class="assets-table">
+            <thead>
+              <tr>
+                <th>资产</th><th>类型</th><th>漏洞</th><th>风险</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>api.target.com</td><td>API网关</td><td>未授权访问</td>
+                <td><span class="risk-tag risk-high">高危</span></td>
+              </tr>
+              <tr>
+                <td>admin.target.cn</td><td>管理后台</td><td>越权操作</td>
+                <td><span class="risk-tag risk-high">高危</span></td>
+              </tr>
+              <tr>
+                <td>search.target.com</td><td>搜索接口</td><td>SQL注入</td>
+                <td><span class="risk-tag risk-high">高危</span></td>
+              </tr>
+              <tr>
+                <td>upload.target.com</td><td>文件服务</td><td>恶意上传</td>
+                <td><span class="risk-tag risk-med">中危</span></td>
+              </tr>
+              <tr>
+                <td>h5.target.com</td><td>移动端</td><td>XSS</td>
+                <td><span class="risk-tag risk-med">中危</span></td>
+              </tr>
+              <tr>
+                <td>static.target.com</td><td>静态资源</td><td>目录遍历</td>
+                <td><span class="risk-tag risk-low">低危</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Agent 实时日志</div>
+        <div class="agent-log">
+          <div class="log-line"><span class="log-time">14:32:01</span><span class="log-ok">[✓]</span><span>关键词生成完成 · 业务词46个 / 技术词29个 / 关联主体词38个</span></div>
+          <div class="log-line"><span class="log-time">14:38:17</span><span class="log-ok">[✓]</span><span>Fofa检索完成 · 返回资产2,104条 · 筛选后247条 (误判率11.2%)</span></div>
+          <div class="log-line"><span class="log-time">14:52:44</span><span class="log-info">[→]</span><span>接口爬取Agent启动 · 目标: admin.target.com · 登录页识别成功</span></div>
+          <div class="log-line"><span class="log-time">14:53:09</span><span class="log-info">[→]</span><span>模拟登录操作 · 捕获POST /api/v2/auth/login · 参数: username/password/captcha</span></div>
+          <div class="log-line"><span class="log-time">15:01:33</span><span class="log-warn">[!]</span><span>反爬检测触发 · 已切换IP代理 · 随机延迟注入 · 继续爬取</span></div>
+          <div class="log-line"><span class="log-time">15:04:22</span><span class="log-info">[→]</span><span>动态接口捕获 · GET /api/user/{id}/detail · 疑似越权参数</span></div>
+          <div class="log-line"><span class="log-time">15:11:58</span><span class="log-ok">[✓]</span><span>接口特征库更新 · 已训练接口分类模型 · 操作类接口347个 / 查询类891个</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

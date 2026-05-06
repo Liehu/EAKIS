@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(touch src/__init__.py)",
+      "Bash(touch src/orchestrator/__init__.py)",
+      "Bash(touch src/orchestrator/nodes/__init__.py)",
+      "Bash(touch src/intelligence/__init__.py)",
+      "Bash(touch src/intelligence/scrapers/__init__.py)"
+    ]
+  }
+}
