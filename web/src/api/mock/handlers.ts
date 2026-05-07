@@ -5,6 +5,9 @@ import { mockAssets } from './data/asset';
 import { mockInterfaces } from './data/interface';
 import { mockVulnerabilities } from './data/vulnerability';
 import { mockReports } from './data/report';
+import { mockProviders, mockModelAllocations, mockProviderUsage } from './data/provider';
+import { mockCompanies } from './data/company';
+import { mockWebhooks } from './data/webhook';
 
 const TASK_ID = 'task_01J9XXXXX';
 
@@ -112,4 +115,54 @@ export const handlers = [
     'PENTEST-AUTO': { model: 'gpt-4o', temperature: 0.3, max_tokens: 4096, timeout_s: 300, retry_attempts: 2, enabled: true },
     'REPORT-GEN': { model: 'qwen2.5-72b', temperature: 0.5, max_tokens: 8192, timeout_s: 600, retry_attempts: 1, enabled: true },
   })),
+
+  // Providers
+  http.get('/v1/config/providers', () => HttpResponse.json({ data: mockProviders })),
+  http.get('/v1/config/providers/:id', ({ params }) => {
+    const p = mockProviders.find((p) => p.id === params.id);
+    return p ? HttpResponse.json(p) : HttpResponse.json({ error: { code: 'NOT_FOUND' } }, { status: 404 });
+  }),
+  http.post('/v1/config/providers', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json({ id: 'prov_new', ...body, enabled: true, created_at: new Date().toISOString(), models: body.models || [] });
+  }),
+  http.put('/v1/config/providers/:id', async ({ params, request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    const p = mockProviders.find((p) => p.id === params.id);
+    return HttpResponse.json({ ...p, ...body });
+  }),
+  http.delete('/v1/config/providers/:id', () => HttpResponse.json({ success: true })),
+  http.get('/v1/config/model-allocations', () => HttpResponse.json(mockModelAllocations)),
+  http.put('/v1/config/model-allocations/:agentName', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json(body);
+  }),
+  http.get('/v1/config/providers/usage', () => HttpResponse.json(mockProviderUsage)),
+
+  // Companies
+  http.get('/v1/companies', () => HttpResponse.json({
+    data: mockCompanies,
+    pagination: { page: 1, page_size: 20, total: mockCompanies.length, total_pages: 1 },
+  })),
+  http.post('/v1/companies', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json({ id: 'comp_new', ...body, task_count: 0, latest_task_status: null, created_at: new Date().toISOString() });
+  }),
+
+  // Webhooks
+  http.get('/v1/config/webhooks', () => HttpResponse.json({ data: mockWebhooks })),
+  http.post('/v1/config/webhooks', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json({ id: 'wh_new', ...body, enabled: true, last_triggered_at: null, last_status: null, failure_count: 0, created_at: new Date().toISOString() });
+  }),
+  http.put('/v1/config/webhooks/:id', async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json(body);
+  }),
+  http.delete('/v1/config/webhooks/:id', () => HttpResponse.json({ success: true })),
+  http.post('/v1/config/webhooks/:id/test', () => HttpResponse.json({ success: true, response_time_ms: 245 })),
+
+  // Batch task operations
+  http.post('/v1/tasks/batch/cancel', () => HttpResponse.json({ success: true })),
+  http.post('/v1/tasks/batch/resume', () => HttpResponse.json({ success: true })),
 ];

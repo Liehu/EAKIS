@@ -22,3 +22,9 @@ export const cancelTask = (taskId: string) =>
 
 export const retryTask = (taskId: string) =>
   client.post(`/v1/tasks/${taskId}/retry`);
+
+export const batchCancelTasks = (taskIds: string[]) =>
+  client.post('/v1/tasks/batch/cancel', { task_ids: taskIds });
+
+export const batchResumeTasks = (taskIds: string[]) =>
+  client.post('/v1/tasks/batch/resume', { task_ids: taskIds });
