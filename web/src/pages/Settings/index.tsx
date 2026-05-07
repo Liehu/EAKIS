@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Tabs, Card, Descriptions, Table, Tag, Switch, Button, Modal, Form, Input, Select, Space, InputNumber, message, Popconfirm, Statistic, Row, Col } from 'antd';
+import { Tabs, Card, Descriptions, Table, Tag, Switch, Button, Modal, Form, Input, Select, Space, message, Popconfirm, Statistic, Row, Col } from 'antd';
 import { PlusOutlined, DeleteOutlined, SendOutlined } from '@ant-design/icons';
 import { getHealth, getMetrics, getAgentConfigs, updateAgentConfig } from '@/api/system';
 import { getProviders, createProvider, deleteProvider, getModelAllocations, getProviderUsage } from '@/api/providers';

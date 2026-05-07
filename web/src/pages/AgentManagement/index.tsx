@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Table, Tag, Switch, Drawer, Descriptions, Form, InputNumber, Input, Button, message } from 'antd';
+import { Card, Table, Switch, Drawer, Form, InputNumber, Input, Button, message } from 'antd';
 import { getAgentConfigs, updateAgentConfig } from '@/api/system';
 import type { AgentConfig } from '@/api/system';
 

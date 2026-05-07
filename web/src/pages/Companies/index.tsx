@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Table, Tag, Button, Space, Modal, Form, Input, Select, Drawer, Descriptions, message, Popconfirm } from 'antd';
+import { Card, Table, Tag, Button, Modal, Form, Input, Select, Drawer, Descriptions, message, Popconfirm } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getCompanies, createCompany, deleteCompany } from '@/api/companies';
 import type { Company } from '@/types/company';

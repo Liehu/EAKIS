@@ -87,7 +87,7 @@ const TaskManagement: React.FC = () => {
       </Card>
 
       <Modal title="新建探测任务" open={createOpen} onCancel={() => setCreateOpen(false)} onOk={() => form.submit()} width={600}>
-        <Form form={form} layout="vertical" onFinish={(values) => { message.success('任务创建成功'); setCreateOpen(false); form.resetFields(); }}>
+        <Form form={form} layout="vertical" onFinish={() => { message.success('任务创建成功'); setCreateOpen(false); form.resetFields(); }}>
           <Form.Item name="company_name" label="企业名称" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="industry" label="行业" rules={[{ required: true }]}>
             <Select options={[{ value: 'fintech', label: '金融科技' }, { value: 'ecommerce', label: '电商' }, { value: 'tech', label: '互联网' }, { value: 'government', label: '政务' }, { value: 'healthcare', label: '医疗' }]} />
