@@ -1,0 +1,75 @@
+<h2>AttackScope AI 前端架构设计</h2>
+<p class="subtitle">React + TypeScript + Vite + Ant Design 5 单体 SPA</p>
+
+<div class="section">
+<h3>项目结构</h3>
+<div class="mockup">
+  <div class="mockup-header">web/ 目录结构</div>
+  <div class="mockup-body" style="font-family:monospace;font-size:13px;line-height:1.7;padding:16px;background:#1a1a2e;color:#e0e0e0;border-radius:6px;">
+    <pre style="margin:0;">
+web/
+├── public/                  # 静态资源
+├── src/
+│   ├── api/                 # API 请求层
+│   │   ├── client.ts        # Axios 实例 + 拦截器
+│   │   ├── mock/            # Mock 数据 & 处理器
+│   │   │   ├── handlers.ts  # MSW request handlers
+│   │   │   ├── data/        # Mock JSON 数据
+│   │   │   └── browser.ts   # MSW browser worker
+│   │   ├── tasks.ts         # 任务 API
+│   │   ├── keywords.ts      # 关键词 API
+│   │   ├── assets.ts        # 资产 API
+│   │   ├── interfaces.ts    # 接口 API
+│   │   ├── vulnerabilities.ts # 漏洞 API
+│   │   ├── reports.ts       # 报告 API
+│   │   └── system.ts        # 系统 API
+│   │
+│   ├── components/          # 通用组件
+│   │   ├── Layout/          # 布局组件
+│   │   │   ├── AppLayout.tsx    # 主布局 (侧边栏+顶栏)
+│   │   │   └── Sidebar.tsx      # 侧边栏导航
+│   │   ├── AgentPipeline/   # Agent 流程管线
+│   │   ├── MetricCard/      # 指标卡片
+│   │   ├── RiskTag/         # 风险等级标签
+│   │   ├── StatusBadge/     # 状态徽章
+│   │   └── AgentLog/        # 实时日志组件
+│   │
+│   ├── hooks/               # 自定义 Hooks
+│   │   ├── useTaskEvents.ts # WebSocket 事件流
+│   │   ├── usePagination.ts # 分页逻辑
+│   │   └── useMock.ts       # Mock 模式切换
+│   │
+│   ├── pages/               # 页面组件
+│   │   ├── Dashboard/       # 总览仪表盘
+│   │   ├── Keywords/        # 关键词生成
+│   │   ├── Assets/          # 资产关联
+│   │   ├── Interfaces/      # 接口爬取
+│   │   ├── Pentest/         # 自动渗透
+│   │   ├── Reports/         # 报告中心
+│   │   ├── Vulnerabilities/ # 漏洞库
+│   │   └── Settings/        # 系统设置
+│   │
+│   ├── store/               # 状态管理 (Zustand)
+│   │   ├── taskStore.ts     # 任务状态
+│   │   └── appStore.ts      # 全局状态 (侧边栏、主题)
+│   │
+│   ├── types/               # TypeScript 类型
+│   │   ├── api.ts           # API 通用类型 (分页、错误)
+│   │   ├── task.ts          # 任务相关类型
+│   │   ├── asset.ts         # 资产相关类型
+│   │   ├── vuln.ts          # 漏洞相关类型
+│   │   └── ...
+│   │
+│   ├── router.tsx           # 路由配置
+│   ├── App.tsx              # 应用入口
+│   └── main.tsx             # 渲染入口
+│
+├── .env.development         # VITE_API_MOCK=true
+├── .env.production          # VITE_API_MOCK=false
+├── index.html
+├── package.json
+├── tsconfig.json
+└── vite.config.ts</pre>
+  </div>
+</div>
+</div>

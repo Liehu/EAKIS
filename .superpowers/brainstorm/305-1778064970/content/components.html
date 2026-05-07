@@ -1,0 +1,97 @@
+<h2>共享组件与数据流</h2>
+<p class="subtitle">复用组件层 + API 请求流 + 实时事件架构</p>
+
+<div class="section">
+<h3>共享组件清单</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+  <div style="background:#1a1a2e;border-radius:8px;padding:14px;border:1px solid #2a2a4e;">
+    <div style="color:#378ADD;font-weight:600;font-size:14px;">AppLayout</div>
+    <div style="color:#aaa;font-size:12px;line-height:1.6;margin-top:4px;">
+      侧边栏 + 顶栏 + 内容区三层布局<br>
+      侧边栏可折叠，高亮当前路由<br>
+      顶栏显示任务选择器和状态徽章
+    </div>
+  </div>
+
+  <div style="background:#1a1a2e;border-radius:8px;padding:14px;border:1px solid #2a2a4e;">
+    <div style="color:#378ADD;font-weight:600;font-size:14px;">AgentPipeline</div>
+    <div style="color:#aaa;font-size:12px;line-height:1.6;margin-top:4px;">
+      五层 Agent 流程管线可视化<br>
+      每层显示：图标 + 名称 + 进度条 + 状态<br>
+      状态：完成(绿) / 运行中(蓝) / 等待(灰)
+    </div>
+  </div>
+
+  <div style="background:#1a1a2e;border-radius:8px;padding:14px;border:1px solid #2a2a4e;">
+    <div style="color:#378ADD;font-weight:600;font-size:14px;">MetricCard</div>
+    <div style="color:#aaa;font-size:12px;line-height:1.6;margin-top:4px;">
+      指标卡片：标签 + 数值 + 变化量<br>
+      支持 ↑/↓ 趋势标识<br>
+      用于 Dashboard 顶部指标区
+    </div>
+  </div>
+
+  <div style="background:#1a1a2e;border-radius:8px;padding:14px;border:1px solid #2a2a4e;">
+    <div style="color:#378ADD;font-weight:600;font-size:14px;">AgentLog</div>
+    <div style="color:#aaa;font-size:12px;line-height:1.6;margin-top:4px;">
+      实时日志流组件<br>
+      三种日志级别：✓ 成功 / → 信息 / ! 警告<br>
+      自动滚动到底部，支持暂停
+    </div>
+  </div>
+
+  <div style="background:#1a1a2e;border-radius:8px;padding:14px;border:1px solid #2a2a4e;">
+    <div style="color:#378ADD;font-weight:600;font-size:14px;">RiskTag</div>
+    <div style="color:#aaa;font-size:12px;line-height:1.6;margin-top:4px;">
+      风险等级标签组件<br>
+      critical/high/medium/low/info<br>
+      颜色映射：红/橙/黄/绿/蓝
+    </div>
+  </div>
+
+  <div style="background:#1a1a2e;border-radius:8px;padding:14px;border:1px solid #2a2a4e;">
+    <div style="color:#378ADD;font-weight:600;font-size:14px;">StatusBadge</div>
+    <div style="color:#aaa;font-size:12px;line-height:1.6;margin-top:4px;">
+      状态徽章：运行中/空闲/完成/失败<br>
+      支持 ● 动态脉冲动画（运行中状态）<br>
+      用于顶栏和 Agent 管线
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="section">
+<h3>数据流架构</h3>
+<div class="mockup">
+  <div class="mockup-header">请求 → 响应流程</div>
+  <div class="mockup-body" style="font-family:monospace;font-size:13px;line-height:2;padding:20px;background:#1a1a2e;color:#e0e0e0;border-radius:6px;text-align:center;">
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">
+      <span style="background:#2a2a4e;padding:6px 12px;border-radius:6px;">Page Component</span>
+      <span style="color:#666;">→</span>
+      <span style="background:#2a2a4e;padding:6px 12px;border-radius:6px;">API Module<br><small style="color:#888">(tasks.ts)</small></span>
+      <span style="color:#666;">→</span>
+      <span style="background:#2a2a4e;padding:6px 12px;border-radius:6px;">client.ts<br><small style="color:#888">(Axios)</small></span>
+      <span style="color:#666;">→</span>
+      <span style="background:#378ADD33;padding:6px 12px;border-radius:6px;color:#378ADD;">Mock 模式?</span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <span style="color:#378ADD;">是 →</span>
+      <span style="background:#63992233;padding:6px 12px;border-radius:6px;color:#639922;">MSW Handler<br><small>(返回 Mock JSON)</small></span>
+      <span style="margin-left:20px;color:#378ADD;">否 →</span>
+      <span style="background:#BA751733;padding:6px 12px;border-radius:6px;color:#BA7517;">FastAPI Backend<br><small>(http://localhost:8000)</small></span>
+    </div>
+    <div style="margin-top:16px;border-top:1px solid #2a2a4e;padding-top:12px;">
+      <span style="color:#888;">实时数据流：</span>
+      <span style="background:#2a2a4e;padding:6px 12px;border-radius:6px;">WebSocket</span>
+      <span style="color:#666;">→</span>
+      <span style="background:#2a2a4e;padding:6px 12px;border-radius:6px;">useTaskEvents hook</span>
+      <span style="color:#666;">→</span>
+      <span style="background:#2a2a4e;padding:6px 12px;border-radius:6px;">Zustand store</span>
+      <span style="color:#666;">→</span>
+      <span style="background:#2a2a4e;padding:6px 12px;border-radius:6px;">Component re-render</span>
+    </div>
+  </div>
+</div>
+</div>

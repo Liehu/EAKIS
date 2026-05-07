@@ -1,12 +1,22 @@
 import os
+import sys
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+# 确保项目根目录在 sys.path 中
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from src.models import *  # noqa: F401,F403 — 注册所有 ORM 模型
 from src.models.database import Base
 
 config = context.config
+
+# 优先使用环境变量中的 DATABASE_URL
+db_url = os.getenv("DATABASE_URL")
+if db_url:
+    config.set_main_option("sqlalchemy.url", db_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

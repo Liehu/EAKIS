@@ -1,4 +1,6 @@
-class PostgresCheckpointer:
-    def __init__(self, db_url: str) -> None:
-        self.db_url = db_url
-        # TODO: initialize connection pool
+from langgraph.checkpoint.memory import MemorySaver
+
+
+def get_checkpointer() -> MemorySaver:
+    """Dev-mode in-memory checkpointer. Swap with PostgresSaver for prod."""
+    return MemorySaver()

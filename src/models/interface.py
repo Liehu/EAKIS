@@ -15,7 +15,7 @@ _SensitiveParamsType = ARRAY(String) if is_postgresql() else JSON
 
 
 class ApiInterface(Base):
-    __tablename__ = "api_interfaces"
+    __tablename__ = "interfaces"
 
     id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     asset_id = Column(PG_UUID(as_uuid=True), ForeignKey("assets.id", ondelete="CASCADE"), nullable=False)
