@@ -6,6 +6,9 @@ import {
   CloudServerOutlined,
   ApiOutlined,
   ThunderboltOutlined,
+  UnorderedListOutlined,
+  BankOutlined,
+  RobotOutlined,
   FileTextOutlined,
   BugOutlined,
   SettingOutlined,
@@ -20,6 +23,12 @@ const coreMenuItems = [
   { key: '/assets', icon: <CloudServerOutlined />, label: '资产关联' },
   { key: '/interfaces', icon: <ApiOutlined />, label: '接口爬取' },
   { key: '/pentest', icon: <ThunderboltOutlined />, label: '自动渗透' },
+];
+
+const taskCompanyMenuItems = [
+  { key: '/tasks', icon: <UnorderedListOutlined />, label: '任务管理' },
+  { key: '/companies', icon: <BankOutlined />, label: '企业靶标' },
+  { key: '/agent-management', icon: <RobotOutlined />, label: 'Agent管理' },
 ];
 
 const outputMenuItems = [
@@ -70,6 +79,19 @@ const Sidebar: React.FC = () => {
         mode="inline"
         selectedKeys={[selectedKey]}
         items={coreMenuItems}
+        onClick={({ key }) => navigate(key)}
+        style={{ background: 'transparent', borderInlineEnd: 'none' }}
+      />
+      {!collapsed && (
+        <div style={{ padding: '8px 16px 4px', fontSize: 10, color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          任务与企业
+        </div>
+      )}
+      <Menu
+        theme="dark"
+        mode="inline"
+        selectedKeys={[selectedKey]}
+        items={taskCompanyMenuItems}
         onClick={({ key }) => navigate(key)}
         style={{ background: 'transparent', borderInlineEnd: 'none' }}
       />

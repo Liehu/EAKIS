@@ -8,6 +8,9 @@ import Pentest from '@/pages/Pentest';
 import Vulnerabilities from '@/pages/Vulnerabilities';
 import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
+import TaskManagement from '@/pages/TaskManagement';
+import Companies from '@/pages/Companies';
+import AgentManagement from '@/pages/AgentManagement';
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +25,9 @@ export const router = createBrowserRouter([
       { path: 'vulnerabilities', element: <Vulnerabilities /> },
       { path: 'reports', element: <Reports /> },
       { path: 'settings', element: <Settings /> },
+      { path: 'tasks', element: <TaskManagement /> },
+      { path: 'companies', element: <Companies /> },
+      { path: 'agent-management', element: <AgentManagement /> },
     ],
   },
 ]);
