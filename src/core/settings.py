@@ -9,10 +9,19 @@ class Settings(BaseSettings):
     database_url_async: str = "postgresql+asyncpg://eakis:eakis@localhost:5432/eakis"
     db_echo: bool = False
 
-    # LLM
+    # LLM (OpenAI-compatible)
     openai_api_key: str = ""
     openai_model: str = "gpt-4o"
     openai_base_url: str | None = None
+
+    # Ollama (local inference)
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_default_model: str = "igorls/gemma-4-E4B-it-heretic-GGUF:latest"
+    ollama_request_timeout: float = 120.0
+    ollama_num_ctx: int = 8192
+    ollama_num_predict: int = 4096
+    ollama_temperature: float = 0.3
+    ollama_auto_detect: bool = True
 
     # Auth (JWT)
     jwt_secret_key: str = "eakis-dev-secret-change-in-production"
@@ -38,9 +47,19 @@ class Settings(BaseSettings):
     debug: bool = True
     cors_origins: list[str] = ["*"]
 
+    # Qdrant / RAG
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_api_key: str | None = None
+    qdrant_collection: str = "eakis_intel"
+    qdrant_vector_size: int = 1536
+    rag_embedding_model: str = "text-embedding-3-small"
+    rag_use_stubs: bool = True
+
     # Module stubs
     intelligence_use_stubs: bool = True
     crawler_use_stubs: bool = True
+    asset_discovery_use_stubs: bool = True
+    asset_discovery_vector_store: bool = False
 
     model_config = {
         "env_file": ".env",

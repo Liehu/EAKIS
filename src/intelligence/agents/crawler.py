@@ -1,7 +1,7 @@
 import asyncio
 import logging
-import random
 
+from src.intelligence.anti_crawl.middleware import AntiCrawlMiddleware, RequestContext
 from src.intelligence.config import CrawlConfig
 from src.intelligence.engine_specs import load_engine_specs
 from src.intelligence.models import CollectionStatus, DataSource, DslQuery, RawDocument
@@ -35,8 +35,14 @@ def _build_scraper_map() -> dict[str, BaseScraper]:
 
 
 class CrawlerAgent:
-    def __init__(self, event_bus: EventBus | None = None, scraper_overrides: dict[str, BaseScraper] | None = None) -> None:
+    def __init__(
+        self,
+        event_bus: EventBus | None = None,
+        scraper_overrides: dict[str, BaseScraper] | None = None,
+        anti_crawl: AntiCrawlMiddleware | None = None,
+    ) -> None:
         self.event_bus = event_bus
+        self.anti_crawl = anti_crawl
         self._scrapers = _build_scraper_map()
         if scraper_overrides:
             self._scrapers.update(scraper_overrides)
@@ -51,6 +57,9 @@ class CrawlerAgent:
         config = config or CrawlConfig()
         all_docs: list[RawDocument] = []
         dsl_map = {q.platform: q.query for q in (dsl_queries or [])}
+
+        if self.anti_crawl and not self.anti_crawl._initialized:
+            await self.anti_crawl.initialize()
 
         semaphore = asyncio.Semaphore(config.max_concurrent_sources)
 
@@ -93,7 +102,16 @@ class CrawlerAgent:
             return []
 
         query = dsl_map.get(source.source_id, company_name)
-        delay = random.uniform(config.anti_crawl.request_delay_min, config.anti_crawl.request_delay_max)
-        await asyncio.sleep(delay)
 
-        return await scraper.scrape(query, config)
+        ctx: RequestContext | None = None
+        try:
+            if self.anti_crawl:
+                ctx = await self.anti_crawl.before_request(source.source_id)
+            docs = await scraper.scrape(query, config)
+            if ctx:
+                await self.anti_crawl.after_request(ctx, success=True)
+            return docs
+        except Exception:
+            if ctx:
+                await self.anti_crawl.after_request(ctx, success=False)
+            raise

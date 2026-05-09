@@ -89,3 +89,32 @@ class IntelligenceStartResponse(BaseModel):
     total_cleaned_documents: int = 0
     avg_quality_score: float = 0.0
     errors: list[str] = Field(default_factory=list)
+
+
+# --- RAG search schemas ---
+
+class RAGSearchRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=2000)
+    top_k: int = Field(default=10, ge=1, le=100)
+    task_id: str | None = Field(default=None, description="Filter by task ID")
+    source_type: str | None = Field(default=None, description="Filter by source type")
+    min_quality: float | None = Field(default=None, ge=0.0, le=1.0, description="Minimum quality score")
+
+
+class RAGSearchResultItem(BaseModel):
+    content: str
+    score: float
+    metadata: dict = Field(default_factory=dict)
+
+
+class RAGSearchResponse(BaseModel):
+    data: list[RAGSearchResultItem] = Field(default_factory=list)
+    total: int = 0
+
+
+class RAGHealthResponse(BaseModel):
+    status: str
+    collection: str = ""
+    vector_count: int = 0
+    vector_size: int = 0
+    error: str | None = None

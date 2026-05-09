@@ -6,7 +6,9 @@ from fastapi.responses import JSONResponse
 
 from src.api.auth import router as auth_router
 from src.api.middleware.audit import AuditLoggingMiddleware
+from src.api.routers.assets import router as assets_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
+from src.api.routers.inference import router as inference_router
 from src.api.routers.intelligence import router as intelligence_router
 from src.api.routers.interfaces import router as interfaces_router
 from src.api.routers.keywords import router as keywords_router
@@ -51,6 +53,8 @@ app.include_router(auth_router, prefix="/v1")
 app.include_router(keywords_router, prefix="/v1")
 app.include_router(intelligence_router, prefix="/v1")
 app.include_router(interfaces_router, prefix="/v1")
+app.include_router(assets_router, prefix="/v1")
+app.include_router(inference_router, prefix="/v1")
 
 
 @app.get("/v1/health")
