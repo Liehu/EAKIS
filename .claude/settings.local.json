@@ -73,7 +73,32 @@
       "Bash(python -m pytest tests/ -q --tb=short)",
       "Bash(python -c \"from src.api.main import app; print\\('App OK'\\)\")",
       "Bash(ls .env)",
+<<<<<<< HEAD
       "Bash(ls .env.example)"
+=======
+      "Bash(ls .env.example)",
+      "Bash(python scripts/run_dev.py)",
+      "Bash(curl -s http://localhost:8000/v1/health)",
+      "Bash(python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload)",
+      "Bash(python -m json.tool)",
+      "Bash(curl -v http://localhost:8000/v1/health)",
+      "Bash(pkill -f uvicorn)",
+      "Bash(cat /tmp/server.log; sleep 3 *)",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/intelligence)",
+      "Bash(curl -s http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/intelligence/sources)",
+      "Bash(curl -s http://localhost:8000/v1/intelligence/rag/health)",
+      "Bash(curl -s -X POST http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/assets/discover -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(curl -s http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/assets/status)",
+      "Bash(curl -s 'http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/assets?risk=medium')",
+      "Bash(curl -s -X POST http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/interfaces/crawl -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(curl -s http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/interfaces/status)",
+      "Bash(curl -s http://localhost:8000/v1/inference/health)",
+      "Bash(curl -s http://localhost:8000/v1/inference/models)",
+      "Bash(curl -s -X POST http://localhost:8000/v1/inference/generate -H 'Content-Type: application/json' -d '{\"prompt\": \"什么是SQL注入漏洞？请简要说明。\"}')",
+      "Bash(curl -s -X POST http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/keywords -H 'Content-Type: application/json' -d '{\"word\": \"测试\", \"type\": \"invalid\", \"weight\": 0.5}')",
+      "Bash(curl -s -X POST http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/keywords -H 'Content-Type: application/json' -d '{\"word\": \"网银\", \"type\": \"business\", \"weight\": 0.9}')"
+>>>>>>> 62da9d74 (feat(core): implement asset discovery, RAG intelligence, and inference modules)
     ]
   }
 }
