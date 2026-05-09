@@ -1,0 +1,60 @@
+# Python 编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 虚拟环境
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE 缓存
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 测试和覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+# Python 编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 虚拟环境
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE 缓存
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 测试和覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
