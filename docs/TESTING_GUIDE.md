@@ -338,6 +338,8 @@ curl -s http://localhost:8000/v1/tasks/$TASK_ID/interfaces | python -m json.tool
 
 ## 推荐测试顺序
 
+### HTTP API 测试（模块 1-7）
+
 1. **Health** → 确认服务正常
 2. **Auth** → 拿到 Token
 3. **Inference** → 确认 Ollama 是否可用（如未启动不影响其他模块）
@@ -347,9 +349,227 @@ curl -s http://localhost:8000/v1/tasks/$TASK_ID/interfaces | python -m json.tool
 7. **Keywords** → 需 PostgreSQL
 8. **联调** → 全链路串通
 
+### 编排层测试（模块 8）
+
+1. **快速验证** → `python scripts/test_orchestrator_quick.py`
+2. **分阶段测试** → `python scripts/test_orchestrator.py --phase intelligence`
+3. **完整流程** → `python scripts/test_orchestrator.py`
+
+---
+
+## 模块 8：Orchestrator — LangGraph 编排层测试
+
+> **重要说明**：本模块测试 LangGraph Agent 编排流程，与模块 3 的 Intelligence API 测试是**两套独立实现**。
+> - 模块 3 测试的是 `IntelligenceModule` 的**顺序执行**流程
+> - 本模块测试的是 `orchestrator/graph.py` 的**有状态图编排**流程
+
+### 8.0 依赖安装
+
+编排层测试需要 LangGraph 相关依赖：
+
+```bash
+# 安装编排层依赖
+pip install langgraph langchain-core
+
+# 或使用项目依赖安装
+pip install -e ".[orchestrator]"
+```
+
+### 8.1 架构对比
+
+| 维度 | Intelligence API (模块3) | Orchestrator 编排层 (本模块) |
+|-----|------------------------|---------------------------|
+| 入口 | `/v1/tasks/{id}/intelligence` | `orchestrator.build_graph()` |
+| 执行方式 | 顺序执行 (`await module.run()`) | LangGraph StateGraph |
+| 状态管理 | 内存字典 | TypedDict GlobalState + 检查点 |
+| Agent 数量 | 4 个 (datasource/dsl/crawler/cleaner) | 14 个（全链路） |
+| 反馈回路 | 无 | 支持循环、条件边、人工干预 |
+
+### 8.2 编排层完整流程
+
+LangGraph 定义的 14 个 Agent 节点：
+
+```
+datasource → dsl_gen → crawler → summarizer → keyword_gen
+    → asset_search → asset_assess → asset_enrich → api_crawler
+    → api_static → test_gen → test_exec → vuln_judge → report_gen
+```
+
+### 8.3 Python 脚本测试（推荐）
+
+项目提供了两个编排层测试脚本：
+
+#### 快速验证（推荐先执行）
+
+验证编排层核心功能是否正常：
+
+```bash
+# 快速验证（约 30 秒）
+python scripts/test_orchestrator_quick.py
+```
+
+**验证内容**：
+- 图构建是否成功
+- 14 个节点是否全部注册
+- 情报采集阶段能否正常执行
+- 状态是否正确传递
+
+#### 完整流程测试
+
+执行完整的编排层流程：
+
+```bash
+# 完整测试（包含所有 14 个节点）
+python scripts/test_orchestrator.py
+
+# 只测试情报采集阶段
+python scripts/test_orchestrator.py --phase intelligence
+
+# 只测试资产发现阶段
+python scripts/test_orchestrator.py --phase assets
+
+# 详细输出模式
+python scripts/test_orchestrator.py --verbose
+```
+
+**阶段划分**：
+- `intelligence`: datasource → dsl_gen → crawler → summarizer → keyword_gen
+- `assets`: asset_search → asset_assess → asset_enrich
+- `interfaces`: api_crawler → api_static
+- `pentest`: test_gen → test_exec → vuln_judge
+- `report`: report_gen
+
+### 8.4 分阶段验证（逐步执行）
+
+#### 阶段 1：情报采集子流程 (datasource → dsl_gen → crawler)
+
+```python
+from src.orchestrator.graph import build_graph
+
+async def test_intelligence_phase():
+    graph = build_graph()
+    task_id = str(uuid4())
+
+    state: GlobalState = {
+        "task_id": task_id,
+        "company_name": "测试公司",
+        "industry": "tech",
+        "domains": ["example.com"],
+        "keywords": ["API", "安全"],
+        "current_stage": "",
+    }
+
+    # 执行到 crawler 后停止
+    config = {"configurable": {"thread_id": task_id}}
+    async for event in graph.astream(state, config):
+        node_name = list(event.keys())[0]
+        print(f"执行: {node_name}")
+        if node_name == "crawler":
+            break
+```
+
+#### 阶段 2：摘要与关键词生成 (summarizer → keyword_gen)
+
+```python
+# 验证 summarizer 和 keyword_gen 节点
+# 这两个节点在 Intelligence API 中不存在，是编排层独有
+```
+
+#### 阶段 3：资产发现子流程 (asset_search → asset_assess → asset_enrich)
+
+```python
+# 验证资产搜索、评估、富化流程
+```
+
+### 8.5 状态检查点测试
+
+LangGraph 支持断点恢复：
+
+```python
+from langgraph.checkpoint.memory import MemorySaver
+
+async def test_checkpoint_recovery():
+    graph = build_graph()  # 已配置 checkpointer
+    task_id = str(uuid4())
+
+    # 第一次执行 - 执行到某个阶段中断
+    config = {"configurable": {"thread_id": task_id}}
+
+    # ... 执行流程 ...
+
+    # 从检查点恢复
+    state_snapshot = graph.get_state(config)
+    print(f"恢复时的阶段: {state_snapshot.next}")
+```
+
+### 8.6 条件路由测试
+
+```python
+# 测试无资产时的关键词生成反馈回路
+from src.orchestrator.router import route_by_asset_count
+
+state_no_assets: GlobalState = {
+    "assets": [],
+    "current_stage": "asset_search",
+}
+next_node = route_by_asset_count(state_no_assets)
+# 预期: 返回 "keyword_gen"（重新生成关键词）
+
+state_with_assets: GlobalState = {
+    "assets": [{"domain": "example.com"}],
+    "current_stage": "asset_search",
+}
+next_node = route_by_asset_count(state_with_assets)
+# 预期: 返回 "asset_enrich"（继续流程）
+```
+
+### 8.7 验证要点
+
+- [ ] 图构建成功（`build_graph()` 无报错）
+- [ ] 14 个节点全部注册
+- [ ] 状态在各节点间正确传递
+- [ ] `summarizer` 节点生成摘要（Intelligence API 无此功能）
+- [ ] `keyword_gen` 节点生成关键词（Intelligence API 无此功能）
+- [ ] 检查点可保存和恢复状态
+- [ ] 条件路由按预期工作
+- [ ] 全链路无阻塞地执行到 `report_gen`
+
+### 8.8 当前限制
+
+1. **API 层未暴露编排端点**：`src/api/main.py` 未注册 orchestrator 路由
+2. **需 Python 直接调用**：目前只能通过 Python 脚本测试，无 HTTP API
+3. **部分 Agent 为 Stub**：资产发现、接口爬取等后端 Agent 可能返回模拟数据
+
+---
+
+## 测试架构总览
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    EAKIS 测试架构                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  HTTP API 测试 (模块 3-7)                                   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  Intelligence API → Assets API → Interfaces API     │   │
+│  │  (顺序执行，4 个 Agent)                              │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                         ↓                                   │
+│  LangGraph 编排测试 (模块 8)  ← 本模块新增                   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  datasource → dsl_gen → crawler → summarizer → ...  │   │
+│  │  (有状态图，14 个 Agent，支持反馈回路)                │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 注意事项
 
 - 当前为 **Stub 模式**：所有外部服务（搜索引擎、爬虫、LLM）返回模拟数据
 - Stub 模式下数据是预设的，主要验证**流程通畅、API 格式正确、状态管理无误**
 - 切换真实模式需修改 `.env` 中的 `INTELLIGENCE_USE_STUBS=false` 等
 - Keywords 模块需要 PostgreSQL 数据库才能完整测试
+- **编排层测试** 需要完整依赖（Qdrant、Kafka 等）才能运行完整流程

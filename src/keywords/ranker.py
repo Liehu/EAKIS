@@ -14,9 +14,8 @@ import math
 import os
 from collections import Counter
 from dataclasses import dataclass, field
-from pathlib import Path
 
-_DOMAIN_DIR = Path(__file__).parent / "domain_dicts"
+from src.core.config_paths import DOMAIN_DICTS_DIR
 
 
 @dataclass(frozen=True)
@@ -53,7 +52,7 @@ class DomainDictionary:
             fname = self._FILE_MAP.get(d)
             if fname is None:
                 continue
-            fpath = _DOMAIN_DIR / fname
+            fpath = DOMAIN_DICTS_DIR / fname
             if fpath.exists():
                 self._words[d] = self._load(fpath)
 
