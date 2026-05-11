@@ -112,7 +112,8 @@
       "Bash(python3 -c \"from prometheus_client import Counter; print\\('✓ prometheus_client OK'\\)\")",
       "Bash(python3 -c ' *)",
       "Bash(cp /coding/EAKIS/src/keywords/domain_dicts/*.txt /coding/EAKIS/config/domain_dicts/ && cp /coding/EAKIS/src/keywords/domain_dicts/.gitkeep /coding/EAKIS/config/domain_dicts/)",
-      "Bash(cp /coding/EAKIS/docs/prompts/*.yaml /coding/EAKIS/config/prompts/)"
+      "Bash(cp /coding/EAKIS/docs/prompts/*.yaml /coding/EAKIS/config/prompts/)",
+      "Bash(grep -E \"\\\\.\\(py|yaml|yml\\)$\")"
     ],
     "additionalDirectories": [
       "/coding/EAKIS/src/keywords/domain_dicts",
