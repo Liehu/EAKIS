@@ -73,9 +73,7 @@
       "Bash(python -m pytest tests/ -q --tb=short)",
       "Bash(python -c \"from src.api.main import app; print\\('App OK'\\)\")",
       "Bash(ls .env)",
-<<<<<<< HEAD
-      "Bash(ls .env.example)"
-=======
+      "Bash(ls .env.example)",
       "Bash(ls .env.example)",
       "Bash(python scripts/run_dev.py)",
       "Bash(curl -s http://localhost:8000/v1/health)",
@@ -97,8 +95,28 @@
       "Bash(curl -s http://localhost:8000/v1/inference/models)",
       "Bash(curl -s -X POST http://localhost:8000/v1/inference/generate -H 'Content-Type: application/json' -d '{\"prompt\": \"什么是SQL注入漏洞？请简要说明。\"}')",
       "Bash(curl -s -X POST http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/keywords -H 'Content-Type: application/json' -d '{\"word\": \"测试\", \"type\": \"invalid\", \"weight\": 0.5}')",
-      "Bash(curl -s -X POST http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/keywords -H 'Content-Type: application/json' -d '{\"word\": \"网银\", \"type\": \"business\", \"weight\": 0.9}')"
->>>>>>> 62da9d74 (feat(core): implement asset discovery, RAG intelligence, and inference modules)
+      "Bash(curl -s -X POST http://localhost:8000/v1/tasks/b9733f89-8c06-48b8-bd97-bbb3a97d20c1/keywords -H 'Content-Type: application/json' -d '{\"word\": \"网银\", \"type\": \"business\", \"weight\": 0.9}')",
+      "Bash(chmod +x /coding/EAKIS/scripts/test_orchestrator.py)",
+      "Bash(pip list *)",
+      "Bash(python3 -m pip list)",
+      "Bash(apt-get update *)",
+      "Bash(apt-get install *)",
+      "Bash(python3 -m pip install langgraph langchain-core --quiet)",
+      "Bash(python3 -m pip install langgraph langchain-core --break-system-packages --quiet)",
+      "Bash(python3 -c \"from langgraph.graph import StateGraph; print\\('✓ langgraph 已安装'\\)\")",
+      "Bash(python3 -m pip install langgraph langchain-core --break-system-packages)",
+      "Bash(python3 scripts/test_orchestrator_quick.py)",
+      "Bash(python3 -m pip install openai pydantic pydantic-settings python-dotenv httpx pyyaml playwright httpx --break-system-packages --quiet)",
+      "Bash(python3 -m pip install prometheus-client opentelemetry-api opentelemetry-sdk qdrant-client minio kafka-python redis celery --break-system-packages --quiet)",
+      "Bash(python3 -m pip install prometheus-client --break-system-packages)",
+      "Bash(python3 -c \"from prometheus_client import Counter; print\\('✓ prometheus_client OK'\\)\")",
+      "Bash(python3 -c ' *)",
+      "Bash(cp /coding/EAKIS/src/keywords/domain_dicts/*.txt /coding/EAKIS/config/domain_dicts/ && cp /coding/EAKIS/src/keywords/domain_dicts/.gitkeep /coding/EAKIS/config/domain_dicts/)",
+      "Bash(cp /coding/EAKIS/docs/prompts/*.yaml /coding/EAKIS/config/prompts/)"
+    ],
+    "additionalDirectories": [
+      "/coding/EAKIS/src/keywords/domain_dicts",
+      "/coding/EAKIS/docs/prompts"
     ]
   }
 }

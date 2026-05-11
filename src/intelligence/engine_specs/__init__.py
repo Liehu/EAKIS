@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from pathlib import Path
 
 import yaml
 
+from src.core.config_paths import ENGINES_YAML
+
 logger = logging.getLogger("eakis.intelligence.engine_specs")
 
-SPECS_FILE = Path(__file__).parent / "engines.yaml"
+SPECS_FILE = ENGINES_YAML
 
 
 @dataclass

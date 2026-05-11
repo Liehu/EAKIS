@@ -1,0 +1,108 @@
+engines:
+  fofa:
+    display_name: "Fofa"
+    search_url: "https://fofa.info/api/v1/search/all"
+    auth_type: "email+apikey"
+    query_param: "qbase64"
+    query_encoding: "base64"
+    fields:
+      domain: 'domain="{value}"'
+      title: 'title="{value}"'
+      header: 'header="{value}"'
+      cert: 'cert="{value}"'
+      icon_hash: 'icon_hash="{value}"'
+      body: 'body="{value}"'
+      port: 'port="{value}"'
+      ip: 'ip="{value}"'
+      protocol: 'protocol="{value}"'
+      country: 'country="{value}"'
+    operators: ["&&", "||", "()"]
+    pagination:
+      param: "page"
+      size_param: "size"
+      default_size: 100
+    response_path: "results"
+    rate_limit: 1.0
+
+  hunter:
+    display_name: "Hunter"
+    search_url: "https://hunter.qianxin.com/openApi/search"
+    auth_type: "apikey"
+    query_param: "query"
+    query_encoding: "none"
+    fields:
+      domain.suffix: 'domain.suffix="{value}"'
+      web.title: 'web.title="{value}"'
+      ip: 'ip="{value}"'
+      port: 'port="{value}"'
+      web.body: 'web.body="{value}"'
+      cert: 'cert="{value}"'
+      header: 'header="{value}"'
+      protocol: 'protocol="{value}"'
+    operators: ["&&", "||", "()"]
+    pagination:
+      param: "page"
+      size_param: "page_size"
+      default_size: 100
+    response_path: "data.arr"
+    rate_limit: 1.0
+
+  shodan:
+    display_name: "Shodan"
+    search_url: "https://api.shodan.io/shodan/host/search"
+    auth_type: "apikey"
+    query_param: "query"
+    query_encoding: "none"
+    fields:
+      org: 'org:"{value}"'
+      http.title: 'http.title:"{value}"'
+      http.html: 'http.html:"{value}"'
+      port: 'port:{value}'
+      ip: 'ip:{value}'
+      ssl.cert.subject.cn: 'ssl.cert.subject.cn:"{value}"'
+      country: 'country:{value}'
+      product: 'product:"{value}"'
+    operators: [" ", "+"]
+    pagination:
+      param: "page"
+      default_size: 100
+    response_path: "matches"
+    rate_limit: 0.5
+
+  censys:
+    display_name: "Censys"
+    search_url: "https://search.censys.io/api/v2/certificates/search"
+    auth_type: "appid+secret"
+    query_param: "q"
+    query_encoding: "none"
+    fields:
+      names: 'names: "{value}"'
+      parsed.names: 'parsed.names: "{value}"'
+      services.port: 'services.port: {value}'
+      services.service_name: 'services.service_name: "{value}"'
+    operators: ["AND", "OR", "NOT"]
+    pagination:
+      param: "cursor"
+      default_size: 100
+    response_path: "result.hits"
+    rate_limit: 2.0
+
+  zoomeye:
+    display_name: "ZoomEye"
+    search_url: "https://api.zoomeye.org/host/search"
+    auth_type: "apikey"
+    query_param: "query"
+    query_encoding: "none"
+    fields:
+      hostname: 'hostname:"{value}"'
+      title: 'title:"{value}"'
+      ip: 'ip:"{value}"'
+      port: 'port:{value}'
+      app: 'app:"{value}"'
+    operators: ["+", " "]
+    pagination:
+      param: "page"
+      size_param: "facet"
+      default_size: 20
+    response_path: "matches"
+    rate_limit: 1.0
