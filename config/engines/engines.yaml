@@ -6,103 +6,754 @@ engines:
     query_param: "qbase64"
     query_encoding: "base64"
     fields:
+      # 基础字段
       domain: 'domain="{value}"'
-      title: 'title="{value}"'
-      header: 'header="{value}"'
-      cert: 'cert="{value}"'
-      icon_hash: 'icon_hash="{value}"'
-      body: 'body="{value}"'
-      port: 'port="{value}"'
+      host: 'host="{value}"'
       ip: 'ip="{value}"'
+      port: 'port="{value}"'
       protocol: 'protocol="{value}"'
+      server: 'server="{value}"'
+      # 内容相关
+      title: 'title="{value}"'
+      body: 'body="{value}"'
+      header: 'header="{value}"'
+      banner: 'banner="{value}"'
+      cert: 'cert="{value}"'
+      # 状态与标识
+      status_code: 'status_code="{value}"'
+      icon_hash: 'icon_hash="{value}"'
+      app: 'app="{value}"'
+      os: 'os="{value}"'
+      # 地理位置与网络信息
       country: 'country="{value}"'
-    operators: ["&&", "||", "()"]
+      city: 'city="{value}"'
+      region: 'region="{value}"'
+      asn: 'asn="{value}"'
+      org: 'org="{value}"'
+      base_protocol: 'base_protocol="{value}"'
+      # 时间与备案
+      after: 'after="{value}"'
+      before: 'before="{value}"'
+      is_ipv6: 'is_ipv6={value}'
+      is_domain: 'is_domain={value}'
+      ip_ports: 'ip_ports="{value}"'
+      port_size: 'port_size="{value}"'
+      port_size_gt: 'port_size_gt="{value}"'
+      port_size_lt: 'port_size_lt="{value}"'
+      icp: 'icp="{value}"'
+    operators: ["=", "==", "!=", "&&", "||", "()"]
     pagination:
       param: "page"
       size_param: "size"
       default_size: 100
     response_path: "results"
     rate_limit: 1.0
-
-  hunter:
-    display_name: "Hunter"
-    search_url: "https://hunter.qianxin.com/openApi/search"
-    auth_type: "apikey"
-    query_param: "query"
-    query_encoding: "none"
-    fields:
-      domain.suffix: 'domain.suffix="{value}"'
-      web.title: 'web.title="{value}"'
-      ip: 'ip="{value}"'
-      port: 'port="{value}"'
-      web.body: 'web.body="{value}"'
-      cert: 'cert="{value}"'
-      header: 'header="{value}"'
-      protocol: 'protocol="{value}"'
-    operators: ["&&", "||", "()"]
-    pagination:
-      param: "page"
-      size_param: "page_size"
-      default_size: 100
-    response_path: "data.arr"
-    rate_limit: 1.0
+    notes: |
+      FOFA支持的检索字段与运算符使用说明[citation:4][citation:10]：
+      
+      **核心检索字段**：
+      - 标题：`title="后台"` - 搜索页面标题包含指定词的资产
+      - 正文：`body="管理后台"` - 搜索HTML正文中包含指定内容的资产
+      - 响应头：`header="thinkphp"` - 搜索HTTP响应头包含指定字段的资产
+      - 证书：`cert="google"` - 搜索SSL证书中包含指定字符串的资产
+      - 域名：`domain="163.com"` - 搜索子域名包含指定域名的网站
+      - 主机：`host=".gov.cn"` - 从域名中搜索指定后缀
+      - IP地址：`ip="1.1.1.1"` / `ip="120.27.6.1/24"` - 支持单IP或CIDR段
+      - 端口：`port="3306"` - 搜索指定端口
+      - 协议：`protocol="https"` - 搜索特定协议资产
+      - 服务器：`server="Apache"` - 搜索特定Web服务器
+      - 操作系统：`os="windows"` - 搜索特定操作系统资产
+      - 应用指纹：`app="TDXK-通达OA"` - 搜索指定应用/设备
+      - 状态码：`status_code="200"` - 查询HTTP响应状态码
+      - Icon Hash：`icon_hash="-247388890"` - 搜索使用相同图标的资产
+      
+      **地理位置与网络信息**：
+      - 国家：`country="CN"` - 按国家代码或名称搜索
+      - 城市：`city="Shanghai"` - 按城市名称搜索
+      - 区域：`region="Zhejiang"` - 按省级行政区搜索
+      - ASN：`asn="19551"` - 按自治域号码搜索
+      - 组织：`org="Amazon.com, Inc."` - 按IP所属组织搜索
+      
+      **时间范围**：
+      - `after="2017"` - 搜索指定时间之后发现的资产
+      - `before="2019-07-01"` - 搜索指定时间之前发现的资产
+      
+      **备案信息**：
+      - `icp="京ICP证xxxx号"` - 按ICP备案号搜索资产，用于企业资产归属定位[citation:10]
+      
+      **逻辑运算符**：
+      - `=`：模糊匹配
+      - `==`：精确匹配（严格匹配）
+      - `!=`：不匹配/排除
+      - `&&`：逻辑与（AND）
+      - `||`：逻辑或（OR）
+      - `()`：优先级分组
+      
+      **组合示例**：`app="TDXK-通达OA" && org="China Education and Research Network Center"`[citation:4]
+      
+      **Tips**：
+      - 支持`ip_ports="3306,443,22"`搜索同时开放多个端口的IP
+      - 支持`port_size_gt="3"`筛选开放端口数量大于N的资产
+      - `icon_hash`常用于追踪使用相同favicon的关联资产（如测试后台、分公司站点）[citation:5]
 
   shodan:
     display_name: "Shodan"
     search_url: "https://api.shodan.io/shodan/host/search"
     auth_type: "apikey"
     query_param: "query"
-    query_encoding: "none"
+    query_encoding: "plain"
     fields:
-      org: 'org:"{value}"'
-      http.title: 'http.title:"{value}"'
-      http.html: 'http.html:"{value}"'
+      # 核心字段（默认搜索data/banner内容）
+      ip: 'ip:"{value}"'
       port: 'port:{value}'
-      ip: 'ip:{value}'
-      ssl.cert.subject.cn: 'ssl.cert.subject.cn:"{value}"'
-      country: 'country:{value}'
+      hostname: 'hostname:"{value}"'
+      # 网络与组织
+      net: 'net:"{value}"'
+      asn: 'asn:"{value}"'
+      org: 'org:"{value}"'
+      isp: 'isp:"{value}"'
+      # 地理位置
+      country: 'country:"{value}"'
+      city: 'city:"{value}"'
+      geo: 'geo:"{value}"'
+      # HTTP特定
+      http_title: 'http.title:"{value}"'
+      http_status: 'http.status:{value}'
+      http_server: 'http.server:"{value}"'
+      http_html: 'http.html:"{value}"'
+      http_favicon_hash: 'http.favicon.hash:{value}'
+      # SSL/TLS证书
+      ssl_cert: 'ssl.cert.subject.cn:"{value}"'
+      ssl_issuer: 'ssl.cert.issuer.cn:"{value}"'
+      ssl_fingerprint: 'ssl.cert.fingerprint:"{value}"'
+      # 设备与服务
+      device: 'device:"{value}"'
+      os: 'os:"{value}"'
       product: 'product:"{value}"'
-    operators: [" ", "+"]
+      version: 'version:"{value}"'
+      # 其他
+      has_screenshot: 'has_screenshot:{value}'
+      has_ssl: 'has_ssl:{value}'
+      has_vuln: 'has_vuln:{value}'
+      vuln: 'vuln:"{value}"'
+      # 时间
+      before: 'before:"{value}"'
+      after: 'after:"{value}"'
+    operators: [" ", "AND", "OR", "NOT", "()", "\""]
     pagination:
       param: "page"
+      size_param: "limit"
       default_size: 100
     response_path: "matches"
-    rate_limit: 0.5
-
-  censys:
-    display_name: "Censys"
-    search_url: "https://search.censys.io/api/v2/certificates/search"
-    auth_type: "appid+secret"
-    query_param: "q"
-    query_encoding: "none"
-    fields:
-      names: 'names: "{value}"'
-      parsed.names: 'parsed.names: "{value}"'
-      services.port: 'services.port: {value}'
-      services.service_name: 'services.service_name: "{value}"'
-    operators: ["AND", "OR", "NOT"]
-    pagination:
-      param: "cursor"
-      default_size: 100
-    response_path: "result.hits"
-    rate_limit: 2.0
+    rate_limit: 1.0
+    notes: |
+      Shodan以"banner"为基本数据单元，默认只搜索`data`属性[citation:7]。使用过滤器时格式为`filtername:value`，注意冒号后无空格。
+      
+      **核心过滤器**[citation:1][citation:7]：
+      
+      **HTTP/Web相关**：
+      - `http.title:"index of"` - 搜索HTTP页面标题
+      - `http.status:200` - 按HTTP状态码筛选
+      - `http.server:"nginx"` - 搜索Server头
+      - `http.html:"login"` - 搜索HTML正文内容
+      - `http.favicon.hash:81586312` - 搜索favicon哈希值（整数hash，非MD5）
+      
+      **网络与位置**：
+      - `country:"CN"` - 双字母国家代码
+      - `city:"Beijing"` - 城市名称
+      - `org:"SingTel Mobile"` - 组织/机构名称[citation:7]
+      - `isp:"China Telecom"` - 互联网服务提供商
+      - `asn:"AS4134"` - 自治域号码
+      - `net:"202.96.0.0/12"` - CIDR网段
+      
+      **证书相关**：
+      - `ssl.cert.subject.cn:"example.com"` - 证书主题CN
+      - `ssl.cert.issuer.cn:"Let's Encrypt"` - 证书颁发者
+      - `ssl.cert.fingerprint:"..."` - 证书指纹
+      
+      **设备与服务**：
+      - `device:"router"` - 设备类型
+      - `os:"Windows"` - 操作系统
+      - `product:"MySQL"` - 产品名称
+      - `port:3306` - 端口号
+      
+      **漏洞筛选**：
+      - `has_vuln:true` - 存在已知漏洞的资产
+      - `vuln:"CVE-2021-44228"` - 特定CVE漏洞
+      
+      **时间范围**：
+      - `after:"2024-01-01"` - 指定日期之后发现的资产
+      - `before:"2024-12-31"` - 指定日期之前发现的资产
+      
+      **布尔与组合**：
+      - 空格 = AND关系
+      - OR / AND / NOT 逻辑运算符
+      - 示例：`org:"SingTel Mobile" city:Singapore`[citation:7]
+      - 组合：`http.title:"Admin" && country:CN && http.status:200`
 
   zoomeye:
     display_name: "ZoomEye"
     search_url: "https://api.zoomeye.org/host/search"
     auth_type: "apikey"
     query_param: "query"
-    query_encoding: "none"
+    query_encoding: "plain"
     fields:
-      hostname: 'hostname:"{value}"'
-      title: 'title:"{value}"'
-      ip: 'ip:"{value}"'
-      port: 'port:{value}'
-      app: 'app:"{value}"'
-    operators: ["+", " "]
+      # 基础字段
+      ip: 'ip="{value}"'
+      cidr: 'cidr="{value}"'
+      port: 'port={value}'
+      domain: 'domain="{value}"'
+      hostname: 'hostname="{value}"'
+      # HTTP相关
+      title: 'title="{value}"'
+      http_body: 'http.body="{value}"'
+      http_header: 'http.header="{value}"'
+      http_header_server: 'http.header.server="{value}"'
+      http_status: 'http.header.status_code="{value}"'
+      # SSL证书
+      ssl: 'ssl="{value}"'
+      ssl_cert_fingerprint: 'ssl.cert.fingerprint="{value}"'
+      ssl_cert_issuer_cn: 'ssl.cert.issuer.cn="{value}"'
+      ssl_cert_subject_cn: 'ssl.cert.subject.cn="{value}"'
+      ssl_version: 'ssl.version="{value}"'
+      ssl_jarm: 'ssl.jarm="{value}"'
+      # 指纹识别
+      iconhash: 'iconhash="{value}"'
+      app: 'app="{value}"'
+      service: 'service="{value}"'
+      device: 'device="{value}"'
+      os: 'os="{value}"'
+      product: 'product="{value}"'
+      # 地理位置
+      country: 'country="{value}"'
+      city: 'city="{value}"'
+      subdivisions: 'subdivisions="{value}"'
+      # 网络信息
+      isp: 'isp="{value}"'
+      org: 'org="{value}"'
+      asn: 'asn={value}'
+      # 时间
+      after: 'after="{value}"'
+      before: 'before="{value}"'
+      # 其他
+      is_honeypot: 'is_honeypot="{value}"'
+      vul_cve: 'vul.cve="{value}"'
+      filehash: 'filehash="{value}"'
+      banner: 'banner="{value}"'
+    operators: ["=", "==", "!=", "&&", "||", "()", "-"]
     pagination:
       param: "page"
-      size_param: "facet"
+      size_param: "size"
       default_size: 20
     response_path: "matches"
     rate_limit: 1.0
+    notes: |
+      ZoomEye搜索语法使用说明[citation:2][citation:8]：
+      
+      **操作符说明**：
+      - `=`：包含关键词（模糊匹配）
+      - `==`：精确匹配，大小写敏感
+      - `!=`：逻辑非/排除
+      - `||`：OR逻辑
+      - `&&`：AND逻辑
+      - `()`：优先级分组
+      - `-`：模糊搜索（通配符效果）
+      
+      **HTTP/Web字段**：
+      - `title="后台"` - 页面标题搜索
+      - `http.body="document"` - HTML正文内容[citation:8]
+      - `http.header="nginx"` - HTTP响应头
+      - `http.header.server="Nginx"` - Server头信息[citation:8]
+      - `http.header.status_code="200"` - HTTP状态码
+      
+      **Icon Hash（两种计算方式）**[citation:8]：
+      - `iconhash="f3418a443e7d841097c714d69ec4bcb8"` - MD5哈希值（32位十六进制）
+      - `iconhash="1941681276"` - MMH3哈希值（整数）
+      
+      **SSL证书字段**[citation:2]：
+      - `ssl="google"` - 证书中包含的字符串
+      - `ssl.cert.fingerprint="..."` - 证书指纹
+      - `ssl.cert.issuer.cn="..."` - 颁发者CN
+      - `ssl.cert.subject.cn="..."` - 主题CN
+      - `ssl.version="TLSv1.3"` - SSL/TLS版本
+      - `ssl.jarm="..."` - JARM指纹
+      
+      **地理位置**[citation:2]：
+      - `country="CN"` - 国家（代码或名称）
+      - `city="changsha"` - 城市（英文）
+      - `subdivisions="beijing"` - 省级行政区（英文）
+      
+      **网络信息**[citation:2][citation:8]：
+      - `ip="8.8.8.8"` - IPv4/v6地址
+      - `cidr="52.2.254.36/24"` - CIDR网段
+      - `org="Stanford University"` - 所属组织
+      - `isp="China Mobile"` - 网络服务提供商
+      - `asn=42893` - 自治域号码
+      
+      **应用指纹**[citation:2]：
+      - `app="Cisco ASA SSL VPN"` - 应用名称
+      - `service="ssh"` - 服务类型
+      - `device="router"` - 设备类型
+      - `os="RouterOS"` - 操作系统
+      - `product="Cisco"` - 产品信息
+      
+      **特殊过滤**[citation:2]：
+      - `is_honeypot="True"` - 蜜罐资产过滤
+      - `vul.cve="CVE-2021-44228"` - CVE漏洞关联资产
+      - `filehash="0b5ce08..."` - 文件哈希搜索
+      
+      **时间范围**：
+      - `after="2020-01-01"` - 发现日期之后
+      - `before="2020-01-01"` - 发现日期之前
+      
+      **组合示例**：`(country="US" && port!=80) || (country="US" && title!="404 Not Found")`[citation:2]
+
+  hunter:
+    display_name: "奇安信Hunter"
+    search_url: "https://hunter.qianxin.com/open/api/search"
+    auth_type: "apikey"
+    query_param: "query"
+    query_encoding: "plain"
+    fields:
+      # Web内容字段
+      web_title: 'web.title="{value}"'
+      web_body: 'web.body="{value}"'
+      web_icon: 'web.icon="{value}"'
+      web_icon_md5: 'web.icon=="{value}"'
+      web_header: 'web.header="{value}"'
+      # 状态与指纹
+      web_status_code: 'web.status_code="{value}"'
+      web_server: 'web.server="{value}"'
+      web_framework: 'web.framework="{value}"'
+      # 网络信息
+      ip: 'ip="{value}"'
+      port: 'port="{value}"'
+      domain: 'domain="{value}"'
+      host: 'host="{value}"'
+      # 地理位置
+      country: 'country="{value}"'
+      province: 'province="{value}"'
+      city: 'city="{value}"'
+      # 备案与企业信息
+      icp: 'icp.name="{value}"'
+      icp_number: 'icp.number="{value}"'
+      # 证书
+      cert: 'cert="{value}"'
+      cert_subject: 'cert.subject="{value}"'
+      cert_issuer: 'cert.issuer="{value}"'
+      cert_serial: 'cert.serial="{value}"'
+      # 资产信息
+      os: 'os="{value}"'
+      device: 'device="{value}"'
+      asn: 'asn="{value}"'
+      isp: 'isp="{value}"'
+      # 时间
+      after: 'after="{value}"'
+      before: 'before="{value}"'
+      # 其他标识
+      app: 'app="{value}"'
+    operators: ["=", "==", "&&", "||", "()", "!"]
+    pagination:
+      param: "page"
+      size_param: "size"
+      default_size: 20
+    response_path: "data.assets"
+    rate_limit: 0.5
+    notes: |
+      奇安信Hunter语法使用说明[citation:5]：
+      
+      **Web内容字段**[citation:5]：
+      - `web.title="管理后台"` - 网站标题
+      - `web.body="登录"` - HTML正文内容
+      - `web.header="Server: nginx"` - HTTP响应头
+      - `web.icon="11ecefc82fe25f741ea3b7c30b922bdc"` - 图标MD5哈希（格式为32位十六进制）
+      - `web.icon=="11ecefc82fe25f741ea3b7c30b922bdc"` - 精确匹配图标MD5
+      
+      **状态码与指纹**：
+      - `web.status_code="200"` - HTTP状态码
+      - `web.server="Tomcat"` - Web服务器类型
+      - `web.framework="Spring"` - Web框架标识
+      
+      **地理位置与网络**：
+      - `country="CN"` - 国家
+      - `province="beijing"` - 省份
+      - `city="shanghai"` - 城市
+      - `isp="China Telecom"` - 网络服务商
+      - `asn="4134"` - 自治域号
+      
+      **备案与企业信息（核心差异化功能）**[citation:5]：
+      - `icp.name="上汽大通"` - 搜索企业所有备案域名（按备案主体名称）
+      - `icp.number="京ICP证xxxx号"` - 按ICP备案号精确查询
+      
+      **证书字段**：
+      - `cert="example.com"` - 证书中包含的字符串
+      - `cert.subject="CN=example.com"` - 证书主题
+      - `cert.issuer="Let's Encrypt"` - 证书颁发者
+      
+      **高级组合示例**[citation:5]：
+      - 企业资产定位：`icp.name="上汽集团" && (web.body="登录" || web.body="注册")`
+      - 图标追踪：`web.icon=="11ecefc82fe25f741ea3b7c30b922bdc"` - 发现使用同一Logo的隐藏IP/域名（测试后台、分公司站点）
+      
+      **资产详情功能**：支持查看IP/域名基础数据、服务指纹（如Tomcat 8.5.35）、网站框架/数据库信息[citation:5]
+      
+      **Tips**：
+      - `web.icon`使用MD5哈希值（32位十六进制），可通过计算目标网站favicon.ico获得
+      - ICP备案是企业资产收集的关键入口，可覆盖90%攻击面[citation:5]
+
+  quake:
+    display_name: "360 Quake"
+    search_url: "https://quake.360.cn/api/v3/search/quake_service"
+    auth_type: "apikey"
+    query_param: "query"
+    query_encoding: "plain"
+    fields:
+      # HTTP/WEB字段
+      http_title: 'http.title:"{value}"'
+      http_body: 'http.body:"{value}"'
+      http_header: 'http.header:"{value}"'
+      http_server: 'http.server:"{value}"'
+      http_status: 'http.status:{value}'
+      http_favicon: 'http.favicon:"{value}"'
+      http_favicon_hash: 'favicon_hash:"{value}"'
+      # SSL证书
+      cert_subject: 'cert.subject:"{value}"'
+      cert_issuer: 'cert.issuer:"{value}"'
+      cert_fingerprint: 'cert.fingerprint:"{value}"'
+      # 服务协议字段（多协议深度解析）
+      ftp_banner: 'ftp.banner:"{value}"'
+      ssh_banner: 'ssh.banner:"{value}"'
+      ssh_fingerprint: 'ssh.fingerprint:"{value}"'
+      mysql_banner: 'mysql.banner:"{value}"'
+      mongodb_banner: 'mongodb.banner:"{value}"'
+      redis_banner: 'redis.banner:"{value}"'
+      elastic_banner: 'elastic.banner:"{value}"'
+      docker_banner: 'docker.banner:"{value}"'
+      smb_banner: 'smb.banner:"{value}"'
+      snmp_banner: 'snmp.banner:"{value}"'
+      modbus_banner: 'modbus.banner:"{value}"'
+      s7_banner: 's7.banner:"{value}"'
+      # 地理位置
+      location_country: 'location.country:"{value}"'
+      location_province: 'location.province:"{value}"'
+      location_city: 'location.city:"{value}"'
+      # 网络信息
+      ip: 'ip:"{value}"'
+      ip_cidr: 'ip_cidr:"{value}"'
+      port: 'port:"{value}"'
+      domain: 'domain:"{value}"'
+      asn: 'asn:"{value}"'
+      isp: 'isp:"{value}"'
+      owner: 'owner:"{value}"'
+      # 操作系统与设备
+      os: 'os:"{value}"'
+      device: 'device:"{value}"'
+      # 时间
+      start_time: 'start_time:"{value}"'
+      end_time: 'end_time:"{value}"'
+      # 其他
+      app: 'app:"{value}"'
+      service: 'service:"{value}"'
+      protocol: 'protocol:"{value}"'
+      is_unAuth: 'is_unAuth:"{value}"'
+    operators: [" ", "AND", "OR", "NOT", "()"]
+    pagination:
+      param: "page"
+      size_param: "size"
+      default_size: 20
+    response_path: "data"
+    rate_limit: 1.0
+    notes: |
+      360 Quake核心优势：支持多协议的深度内容提取，包括FTP、SSH、RSYNC、SNMP、Docker、DNS、Elastic、MongoDB、Modbus、S7等协议的细化字段[citation:6]。
+      
+      **HTTP/WEB字段**[citation:6]：
+      - `http.title:"管理后台"` - 网页标题
+      - `http.body:"login"` - 网页正文
+      - `http.header:"nginx"` - HTTP响应头
+      - `http.server:"nginx/1.1.19"` - Server版本信息
+      - `http.status:200` - HTTP状态码
+      - `http.favicon:"..."` - 网站图标内容
+      - `favicon_hash:"81586312"` - 图标哈希（MMH3/整数格式）
+      
+      **SSL证书**：
+      - `cert.subject:"example.com"` - 证书主题
+      - `cert.issuer:"Let's Encrypt"` - 证书颁发者
+      - `cert.fingerprint:"..."` - 证书指纹
+      
+      **多协议深度解析**（Quake特色功能）[citation:6]：
+      
+      **文件传输类**：
+      - `ftp.banner:"vsFTPd"` - FTP服务banner
+      - `rsync.banner:"@RSYNCD"` - Rsync服务
+      
+      **远程访问类**：
+      - `ssh.banner:"OpenSSH"` - SSH服务banner
+      - `ssh.fingerprint:"..."` - SSH主机密钥指纹
+      
+      **数据库类**：
+      - `mysql.banner:"MySQL"` - MySQL服务信息
+      - `mongodb.banner:"MongoDB"` - MongoDB服务
+      - `elastic.banner:"Elasticsearch"` - ES服务
+      - `redis.banner:"redis_version"` - Redis服务
+      
+      **工业控制系统**：
+      - `modbus.banner:"Modbus"` - Modbus协议
+      - `s7.banner:"Siemens"` - S7协议（西门子PLC）
+      
+      **其他服务**：
+      - `docker.banner:"Docker"` - Docker服务
+      - `smb.banner:"SMB"` - SMB协议
+      - `snmp.banner:"SNMP"` - SNMP协议
+      - `upnp.banner:"UPnP"` - UPnP服务
+      
+      **地理位置**[citation:6]：
+      - `location.country:"CN"` - 国家（双字母代码）
+      - `location.province:"beijing"` - 省份
+      - `location.city:"shanghai"` - 城市
+      
+      **网络信息**(Quake优势)[citation:6]：
+      - `ip:"1.1.1.1"` - IP地址
+      - `ip_cidr:"1.1.1.0/24"` - CIDR网段
+      - `port:"443"` - 端口
+      - `asn:"4134"` - 自治域号码
+      - `isp:"China Telecom"` - 网络服务提供商
+      - `owner:"清华大学"` - IP归属单位（ISP精细归类，便于红队信息收集）[citation:6]
+      
+      **未授权访问检测**：
+      - `is_unAuth:"true"` - 筛选可能存在未授权访问的服务（如Redis、MongoDB未授权）[citation:6]
+      
+      **逻辑运算符**：支持`AND`、`OR`、`NOT`、空格（AND关系）、括号优先级
+      
+      **Tips**：
+      - Quake对运营商/单位做了归类，`owner`字段可查询IP归属单位，配合`org`信息便于锁定目标范围[citation:6]
+      - 协议字段覆盖广，适合工控、物联网等特殊场景的资产发现
+
+  ceye:
+    display_name: "Ceye"
+    search_url: "https://api.ceye.io/v1/records"
+    auth_type: "token"
+    query_param: "query"
+    query_encoding: "plain"
+    fields: {}
+    operators: []
+    pagination:
+      param: "page"
+      size_param: "size"
+      default_size: 20
+    response_path: "data"
+    rate_limit: 0.2
+    notes: |
+      Ceye是一个DNS/HTTP日志回显平台，主要用于验证无回显漏洞（如XXE、SSRF、Blind RCE等）。其数据由平台被动收集，不支持主动搜索或复杂的资产检索语法[citation:6]。
+      
+      **核心功能**：
+      - 提供子域名`{identifier}.ceye.io`用于漏洞利用
+      - 记录向该域名发起的DNS查询和HTTP请求
+      
+      **适用场景**：
+      - SSRF漏洞验证（检查目标是否发起了DNS查询）
+      - XXE盲注（通过外部实体发起HTTP请求）
+      - 无回显命令执行检测
+      
+      **检索能力**：仅能通过API查询特定identifier下的历史记录（按时间倒序），不支持布尔组合、字段过滤等高级语法。
+      
+      **注意**：Ceye不提供资产主动发现功能，与Shodan、FOFA等网络空间搜索引擎属于不同类别，应作为漏洞验证辅助工具使用。
+
+  baidu:
+    display_name: "百度"
+    search_url: "https://www.baidu.com/s"
+    auth_type: "none"
+    query_param: "wd"
+    query_encoding: "plain"
+    fields:
+      title: 'intitle="{value}"'
+      url: 'inurl="{value}"'
+      site: 'site="{value}"'
+      filetype: 'filetype="{value}"'
+    operators: ["空格(AND)", "-", "()"]
+    pagination:
+      param: "pn"
+      size_param: "rn"
+      default_size: 10
+    response_path: "html"
+    rate_limit: 1.0
+    notes: |
+      百度支持的基础语法及组合应用说明如下：
+      - 关键字：直接输入即可，默认词间为“与”(AND)关系。
+      - 短语精确搜索：使用双引号 `""` 包裹，如 `"精确短语"` [citation:1][citation:9]。
+      - 站点搜索 (site)：将搜索范围限定在特定站点或域名，语法为 `关键词 site:域名`，`site:` 前需有空格，且域名不包含 `http://`，如 `人工智能 site:tsinghua.edu.cn` [citation:3][citation:8][citation:9]。
+      - 文件类型 (filetype)：搜索特定格式的文件，语法为 `关键词 filetype:扩展名`，如 `深度学习 filetype:pdf` [citation:3][citation:8]。
+      - 逻辑操作：
+          - “与”(AND)：使用空格连接多个关键词，如 `大数据 技术`。
+          - “或”(OR)：百度高级搜索界面支持，或使用 `|` 符号，如 `神经网络 | 深度学习`。
+          - “非”(NOT)：使用减号 `-` 排除包含特定词的结果，注意减号前必须有空格，如 `区块链 -比特币` [citation:1][citation:9]。
+      - 标题/URL限定：
+          - `intitle:`：限定搜索结果的标题中包含指定关键词，如 `intitle:后台登录` [citation:3][citation:8]。
+          - `inurl:`：限定搜索结果的URL中包含指定关键词，如 `inurl:login` [citation:3][citation:8]。
+      - 时间范围：百度无明确的 `after:` 或 `before:` 语法，需在搜索结果页使用“时间筛选”工具 [citation:4]。
+
+  bing:
+    display_name: "Bing"
+    search_url: "https://www.bing.com/search"
+    auth_type: "none"
+    query_param: "q"
+    query_encoding: "plain"
+    fields:
+      title: 'intitle:{value}'
+      url: 'inurl:{value}'
+      site: 'site:{value}'
+      filetype: 'filetype:{value}'
+      body: 'inbody:{value}'
+    operators: ["AND", "OR", "NOT", "()", "+", "-"]
+    pagination:
+      param: "first"
+      size_param: "count"
+      default_size: 10
+    response_path: "html"
+    rate_limit: 1.0
+    notes: |
+      Bing的高级搜索运算符功能强大，与Google类似。详细说明如下：
+      - 关键字：直接输入。
+      - 短语精确搜索：使用双引号 `""` 进行强制短语匹配，如 `"machine learning basics"` [citation:2][citation:6][citation:10]。
+      - 站点搜索 (site)：搜索特定网站内的内容，如 `AI site:gov.cn` [citation:2][citation:10]。
+      - 文件类型 (filetype)：限定返回的文件格式，如 `filetype:pdf 机器学习综述` [citation:2][citation:10]。
+      - 逻辑操作：
+          - “与”(AND)：默认空格即为AND。也可使用 `AND`、`&` 或 `&&`，如 `AI AND ethics` [citation:10]。
+          - “或”(OR)：连接同义词或备选项，使用 `OR`、`|` 或 `||`，如 `(神经网络 OR 深度学习) 应用` [citation:10]。
+          - “非”(NOT)：排除特定词，使用 `NOT` 或 `-`，如 `区块链 -加密货币`，`NOT`前需有空格 [citation:2][citation:6][citation:10]。
+      - 时间范围：支持 `after:` 和 `before:` 运算符，语法为 `关键词 after:YYYY-MM-DD before:YYYY-MM-DD`，例如 `新冠疫苗 after:2021-01-01 before:2021-12-31`。也支持 `date:` 范围参数，如 `AI date:2022..2023` [citation:2][citation:4]。
+      - 标题/URL/正文限定：
+          - `intitle:`：查询词出现在页面标题中，如 `intitle:"隐私政策"` [citation:10]。
+          - `inurl:`：查询词出现在URL中，如 `inurl:docs/api` [citation:4]。
+          - `inbody:`：查询词出现在页面主体内容中 [citation:10]。
+      - 其他高级指令：
+          - `near:n`：查找两个关键词之间相隔不超过n个单词的页面，如 `"ipad" near:5 "apple"` [citation:10]。
+          - `hasfeed:`：查找网站中包含RSS或Atom feed的页面，如 `hasfeed:blog site:microsoft.com` [citation:10]。
+
+  google:
+    display_name: "Google"
+    search_url: "https://www.google.com/search"
+    auth_type: "none"
+    query_param: "q"
+    query_encoding: "plain"
+    fields:
+      title: 'intitle:"{value}"'
+      url: 'inurl:"{value}"'
+      site: 'site:{value}'
+      filetype: 'filetype:{value}'
+      cache: 'cache:{value}'
+      related: 'related:{value}'
+    operators: ["AND", "OR", "NOT", "()", "+", "-", "*"]
+    pagination:
+      param: "start"
+      size_param: "num"
+      default_size: 10
+    response_path: "html"
+    rate_limit: 1.0
+    notes: |
+      Google Dorking是信息收集和信息安全领域常用的技术。其核心语法组合如下：
+      - 关键字：直接输入。
+      - 短语精确搜索：使用双引号 `""` 强制完全匹配，顺序不变，如 `"to be or not to be"` [citation:4]。
+      - 站点搜索 (site)：在特定网站或域名下搜索，可用于查找子域名或限定来源，如 `site:*.gov.cn` 或 `site:example.com` [citation:7]。
+      - 文件类型 (filetype)：查找特定文件，对信息安全测试尤为重要，可搜索如 `filetype:xls "password"` 或 `filetype:sql "username"` [citation:3][citation:7]。
+      - 逻辑操作：
+          - “与”(AND)：默认空格即为AND。
+          - “或”(OR)：使用 `OR` 或 `|` 连接，如 `"security" OR "penetration testing"` [citation:4]。
+          - “非”(NOT)：使用减号 `-` 排除关键词，如 `linux -ubuntu` [citation:4]。
+      - 通配符：使用 `*` 代表任意单词，常用于短语中，如 `"人工智能 * 应用"` [citation:4]。
+      - 时间范围：支持 `after:` 和 `before:` 运算符，例如 `Google Hacking after:2023-01-01` [citation:4][citation:7]。
+      - 标题/URL/正文限定：
+          - `intitle:` 与 `allintitle:`：前者标题包含单个词，如 `intitle:index of`；后者标题包含所有词，如 `allintitle:admin config` [citation:4][citation:7]。
+          - `inurl:` 与 `allinurl:`：查找URL中的特定关键词，常用于查找敏感目录或参数，如 `inurl:wp-config.php` 或 `allinurl:admin login` [citation:4][citation:7]。
+          - `intext:` 与 `allintext:`：搜索页面正文内容，如 `intext:"sql connection"` [citation:4]。
+      - 其他高级指令：
+          - `cache:`：查看Google缓存的网页版本，如 `cache:example.com` [citation:4]。
+          - `related:`：查找与指定网址内容类似的网站，如 `related:github.com` [citation:4]。
+
+  github:
+    display_name: "GitHub"
+    search_url: "https://api.github.com/search/code"
+    auth_type: "token"
+    query_param: "q"
+    query_encoding: "plain"
+    repo_search_url: "https://api.github.com/search/repositories"
+    issues_search_url: "https://api.github.com/search/issues"
+    fields:
+      # 代码/文件内容搜索
+      code_content: '{value}'                                      # 直接输入关键词搜索代码内容[citation:2]
+      code_file: 'filename:"{value}"'                              # 按文件名搜索[citation:2]
+      code_path: 'path:"{value}"'                                  # 按文件路径搜索[citation:2]
+      code_extension: 'extension:"{value}"'                        # 按文件扩展名过滤[citation:2]
+      code_language: 'language:"{value}"'                          # 按编程语言过滤[citation:2]
+      code_size: 'size:{value}'                                    # 按文件大小过滤(KB)[citation:2]
+      # 仓库所有者/组织限定
+      owner: 'user:"{value}"'                                      # 按用户所有者过滤[citation:2]
+      org: 'org:"{value}"'                                         # 按组织所有者过滤[citation:2]
+      repo: 'repo:"{value}"'                                       # 限定在特定仓库中搜索[citation:2]
+      # 仓库搜索特定字段
+      repo_name: 'in:name "{value}"'                               # 仓库名称中包含[citation:5]
+      repo_desc: 'in:description "{value}"'                        # 仓库描述中包含[citation:5]
+      repo_readme: 'in:readme "{value}"'                           # README中包含[citation:5]
+      repo_topic: 'topic:"{value}"'                                # 按主题标签过滤[citation:5]
+      repo_license: 'license:"{value}"'                            # 按许可证类型过滤[citation:5]
+      # 仓库质量指标
+      stars: 'stars:{value}'                                       # 按Star数过滤[citation:3]
+      forks: 'forks:{value}'                                       # 按Fork数过滤[citation:5]
+      followers: 'followers:{value}'                               # 按关注者数量过滤[citation:5]
+      # 仓库状态与活跃度
+      visibility: 'is:{value}'                                     # 可见性: public/private/internal[citation:5]
+      archived: 'archived:{value}'                                 # 是否已归档: true/false[citation:5]
+      is_fork: 'fork:{value}'                                      # 是否为Fork: true/false[citation:5]
+      created: 'created:"{value}"'                                 # 创建时间范围[citation:5]
+      updated: 'pushed:"{value}"'                                  # 最后更新时间范围[citation:3]
+      # Issue/PR搜索
+      issue_author: 'author:"{value}"'                             # Issue/PR作者
+      issue_assignee: 'assignee:"{value}"'                         # Issue/PR指派人
+      issue_label: 'label:"{value}"'                               # 按标签过滤
+      issue_state: 'is:{value}'                                    # 状态: open/closed
+      # 排除语法
+      exclude: '-{field}:"{value}"'                                # 排除匹配结果[citation:1]
+    operators: ["AND", "OR", "NOT", "()", "-"]
+    pagination:
+      param: "page"
+      size_param: "per_page"
+      default_size: 30
+    response_path: "items"
+    rate_limit: 10.0
+    notes: |
+      GitHub搜索支持仓库、代码、Issue/PR、用户等多种搜索类型。以下分为代码搜索和仓库搜索两大类说明。
+      
+      ============================================================
+      一、代码搜索 (Code Search) - 用于搜索代码内容
+      ============================================================
+      
+      代码搜索语法参考: https://docs.github.com/en/search-github/searching-on-github/searching-code[citation:2]
+      
+      **基本关键词搜索**[citation:2]:
+      - 直接搜索代码内容: `React useState`
+      - 精确短语匹配: `"useEffect cleanup"`
+      
+      **文件限定**[citation:2]:
+      - `filename:"config.yml"` - 搜索指定文件名的文件
+      - `path:"src/components"` - 搜索指定路径下的文件
+      - `extension:"js"` - 按文件扩展名过滤
+      - `language:"python"` - 按编程语言过滤
+      
+      **所有者限定 (Owner限定)**[citation:2]:
+      - `user:"vercel"` - 搜索特定用户拥有的仓库
+      - `org:"facebook"` - 搜索特定组织拥有的仓库
+      - 多owner组合: `org:"microsoft" OR org:"google"`
+      
+      **仓库限定**[citation:2]:
+      - `repo:"vercel/next.js"` - 限定在特定仓库中搜索
+      - 多个仓库: `repo:"facebook/react" repo:"vuejs/core"`
+      
+      **文件大小限定**[citation:2]:
+      - `size:100` - 文件大小等于100KB
+      - `size:>100` - 大于100KB
+      - `size:<50` - 小于50KB
+      - `size:100..500` - 范围在100-500KB之间
+      
+      **内容/路径限制**[citation:2]:
+      - `--match=file` - 仅搜索文件内容（CLI参数）
+      - `--match=path` - 仅搜索文件路径
+      
+      **代码搜索组合示例**[citation:2]:

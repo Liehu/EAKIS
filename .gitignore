@@ -58,3 +58,7 @@ htmlcov/
 .tox/
 .mypy_cache/
 .ruff_cache/
+
+#编辑器配置
+.claude/
+.superpowers/
