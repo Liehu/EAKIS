@@ -1,0 +1,90 @@
+# 数据源配置定义
+# 用户可以在此添加自定义数据源
+
+dataSources:
+  # 新闻类数据源
+  - sourceId: baidu_news
+    name: 百度新闻
+    category: NEWS
+    priority: 7
+    expectedYield: 0.7
+    rateLimit: 2.0
+
+  - sourceId: wechat
+    name: 微信公众号
+    category: NEWS
+    priority: 6
+    expectedYield: 0.6
+    rateLimit: 1.0
+
+  - sourceId: "36kr"
+    name: 36氪
+    category: NEWS
+    priority: 5
+    expectedYield: 0.5
+    rateLimit: 3.0
+
+  # 官方类数据源
+  - sourceId: official_site
+    name: 企业官网
+    category: OFFICIAL
+    priority: 8
+    expectedYield: 0.8
+    rateLimit: 5.0
+
+  - sourceId: github_org
+    name: GitHub 组织页
+    category: OFFICIAL
+    priority: 6
+    expectedYield: 0.4
+    rateLimit: 10.0
+
+  - sourceId: tech_blog
+    name: 技术博客
+    category: OFFICIAL
+    priority: 5
+    expectedYield: 0.5
+    rateLimit: 5.0
+
+  # 法律/合规类数据源
+  - sourceId: icp_query
+    name: ICP备案查询
+    category: LEGAL
+    priority: 9
+    expectedYield: 0.9
+    rateLimit: 1.0
+
+  - sourceId: business_info
+    name: 工商信息
+    category: LEGAL
+    priority: 7
+    expectedYield: 0.7
+    rateLimit: 1.0
+
+  - sourceId: bidding
+    name: 招投标公告
+    category: LEGAL
+    priority: 4
+    expectedYield: 0.3
+    rateLimit: 2.0
+
+  # 安全类数据源
+  - sourceId: cnvd
+    name: CNVD漏洞库
+    category: SECURITY
+    priority: 6
+    expectedYield: 0.5
+    rateLimit: 5.0
+
+  - sourceId: nvd
+    name: NVD数据库
+    category: SECURITY
+    priority: 5
+    expectedYield: 0.4
+    rateLimit: 10.0
+
+# 资产引擎数据源优先级配置（自动从 engines.yaml 生成）
+assetEnginePriority:
+  start: 9
+  end: 5
+  step: -1

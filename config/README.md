@@ -15,11 +15,12 @@ config/
 │   └── tech_stack.txt     # 技术栈关键词
 ├── engines/               # 搜索引擎规格配置
 │   └── engines.yaml       # 引擎 API 规范定义
-└── prompts/               # LLM 提示词版本管理
-    ├── asset_assessment_v2.yaml
-    ├── browser_control_v2.yaml
-    ├── keyword_extraction_v2.yaml
-    └── vuln_case_gen_v2.yaml
+├── prompts/               # LLM 提示词版本管理
+│   ├── asset_assessment_v2.yaml
+│   ├── browser_control_v2.yaml
+│   ├── keyword_extraction_v2.yaml
+│   └── vuln_case_gen_v2.yaml
+└── datasources.yaml       # 数据源配置定义
 ```
 
 ## 配置文件说明
@@ -67,6 +68,21 @@ LLM Agent 提示词版本管理。每个 YAML 文件包含：
 **自定义提示词：**
 1. 复制现有文件并修改版本号
 2. 在代码中引用新版本
+
+### datasources.yaml
+
+数据源配置定义，包含各类情报数据源：
+
+- `sourceId`: 数据源唯一标识
+- `name`: 数据源显示名称
+- `category`: 类别 (NEWS/OFFICIAL/LEGAL/SECURITY)
+- `priority`: 优先级 (1-9，越高越优先)
+- `expectedYield`: 预期产出率 (0-1)
+- `rateLimit`: 请求限流 (请求/秒)
+
+**添加新数据源：**
+1. 在 `dataSources` 数组中添加新条目
+2. 重启服务或调用 `reload_datasource_catalog()`
 
 ## 配置引用
 

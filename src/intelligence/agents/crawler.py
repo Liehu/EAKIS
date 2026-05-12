@@ -6,10 +6,10 @@ from src.intelligence.config import CrawlConfig
 from src.intelligence.engine_specs import load_engine_specs
 from src.intelligence.models import CollectionStatus, DataSource, DslQuery, RawDocument
 from src.intelligence.services.base import BaseScraper
-from src.intelligence.services.generic_scraper import GenericEngineScraper
-from src.intelligence.services.scrapers.legal_scraper import LegalScraper
-from src.intelligence.services.scrapers.news_scraper import NewsScraper
-from src.intelligence.services.scrapers.official_scraper import OfficialScraper
+from src.intelligence.scrapers.generic_scraper import GenericEngineScraper
+from src.intelligence.scrapers.legal_scraper import LegalScraper
+from src.intelligence.scrapers.news_scraper import NewsScraper
+from src.intelligence.scrapers.official_scraper import OfficialScraper
 from src.shared.event_bus import EventBus
 
 logger = logging.getLogger("eakis.intelligence.crawler")

@@ -275,6 +275,82 @@ curl -X POST http://localhost:8000/v1/tasks/$TASK_ID/keywords \
 
 ---
 
+## 模块 7.5：DSL + Crawler 独立联调测试
+
+> **本模块测试 DSL 查询生成和资产爬虫的独立联调**，支持真实 API 调用。
+
+### 7.5.1 快速验证（Stub 模式）
+
+```bash
+# 使用预设目标测试
+python scripts/test_dsl_crawler.py --preset example
+
+# 使用真实公司测试
+python scripts/test_dsl_crawler.py --preset alibaba
+
+# 自定义目标测试
+python scripts/test_dsl_crawler.py \
+    --company "腾讯科技" \
+    --domains qq.com wechat.com \
+    --keywords 腾讯 微信 QQ
+```
+
+**预期输出**：
+```
+生成的 DSL 查询 (2 条):
+  [fofa] domain="qq.com" && title="腾讯"
+  [hunter] domain.suffix="qq.com" && web.title="腾讯"
+
+爬取完成，共获取 4 条文档
+  [Fofa] 2 条
+  [奇安信Hunter] 2 条
+```
+
+### 7.5.2 真实 API 测试
+
+**配置方式**：
+
+编辑 `config/engines/engines.yaml`，填写 API 密钥并启用：
+
+```yaml
+engines:
+  fofa:
+    api_key: "your_fofa_api_key"
+    email: "your_fofo_email"
+    enabled: true
+```
+
+**运行测试**：
+
+```bash
+# Stub 模式（默认，无需 API Key）
+python scripts/test_dsl_crawler.py --preset alibaba
+
+# 真实 API 模式
+python scripts/test_dsl_crawler.py --real --preset alibaba
+```
+
+**详细文档**：参见 [DSL_CRAWLER_REAL_MODE_GUIDE.md](DSL_CRAWLER_REAL_MODE_GUIDE.md)
+
+### 7.5.3 测试结果
+
+结果保存在 `test_results/dsl_crawler_test_*.json`，包含：
+
+- 生成的 DSL 查询（platform, query, valid）
+- 爬取的文档（source, content, url）
+- 错误信息
+
+### 7.5.4 验证要点
+
+- [ ] DSL 查询使用正确的域名和关键词
+- [ ] DSL 语法符合各引擎规范
+- [ ] 爬虫返回正确的文档数
+- [ ] 真实 API 模式下数据来自实际搜索
+
+**详细文档**：参见 [DSL_CRAWLER_TEST_GUIDE.md](DSL_CRAWLER_TEST_GUIDE.md)
+
+---
+
 ## 联调测试：M1 → M3 → M4 全链路
 
 用同一个 TASK_ID 串联全流程：

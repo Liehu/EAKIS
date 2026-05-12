@@ -1,13 +1,87 @@
 import logging
+from enum import Enum
 
+import yaml
+
+from src.core.config_paths import DATASOURCES_YAML
 from src.intelligence.engine_specs import load_engine_specs
 from src.intelligence.models import DataSource, SourceCategory
 from src.intelligence.services.base import BaseRAGClient
 
 logger = logging.getLogger("eakis.intelligence.datasource")
 
+# YAML category -> SourceCategory 映射
+_CATEGORY_MAP = {
+    "NEWS": SourceCategory.NEWS,
+    "OFFICIAL": SourceCategory.OFFICIAL,
+    "LEGAL": SourceCategory.LEGAL,
+    "SECURITY": SourceCategory.SECURITY,
+    "ASSET_ENGINE": SourceCategory.ASSET_ENGINE,
+}
+
+
+def _load_datasource_catalog() -> dict[SourceCategory, list[DataSource]]:
+    """从 datasources.yaml 加载静态数据源目录。"""
+    if not DATASOURCES_YAML.exists():
+        logger.warning("数据源配置文件不存在: %s，使用默认空目录", DATASOURCES_YAML)
+        return {}
+
+    try:
+        with open(DATASOURCES_YAML, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        catalog: dict[SourceCategory, list[DataSource]] = {}
+        for item in data.get("dataSources", []):
+            try:
+                category_str = item.get("category")
+                category = _CATEGORY_MAP.get(category_str)
+                if not category:
+                    logger.warning("未知的数据源类别: %s", category_str)
+                    continue
+
+                ds = DataSource(
+                    source_id=item["sourceId"],
+                    name=item["name"],
+                    category=category,
+                    priority=item.get("priority", 5),
+                    expected_yield=item.get("expectedYield", 0.5),
+                    rate_limit=item.get("rateLimit", 1.0),
+                )
+
+                catalog.setdefault(category, []).append(ds)
+            except Exception as e:
+                logger.warning("解析数据源配置失败: %s, 错误: %s", item, e)
+
+        logger.info("从 %s 加载了 %d 个类别共 %d 个数据源",
+                    DATASOURCES_YAML, len(catalog), sum(len(v) for v in catalog.values()))
+        return catalog
+
+    except Exception as e:
+        logger.error("加载数据源配置失败: %s", e)
+        return {}
+
+
+# 全局缓存的数据源目录
+_DATASOURCE_CATALOG: dict[SourceCategory, list[DataSource]] | None = None
+
+
+def get_datasource_catalog() -> dict[SourceCategory, list[DataSource]]:
+    """获取数据源目录（带缓存）。"""
+    global _DATASOURCE_CATALOG
+    if _DATASOURCE_CATALOG is None:
+        _DATASOURCE_CATALOG = _load_datasource_catalog()
+    return _DATASOURCE_CATALOG
+
+
+def reload_datasource_catalog() -> dict[SourceCategory, list[DataSource]]:
+    """重新加载数据源目录。"""
+    global _DATASOURCE_CATALOG
+    _DATASOURCE_CATALOG = _load_datasource_catalog()
+    return _DATASOURCE_CATALOG
+
 
 def _build_asset_engine_sources() -> list[DataSource]:
+    """从 engines.yaml 构建资产引擎数据源。"""
     sources: list[DataSource] = []
     priority = 9
     for name, spec in load_engine_specs().items():
@@ -23,32 +97,12 @@ def _build_asset_engine_sources() -> list[DataSource]:
     return sources
 
 
-STATIC_CATALOG = {
-    SourceCategory.NEWS: [
-        DataSource(source_id="baidu_news", name="百度新闻", category=SourceCategory.NEWS, priority=7, expected_yield=0.7, rate_limit=2.0),
-        DataSource(source_id="wechat", name="微信公众号", category=SourceCategory.NEWS, priority=6, expected_yield=0.6, rate_limit=1.0),
-        DataSource(source_id="36kr", name="36氪", category=SourceCategory.NEWS, priority=5, expected_yield=0.5, rate_limit=3.0),
-    ],
-    SourceCategory.OFFICIAL: [
-        DataSource(source_id="official_site", name="企业官网", category=SourceCategory.OFFICIAL, priority=8, expected_yield=0.8, rate_limit=5.0),
-        DataSource(source_id="github_org", name="GitHub 组织页", category=SourceCategory.OFFICIAL, priority=6, expected_yield=0.4, rate_limit=10.0),
-        DataSource(source_id="tech_blog", name="技术博客", category=SourceCategory.OFFICIAL, priority=5, expected_yield=0.5, rate_limit=5.0),
-    ],
-    SourceCategory.LEGAL: [
-        DataSource(source_id="icp_query", name="ICP备案查询", category=SourceCategory.LEGAL, priority=9, expected_yield=0.9, rate_limit=1.0),
-        DataSource(source_id="business_info", name="工商信息", category=SourceCategory.LEGAL, priority=7, expected_yield=0.7, rate_limit=1.0),
-        DataSource(source_id="bidding", name="招投标公告", category=SourceCategory.LEGAL, priority=4, expected_yield=0.3, rate_limit=2.0),
-    ],
-    SourceCategory.SECURITY: [
-        DataSource(source_id="cnvd", name="CNVD漏洞库", category=SourceCategory.SECURITY, priority=6, expected_yield=0.5, rate_limit=5.0),
-        DataSource(source_id="nvd", name="NVD数据库", category=SourceCategory.SECURITY, priority=5, expected_yield=0.4, rate_limit=10.0),
-    ],
-}
-
-
 class DataSourceAgent:
+    """数据源选择 Agent - 从配置文件加载可用的数据源。"""
+
     def __init__(self, rag_client: BaseRAGClient) -> None:
         self.rag_client = rag_client
+        self._catalog = get_datasource_catalog()
 
     async def select_sources(
         self,
@@ -56,7 +110,13 @@ class DataSourceAgent:
         industry: str | None = None,
         enabled_categories: list[SourceCategory] | None = None,
     ) -> list[DataSource]:
-        categories = enabled_categories or [SourceCategory.NEWS, SourceCategory.OFFICIAL, SourceCategory.LEGAL, SourceCategory.ASSET_ENGINE]
+        """根据公司和行业选择合适的数据源。"""
+        categories = enabled_categories or [
+            SourceCategory.NEWS,
+            SourceCategory.OFFICIAL,
+            SourceCategory.LEGAL,
+            SourceCategory.ASSET_ENGINE,
+        ]
 
         rag_hints = await self._query_rag_history(company_name, industry)
 
@@ -65,8 +125,10 @@ class DataSourceAgent:
             if cat == SourceCategory.ASSET_ENGINE:
                 cat_sources = _build_asset_engine_sources()
             else:
-                cat_sources = STATIC_CATALOG.get(cat, [])
+                cat_sources = self._catalog.get(cat, [])
             for src in cat_sources:
+                # 深拷贝避免修改原始数据
+                src = DataSource(**src.__dict__)
                 effective = rag_hints.get(src.source_id)
                 if effective is not None:
                     src.expected_yield = effective
@@ -77,6 +139,7 @@ class DataSourceAgent:
         return sources
 
     async def _query_rag_history(self, company_name: str, industry: str | None) -> dict[str, float]:
+        """查询 RAG 历史记录中的数据源效果。"""
         try:
             results = await self.rag_client.search(f"{company_name} {industry or ''} 有效数据源", top_k=5)
             hints: dict[str, float] = {}
