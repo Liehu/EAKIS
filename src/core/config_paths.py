@@ -20,6 +20,7 @@ PROMPTS_DIR = CONFIG_DIR / "prompts"
 
 # Specific files
 ENGINES_YAML = ENGINES_DIR / "engines.yaml"
+DATASOURCES_YAML = CONFIG_DIR / "datasources.yaml"
 
 
 def get_domain_dict_path(filename: str) -> Path:
@@ -44,3 +45,13 @@ def list_prompts() -> list[str]:
     if not PROMPTS_DIR.exists():
         return []
     return [f.name for f in PROMPTS_DIR.iterdir() if f.is_file() and f.suffix == ".yaml"]
+
+def get_engine_specs() -> dict:
+    """Get engine specifications from engines.yaml."""
+    import yaml
+
+    if not ENGINES_YAML.exists():
+        return {}
+
+    with open(ENGINES_YAML, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f).get("engines", {})

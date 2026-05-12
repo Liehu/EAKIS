@@ -1,0 +1,54 @@
+{
+  "target": {
+    "company_name": "Example Corporation",
+    "domains": [
+      "example.com",
+      "example.org"
+    ],
+    "keywords": [
+      "example",
+      "test",
+      "demo"
+    ],
+    "industry": "tech"
+  },
+  "mode": "stub",
+  "timestamp": "2026-05-11T19:08:15.363797",
+  "results": {
+    "dsl_queries": [
+      {
+        "platform": "fofa",
+        "query": "domain=\"example.com\" && title=\"目标\"",
+        "valid": true
+      },
+      {
+        "platform": "hunter",
+        "query": "domain.suffix=\"example.com\" && web.title=\"目标\"",
+        "valid": true
+      }
+    ],
+    "crawled_docs": [
+      {
+        "source": "Fofa",
+        "content": "[Fofa] 资产发现：domain=\"example.com\" && title=\"目标\"关联域名 example-cbfa.com，开放端口80/443/8080，技术栈Nginx/Spring Boot",
+        "url": "https://fofa.info/api/v1/search/all?qbase64=ZG9tYWluPSJleGFtcGxlLmNvbSIgJiYgdGl0bGU9IuebruaghyI="
+      },
+      {
+        "source": "Fofa",
+        "content": "[Fofa] SSL证书信息：domain=\"example.com\" && title=\"目标\"关联域名使用Let's Encrypt证书，有效期至2025年底",
+        "url": "https://fofa.info/api/v1/search/all?qbase64=ZG9tYWluPSJleGFtcGxlLmNvbSIgJiYgdGl0bGU9IuebruaghyI="
+      },
+      {
+        "source": "奇安信Hunter",
+        "content": "[奇安信Hunter] 资产发现：domain.suffix=\"example.com\" && web.title=\"目标\"关联域名 example-5ba5.com，开放端口80/443/8080，技术栈Nginx/Spring Boot",
+        "url": "https://hunter.qianxin.com/open/api/search?query=domain.suffix=\"example.com\" && web.title=\"目标\""
+      },
+      {
+        "source": "奇安信Hunter",
+        "content": "[奇安信Hunter] SSL证书信息：domain.suffix=\"example.com\" && web.title=\"目标\"关联域名使用Let's Encrypt证书，有效期至2025年底",
+        "url": "https://hunter.qianxin.com/open/api/search?query=domain.suffix=\"example.com\" && web.title=\"目标\""
+      }
+    ],
+    "errors": []
+  }
+}
