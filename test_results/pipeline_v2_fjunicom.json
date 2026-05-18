@@ -1,0 +1,656 @@
+{
+  "pipeline_version": "2.0",
+  "timestamp": "2026-05-18T14:20:39.208622",
+  "company_name": "福建联通",
+  "total_elapsed_ms": 4306,
+  "search_keywords": {
+    "primary": "\"福建联通\"",
+    "verb_groups": [
+      "打造",
+      "发布",
+      "招标"
+    ],
+    "noun_groups": [
+      "系统",
+      "平台"
+    ],
+    "combinations": [
+      "\"福建联通\" \"打造\" \"系统\"",
+      "\"福建联通\" \"打造\" \"平台\"",
+      "\"福建联通\" \"发布\" \"系统\"",
+      "\"福建联通\" \"发布\" \"平台\"",
+      "\"福建联通\" \"招标\" \"系统\"",
+      "\"福建联通\" \"招标\" \"平台\""
+    ]
+  },
+  "steps": {
+    "0_keyword_expansion": {
+      "status": "completed",
+      "combinations": [
+        "\"福建联通\" \"打造\" \"系统\"",
+        "\"福建联通\" \"打造\" \"平台\"",
+        "\"福建联通\" \"发布\" \"系统\"",
+        "\"福建联通\" \"发布\" \"平台\"",
+        "\"福建联通\" \"招标\" \"系统\"",
+        "\"福建联通\" \"招标\" \"平台\""
+      ]
+    },
+    "1_title_dedup": {
+      "status": "completed",
+      "input_count": 12,
+      "unique_count": 11,
+      "duplicate_count": 1,
+      "threshold": 0.9,
+      "duplicates_removed": [
+        {
+          "title": "福建联通两大智·云数据中心启用 以更精的网络打造坚实底座",
+          "url": "http://iot.china.com.cn/content/2023-09/12/content_42517212.html",
+          "similar_to": "福建联通两大智·云数据中心启用 以更精的网络打造坚实底座"
+        }
+      ],
+      "similarity_matrix": [
+        {
+          "title_a": "福建联通两大智·云数据中心启用 以更精的网络打造坚实底座",
+          "title_b": "福建联通两大智·云数据中心启用 以更精的网络打造坚实底座",
+          "similarity": 1.0,
+          "is_duplicate": true
+        }
+      ]
+    },
+    "2_content_extraction": {
+      "status": "completed",
+      "elapsed_ms": 4272,
+      "enriched_count": 5,
+      "passthrough_count": 6,
+      "enriched": [
+        {
+          "url": "https://fjca.miit.gov.cn/xwdt/xydt/art/2025/art_b8a7742d0f824d04849852c4fd199e00.html",
+          "title": "福建联通：擘画低空经济发展新图景",
+          "extraction_method": "trafilatura",
+          "word_count": 623,
+          "content_preview": "福建联通：擘画低空经济发展新图景 4月28日，中国联通以“数联低空 智通未来”为主题的低空经济展区盛大开展，全面展示了低空经济产业图谱，低空经济产业园龙头企业生态链，以及中国联通低空智联网络，低空数智底座，智慧应用平台、安全监管平台、空域管理平台以及“低空+”多元化应用场景的“1+1+3+N”能力体"
+        },
+        {
+          "url": "https://www.thepaper.cn/newsDetail_forward_9503975",
+          "title": "保卫碧海银滩！福建联通打造全国首个海漂垃圾监控网络_澎湃号·政务_澎湃新闻-The Paper",
+          "extraction_method": "trafilatura",
+          "word_count": 299,
+          "content_preview": "- +1 保卫碧海银滩！福建联通打造全国首个海漂垃圾监控网络 近日，福建联通为福州市生态环境局搭建的全国首个海漂垃圾视频监控网络上线。通过前端监视系统、智能识别系统及智能分析预警系统，结合AI识别算法分析，该项目实现了前端AI图像采集设备与后台服务器集群的互联互通，可对重点岸段海域进行全景实时监测，"
+        },
+        {
+          "url": "https://fj.sina.cn/news/2025-04-21/detail-inetxncu5046871.d.html",
+          "title": "人工智能+，解码数智未来无限可能——福建联通积极拥抱AI助力八闽数智升级",
+          "extraction_method": "trafilatura",
+          "word_count": 1394,
+          "content_preview": "人工智能+，解码数智未来无限可能——福建联通积极拥抱AI助力八闽数智升级 DeepSeek全球火热“出圈”，“人工智能”成为备受瞩目的高频热词。第八届数字中国建设峰会即将盛大启幕，福建联通也将携“人工智能”硬核创新成果精彩亮相。今年来，福建联通积极拥抱人工智能，构建全场景智慧服务能力，为千行百业数智"
+        },
+        {
+          "url": "https://fj.sina.cn/news/2025-02-26/detail-inemuvpm8940850.d.html",
+          "title": "福建联通：拥抱DeepSeek 聚力AI驱动 加速推动数智化转型升级",
+          "extraction_method": "trafilatura",
+          "word_count": 973,
+          "content_preview": "福建联通：拥抱DeepSeek 聚力AI驱动 加速推动数智化转型升级 DeepSeek强势崛起，引爆新一轮AI热潮。福建联通积极拥抱人工智能技术，全面加速AI赋能数智化转型进程，已实现DeepSeek-R1满血版本私有化部署，对内实现降本增效与数据安全双保障，对外构建全场景智慧服务能力，为千行百业数"
+        },
+        {
+          "url": "http://www.fj.xinhuanet.com/20250531/8b78d1bf6f6d45e0ae3e403886fcb77b/c.html",
+          "title": "福建省残联携手福建联通打造“AI助残问策问服智能体”",
+          "extraction_method": "trafilatura",
+          "word_count": 436,
+          "content_preview": "5月29日，福建省残联联合福建联通举办“AI+智慧助残·数智赋能服务新升级”科技助残主题活动，正式上线在全国率先打造的基于Deepseek大模型的智能助残政策解读与咨询服务的智能体。 此次发布的“AI助残问策问服智能体”项目聚焦残联系统政策咨询与业务办理等重点场景，依托先进大模型技术，为残联工作人员"
+        }
+      ],
+      "passthrough": [
+        {
+          "url": "https://example.com/bid-security-platform",
+          "title": "中国联通福建省分公司网络安全态势感知平台招标公告",
+          "reason": "extraction_failed",
+          "content_preview": "标题: 中国联通福建省分公司网络安全态势感知平台招标公告 链接: https://example.com/bid-security-platform 摘要: 项目预算500万元，要求支持Nginx反向"
+        },
+        {
+          "url": "https://example.com/fj-unicom-5g-msg",
+          "title": "福建联通发布5G消息系统 助力政企数字化转型",
+          "reason": "extraction_failed",
+          "content_preview": "标题: 福建联通发布5G消息系统 助力政企数字化转型 链接: https://example.com/fj-unicom-5g-msg 摘要: 福建联通正式发布5G消息系统，该系统基于RESTful "
+        },
+        {
+          "url": "https://example.com/fj-unicom-iot-mgmt",
+          "title": "福建联通物联网管理系统升级发布 支持百万级设备接入",
+          "reason": "extraction_failed",
+          "content_preview": "标题: 福建联通物联网管理系统升级发布 支持百万级设备接入 链接: https://example.com/fj-unicom-iot-mgmt 摘要: 升级后的物联网管理系统支持MQTT协议和CoA"
+        },
+        {
+          "url": "https://example.com/bid-smart-city",
+          "title": "福建联通智慧城市综合管理平台招标 覆盖九地市",
+          "reason": "extraction_failed",
+          "content_preview": "标题: 福建联通智慧城市综合管理平台招标 覆盖九地市 链接: https://example.com/bid-smart-city 摘要: 项目要求构建统一数据中台，集成Nginx、Redis、Pos"
+        },
+        {
+          "url": "https://example.com/fj-unicom-zte-computing",
+          "title": "福建联通联合中兴通讯打造算力调度平台",
+          "reason": "extraction_failed",
+          "content_preview": "标题: 福建联通联合中兴通讯打造算力调度平台 链接: https://example.com/fj-unicom-zte-computing 摘要: 福建联通与中兴通讯股份有限公司合作，打造算力调度平"
+        },
+        {
+          "url": "https://example.com/fj-unicom-soc",
+          "title": "福建联通安全运营中心系统发布 筑牢网络安全防线",
+          "reason": "extraction_failed",
+          "content_preview": "标题: 福建联通安全运营中心系统发布 筑牢网络安全防线 链接: https://example.com/fj-unicom-soc 摘要: 新发布的安全运营中心系统集成了SWIFT跨境支付监控能力，结"
+        }
+      ]
+    },
+    "3_cleaner_quality_sha256": {
+      "status": "completed",
+      "elapsed_ms": 8,
+      "input_count": 11,
+      "output_count": 11,
+      "avg_quality": 0.9545,
+      "documents": [
+        {
+          "source_name": "福建联通：擘画低空经济发展新图景",
+          "source_url": "https://fjca.miit.gov.cn/xwdt/xydt/art/2025/art_b8a7742d0f824d04849852c4fd199e00.html",
+          "quality_score": 1.0,
+          "checksum": "606946cd0e1f0011...",
+          "entities": [
+            "以及中国联通低空智联网络",
+            "通过技术",
+            "大数据分析等技术"
+          ],
+          "content_length": 737,
+          "content_preview": "福建联通：擘画低空经济发展新图景 4月28日，中国联通以“数联低空 智通未来”为主题的低空经济展区盛大开展，全面展示了低空经济产业图谱，低空经济产业园龙头企业生态链，以及中国联通低空智联网络，低空数智底座，智慧应用平台、安全监管平台、空域管理平台以及“低空+”多元化应用场景的“1+1+3+N”能力体系。福建联通立足山海特色，通过技术创新与应用场景深度融合，打造“低空+”应用新场景，全方位服务福建省"
+        },
+        {
+          "source_name": "保卫碧海银滩！福建联通打造全国首个海漂垃圾监控网络_澎湃号·政务_澎湃新闻-The Paper",
+          "source_url": "https://www.thepaper.cn/newsDetail_forward_9503975",
+          "quality_score": 0.5,
+          "checksum": "1504aae8710770df...",
+          "entities": [
+            "全国首个海漂垃圾监控网络",
+            "首个海漂垃圾视频监控网络",
+            "澎湃新闻仅提供信息",
+            "互联网新闻信息",
+            "上海东方报业有限公司"
+          ],
+          "content_length": 387,
+          "content_preview": "- +1 保卫碧海银滩！福建联通打造全国首个海漂垃圾监控网络 近日，福建联通为福州市生态环境局搭建的全国首个海漂垃圾视频监控网络上线。通过前端监视系统、智能识别系统及智能分析预警系统，结合AI识别算法分析，该项目实现了前端AI图像采集设备与后台服务器集群的互联互通，可对重点岸段海域进行全景实时监测，有效解决了海漂垃圾监管海域范围广，监管人力不足等问题，为建立陆海统筹的污染源“云”管控系统奠定了基础"
+        },
+        {
+          "source_name": "人工智能+，解码数智未来无限可能——福建联通积极拥抱AI助力八闽数智升级",
+          "source_url": "https://fj.sina.cn/news/2025-04-21/detail-inetxncu5046871.d.html",
+          "quality_score": 1.0,
+          "checksum": "597cec2c499d5675...",
+          "entities": [
+            "API",
+            "福建联通紧随前沿技术",
+            "通过这一技术",
+            "解锁网络",
+            "实现网络",
+            "大模型的网络"
+          ],
+          "content_length": 1671,
+          "content_preview": "人工智能+，解码数智未来无限可能——福建联通积极拥抱AI助力八闽数智升级 DeepSeek全球火热“出圈”，“人工智能”成为备受瞩目的高频热词。第八届数字中国建设峰会即将盛大启幕，福建联通也将携“人工智能”硬核创新成果精彩亮相。今年来，福建联通积极拥抱人工智能，构建全场景智慧服务能力，为千行百业数智化转型升级，注入AI强劲新动能。 本地部署：从“云端智能”到“身边智能” 随着DeepSeek席卷全"
+        },
+        {
+          "source_name": "福建联通：拥抱DeepSeek 聚力AI驱动 加速推动数智化转型升级",
+          "source_url": "https://fj.sina.cn/news/2025-02-26/detail-inemuvpm8940850.d.html",
+          "quality_score": 1.0,
+          "checksum": "7adaa1ef5476b9a6...",
+          "entities": [
+            "联通积极拥抱人工智能技术",
+            "这一技术",
+            "并提供持续的技术",
+            "覆盖网络",
+            "筑牢信息"
+          ],
+          "content_length": 1160,
+          "content_preview": "福建联通：拥抱DeepSeek 聚力AI驱动 加速推动数智化转型升级 DeepSeek强势崛起，引爆新一轮AI热潮。福建联通积极拥抱人工智能技术，全面加速AI赋能数智化转型进程，已实现DeepSeek-R1满血版本私有化部署，对内实现降本增效与数据安全双保障，对外构建全场景智慧服务能力，为千行百业数智化转型升级，注入AI强劲新动能。 技术筑基：全面接入DeepSeek-R1，打造自主可控AI底座 "
+        },
+        {
+          "source_name": "百度搜索",
+          "source_url": "https://example.com/bid-security-platform",
+          "quality_score": 1.0,
+          "checksum": "4a73ab54de80582d...",
+          "entities": [
+            "Nginx",
+            "Redis",
+            "PostgreSQL",
+            "中国联通福建省分公司网络",
+            "投标方须具备网络"
+          ],
+          "content_length": 144,
+          "content_preview": "标题: 中国联通福建省分公司网络安全态势感知平台招标公告 链接: https://example.com/bid-security-platform 摘要: 项目预算500万元，要求支持Nginx反向代理、Redis缓存、PostgreSQL数据库。投标方须具备网络安全等级保护三级认证。"
+        },
+        {
+          "source_name": "百度新闻",
+          "source_url": "https://example.com/fj-unicom-5g-msg",
+          "quality_score": 1.0,
+          "checksum": "bedc1c2e1b22e4ae...",
+          "entities": [
+            "DevOps",
+            "CI/CD",
+            "API",
+            "REST",
+            "GraphQL"
+          ],
+          "content_length": 153,
+          "content_preview": "标题: 福建联通发布5G消息系统 助力政企数字化转型 链接: https://example.com/fj-unicom-5g-msg 摘要: 福建联通正式发布5G消息系统，该系统基于RESTful API架构，采用GraphQL查询引擎，支持CI/CD自动化部署流水线，结合DevOps理念建设运维体系。"
+        },
+        {
+          "source_name": "福建省残联携手福建联通打造“AI助残问策问服智能体”",
+          "source_url": "http://www.fj.xinhuanet.com/20250531/8b78d1bf6f6d45e0ae3e403886fcb77b/c.html",
+          "quality_score": 1.0,
+          "checksum": "d4913311ff10bb8b...",
+          "entities": [
+            "依托先进大模型技术",
+            "实地体验人工智能技术",
+            "推动科技"
+          ],
+          "content_length": 498,
+          "content_preview": "5月29日，福建省残联联合福建联通举办“AI+智慧助残·数智赋能服务新升级”科技助残主题活动，正式上线在全国率先打造的基于Deepseek大模型的智能助残政策解读与咨询服务的智能体。 此次发布的“AI助残问策问服智能体”项目聚焦残联系统政策咨询与业务办理等重点场景，依托先进大模型技术，为残联工作人员提供智能政策解析、多轮问答、个性化推荐等功能服务，助力提升残疾人服务效率与质量。 活动现场，福建省残"
+        },
+        {
+          "source_name": "百度新闻",
+          "source_url": "https://example.com/fj-unicom-iot-mgmt",
+          "quality_score": 1.0,
+          "checksum": "5a638b0c4d98da5a...",
+          "entities": [
+            "Kubernetes",
+            "MySQL",
+            "Go",
+            "微服务"
+          ],
+          "content_length": 151,
+          "content_preview": "标题: 福建联通物联网管理系统升级发布 支持百万级设备接入 链接: https://example.com/fj-unicom-iot-mgmt 摘要: 升级后的物联网管理系统支持MQTT协议和CoAP协议，基于Go语言开发微服务网关，使用MySQL集群存储设备数据，Kubernetes容器编排管理。"
+        },
+        {
+          "source_name": "百度搜索",
+          "source_url": "https://example.com/bid-smart-city",
+          "quality_score": 1.0,
+          "checksum": "dfeb8bd3b1b19c31...",
+          "entities": [
+            "Nginx",
+            "Redis",
+            "PostgreSQL",
+            "与中国联通福建省分公司"
+          ],
+          "content_length": 142,
+          "content_preview": "标题: 福建联通智慧城市综合管理平台招标 覆盖九地市 链接: https://example.com/bid-smart-city 摘要: 项目要求构建统一数据中台，集成Nginx、Redis、PostgreSQL技术栈。投标方需具备智慧城市建设经验，与中国联通福建省分公司签订合同。"
+        },
+        {
+          "source_name": "百度新闻",
+          "source_url": "https://example.com/fj-unicom-zte-computing",
+          "quality_score": 1.0,
+          "checksum": "fde485a9f1f5c667...",
+          "entities": [
+            "Docker",
+            "Kubernetes",
+            "PostgreSQL",
+            "Java",
+            "容器化",
+            "API",
+            "建联通与中兴通讯股份有限公司"
+          ],
+          "content_length": 159,
+          "content_preview": "标题: 福建联通联合中兴通讯打造算力调度平台 链接: https://example.com/fj-unicom-zte-computing 摘要: 福建联通与中兴通讯股份有限公司合作，打造算力调度平台。平台采用容器化Docker+Kubernetes架构，API网关使用Java开发，数据库选用PostgreSQL。"
+        },
+        {
+          "source_name": "百度新闻",
+          "source_url": "https://example.com/fj-unicom-soc",
+          "quality_score": 1.0,
+          "checksum": "89f91fd4caa81865...",
+          "entities": [
+            "Rust",
+            "筑牢网络"
+          ],
+          "content_length": 142,
+          "content_preview": "标题: 福建联通安全运营中心系统发布 筑牢网络安全防线 链接: https://example.com/fj-unicom-soc 摘要: 新发布的安全运营中心系统集成了SWIFT跨境支付监控能力，结合Rust语言开发的高性能分析引擎，并与国家互联网应急中心合作建立威胁情报共享机制。"
+        }
+      ]
+    },
+    "4_keyword_extraction_v2": {
+      "status": "completed",
+      "prompt_file": "keyword_extraction_v2.yaml",
+      "business_keywords": [
+        {
+          "word": "打造低空消防救援平台",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "打造全国首个海漂垃圾监控网络",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "上线。通过前端监视系统",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "构建全场景智慧服务",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "推出全场景定制化解决方案",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "构建厦门大学多元算力平台",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "打造惠智星系统",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "建设智能问答系统",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "构建AI大模型智能系统",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "打造优质服务",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "部署方面，在GPU服务",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "部署大模型，并启动大模型服务",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "发布5G消息系统",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "打造具有福建特色的智慧助残服务",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "打造算力调度平台",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "发布 筑牢网络",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "发布的安全运营中心系统",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "福建联通云平台",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "福建联通发布5G消息系统",
+          "confidence": 0.9,
+          "source_idx": 0
+        },
+        {
+          "word": "福建联通物联网管理系统",
+          "confidence": 0.9,
+          "source_idx": 0
+        }
+      ],
+      "tech_keywords": [
+        {
+          "word": "Kubernetes",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "Docker",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "Nginx",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "Redis",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "PostgreSQL",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "MySQL",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "微服务",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "容器化",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "API",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "REST",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "GraphQL",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "DevOps",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "CI/CD",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "Java",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "Rust",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "SWIFT",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "5G",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "AI",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "物联网",
+          "confidence": 0.92,
+          "source_idx": 0
+        },
+        {
+          "word": "iot",
+          "confidence": 0.92,
+          "source_idx": 0
+        }
+      ],
+      "entity_keywords": [
+        {
+          "word": "福建联通",
+          "confidence": 0.99,
+          "source_idx": 0
+        },
+        {
+          "word": "联通低空智联网络",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "通过技术",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "大数据分析等技术",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "海漂垃圾监控网络",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "垃圾视频监控网络",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "湃新闻仅提供信息",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "互联网新闻信息",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "上海东方报业有限公司",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "联通紧随前沿技术",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "通过这一技术",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "解锁网络",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "实现网络",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "大模型的网络",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "万人次的通信",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "拥抱人工智能技术",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "这一技术",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "并提供持续的技术",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "覆盖网络",
+          "confidence": 0.88,
+          "source_idx": 0
+        },
+        {
+          "word": "筑牢信息",
+          "confidence": 0.88,
+          "source_idx": 0
+        }
+      ],
+      "stats": {
+        "elapsed_ms": 12,
+        "method": "llm_v2_prompt",
+        "prompt_file": "keyword_extraction_v2.yaml",
+        "total_keywords": 60,
+        "business_count": 20,
+        "tech_count": 20,
+        "entity_count": 20
+      }
+    },
+    "5_llm_summarization": {
+      "status": "completed",
+      "method": "llm_map_reduce",
+      "business_info": "基于模拟摘要的业务描述",
+      "tech_mentions": [
+        "AI",
+        "大数据",
+        "5G",
+        "API",
+        "Nginx",
+        "Redis",
+        "PostgreSQL",
+        "REST",
+        "GraphQL",
+        "CI/CD"
+      ],
+      "entity_mentions": [
+        "保留最关键的信息",
+        "企业攻击面相关的关键信息",
+        "以及中国联通低空智联网络",
+        "通过技术",
+        "大数据分析等技术"
+      ],
+      "product_mentions": [],
+      "elapsed_ms": 6,
+      "source_documents": 11
+    }
+  }
+}

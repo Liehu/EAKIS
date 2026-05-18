@@ -9,3 +9,6 @@ PIPELINE_DURATION = Histogram("eakis_pipeline_duration_seconds", "Pipeline stage
 INFERENCE_REQUEST_COUNT = Counter("eakis_inference_requests_total", "Inference service requests", ["endpoint"])
 RAG_UPSERT_COUNT = Counter("eakis_rag_upsert_total", "RAG documents upserted")
 RAG_SEARCH_COUNT = Counter("eakis_rag_search_total", "RAG searches performed")
+EXTRACTION_COUNT = Counter("eakis_extraction_total", "Pages content-extracted", ["method", "status"])
+EXTRACTION_DURATION = Histogram("eakis_extraction_duration_seconds", "Content extraction latency", ["method"])
+EXTRACTION_CDP_FALLBACK = Counter("eakis_extraction_cdp_fallback_total", "CDP fallback triggers")

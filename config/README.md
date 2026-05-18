@@ -20,7 +20,8 @@ config/
 │   ├── browser_control_v2.yaml
 │   ├── keyword_extraction_v2.yaml
 │   └── vuln_case_gen_v2.yaml
-└── datasources.yaml       # 数据源配置定义
+├── datasources.yaml       # 数据源配置定义
+└── crawler.yaml           # CDP 爬虫配置（M1 情报采集）
 ```
 
 ## 配置文件说明
@@ -84,6 +85,53 @@ LLM Agent 提示词版本管理。每个 YAML 文件包含：
 1. 在 `dataSources` 数组中添加新条目
 2. 重启服务或调用 `reload_datasource_catalog()`
 
+### crawler.yaml
+
+CDP 爬虫配置文件，用于 M1 情报采集模块的浏览器自动化爬取。
+
+**配置项：**
+
+- `cdp_mode.enabled`: 是否启用 CDP 爬虫模式（默认：false）
+- `cdp_mode.max_pages`: 并发浏览器页面数（默认：5）
+- `cdp_mode.timeout`: 单页面超时时间，单位秒（默认：30）
+- `cdp_mode.headless`: 是否无头模式运行（默认：true）
+- `cdp_mode.launch_args`: 浏览器启动参数列表
+
+**搜索引擎 CDP 配置：**
+
+支持普通搜索引擎（百度/Bing/Google）的浏览器访问模式：
+- `search_url`: 搜索接口 URL
+- `query_param`: 查询参数名
+- `result_selector`: 结果容器选择器
+- `title_selector`: 标题选择器
+- `link_selector`: 链接选择器
+- `snippet_selector`: 摘要选择器
+
+**反爬对抗策略：**
+
+- `anti_crawl.delay_range`: 请求间隔范围，单位秒（默认：[1.5, 4.0]）
+- `anti_crawl.retry_attempts`: 重试次数（默认：3）
+- `anti_crawl.retry_backoff`: 重试退避系数（默认：2.0）
+- `anti_crawl.random_wait`: 是否启用随机等待（默认：true）
+
+**降级策略：**
+
+- `fallback.on_failure`: CDP 失败时是否降级到 httpx API 调用（默认：true）
+- `fallback.failure_types`: 触发降级的错误类型列表
+- `fallback.max_fallback_attempts`: 最大降级次数（默认：2）
+
+**使用方式：**
+
+```python
+from src.intelligence.agents.crawler import CrawlerAgent
+
+# 启用 CDP 模式
+crawler = CrawlerAgent(cdp_mode=True)
+
+# 或通过配置文件控制（设置 crawler.yaml 中 cdp_mode.enabled = true）
+crawler = CrawlerAgent()
+```
+
 ## 配置引用
 
 在代码中通过 `src.core.config_paths` 模块引用配置文件：
@@ -93,6 +141,7 @@ from src.core.config_paths import (
     DOMAIN_DICTS_DIR,
     ENGINES_YAML,
     PROMPTS_DIR,
+    CRAWLER_YAML,
     get_domain_dict_path,
     get_prompt_path,
 )

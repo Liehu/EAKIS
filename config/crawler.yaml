@@ -1,0 +1,142 @@
+# CDP 爬虫配置
+# 用于 M1 情报采集模块的浏览器自动化爬取
+
+cdp_mode:
+  # 是否启用 CDP 爬虫模式
+  # 启用后，普通搜索引擎（百度/Bing/Google）和需要 JS 渲染的页面将使用 Playwright + CDP
+  enabled: true
+
+  # 并发浏览器页面数
+  max_pages: 5
+
+  # 单页面超时时间（秒）
+  timeout: 30
+
+  # 是否无头模式运行
+  headless: true
+
+  # 浏览器启动参数
+  launch_args:
+    - "--disable-blink-features=AutomationControlled"
+    - "--disable-dev-shm-usage"
+    - "--no-sandbox"
+    - "--disable-gpu"
+
+# 搜索引擎 CDP 配置
+# 这些引擎在使用 CDP 模式时将采用浏览器访问
+# 注意：search_url、query_param 等参数 DSL 生成器会自动使用 engine_specs 中的配置
+# 此处的配置主要用于结果页面的 CSS 选择器
+cdp_engines:
+  baidu:
+    search_url: https://www.baidu.com/s
+    query_param: wd
+    result_selector: ".result"
+    title_selector: "h3 a"
+    link_selector: "h3 a"
+    snippet_selector: ".c-abstract"
+
+  bing:
+    search_url: https://www.bing.com/search
+    query_param: q
+    result_selector: ".b_algo"
+    title_selector: "h2 a"
+    link_selector: "h2 a"
+    snippet_selector: ".b_caption p"
+
+  google:
+    search_url: https://www.google.com/search
+    query_param: q
+    result_selector: ".g"
+    title_selector: "h3"
+    link_selector: "h3 a"
+    snippet_selector: ".VwiC3b"
+
+  # 更多普通搜索引擎可以在此添加
+  sogou:
+    search_url: https://www.sogou.com/web
+    query_param: query
+    result_selector: ".vrwrap"
+    title_selector: "h3 a"
+    link_selector: "h3 a"
+    snippet_selector: ".ft"
+
+  so360:
+    search_url: https://www.so.com/s
+    query_param: q
+    result_selector: ".result"
+    title_selector: "h3 a"
+    link_selector: "h3 a"
+    snippet_selector: ".intro"
+
+# 反爬对抗策略
+anti_crawl:
+  # 请求间隔范围（秒）
+  delay_range: [1.5, 4.0]
+
+  # 重试次数
+  retry_attempts: 3
+
+  # 重试退避系数
+  retry_backoff: 2.0
+
+  # 是否启用随机等待
+  random_wait: true
+
+# 降级策略
+fallback:
+  # CDP 失败时是否降级到 httpx API 调用
+  on_failure: true
+
+  # 触发降级的错误类型
+  failure_types:
+    - timeout
+    - navigation_error
+    - empty_results
+
+  # 最大降级次数
+  max_fallback_attempts: 2
+
+# 全文内容提取配置
+# 在搜索结果爬取后，自动访问原始 URL 并提取正文内容
+content_extraction:
+  # 是否启用全文提取
+  enabled: true
+
+  # 快速模式超时（秒）— httpx + trafilatura
+  fast_mode_timeout: 15
+
+  # CDP 模式超时（秒）— Playwright + trafilatura
+  cdp_mode_timeout: 30
+
+  # CDP 等待内容渲染时间（秒）
+  cdp_wait_for_content: 2.0
+
+  # 最大并发提取数
+  max_concurrent_extractions: 5
+
+  # 最小有效内容长度（字符数），低于此值的提取结果会被丢弃
+  min_content_length: 100
+
+  # 是否自动降级到 CDP（检测到 JS 渲染页面时）
+  auto_cdp_fallback: true
+
+  # 标题相似度去重（提取后根据标题去重转载新闻）
+  title_dedup_enabled: true
+  # 标题相似度阈值（0.0-1.0），超过此值视为重复
+  title_similarity_threshold: 0.9
+
+  # 已知需要 JS 渲染的域名（强制使用 CDP）
+  cdp_required_domains:
+    - mp.weixin.qq.com
+    - weibo.com
+    - x.com
+    - twitter.com
+
+  # 跳过的 URL 模式（搜索引擎结果页、文件下载等）
+  skip_url_patterns:
+    - "baidu\\.com/s\\?"
+    - "bing\\.com/search"
+    - "google\\.com/search"
+    - "sogou\\.com/web"
+    - "so\\.com/s"
+    - "\\.(pdf|zip|rar|exe|jpg|png|gif|svg|mp4)$"

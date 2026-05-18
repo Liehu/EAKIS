@@ -181,7 +181,7 @@ class GenericEngineScraper(BaseScraper):
 
 def build_scraper_map() -> dict[str, BaseScraper]:
     """构建爬虫映射，支持从配置文件读取密钥"""
-    from src.intelligence.config import get_engine_specs
+    from src.intelligence.engine_specs import load_engine_specs
 
     specs = load_engine_specs()
     scrapers: dict[str, BaseScraper] = {}

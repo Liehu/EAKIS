@@ -1,0 +1,207 @@
+{
+  "company": "福建联通",
+  "timestamp": "2026-05-18T07:31:21.945091+00:00",
+  "search_queries": [
+    "福建联通 打造 系统",
+    "福建联通 打造 平台",
+    "福建联通 发布 系统",
+    "福建联通 发布 平台",
+    "福建联通 招标 系统",
+    "福建联通 招标 平台",
+    "福建联通 上线 平台",
+    "福建联通 中标 系统"
+  ],
+  "stats": {
+    "search_results": 20,
+    "extracted_articles": 10,
+    "successful_extractions": 10,
+    "failed_extractions": 0
+  },
+  "results": [
+    {
+      "title": "福建省",
+      "url": "https://baike.baidu.com/item/%E7%A6%8F%E5%BB%BA%E7%9C%81/122534",
+      "event_date": null,
+      "event_type": "签约",
+      "main_org": "福建省",
+      "partner_orgs": [],
+      "products": [],
+      "tech_stack": [],
+      "industry_tags": [
+        "政务",
+        "地区概况"
+      ],
+      "summary": "福建省发布省级概况信息"
+    },
+    {
+      "title": "习近平就推动哲学社会科学高质量发展作出重要指示",
+      "url": "https://www.fujian.gov.cn/",
+      "event_date": null,
+      "event_type": "签约",
+      "main_org": "福建联通",
+      "partner_orgs": [],
+      "products": [],
+      "tech_stack": [],
+      "industry_tags": [
+        "政务"
+      ],
+      "summary": "习近平作出重要指示推动哲学社会科学高质量发展"
+    },
+    {
+      "title": "政府信息公开",
+      "url": "https://www.fj.gov.cn/zwgk/",
+      "event_date": null,
+      "event_type": "签约",
+      "main_org": "福建联通",
+      "partner_orgs": [],
+      "products": [],
+      "tech_stack": [],
+      "industry_tags": [
+        "政务"
+      ],
+      "summary": "福建联通发布政府信息公开公告"
+    },
+    {
+      "title": "福建",
+      "url": "https://baike.sogou.com/v12479.htm",
+      "event_date": null,
+      "event_type": null,
+      "main_org": "福建联通",
+      "partner_orgs": [],
+      "products": [],
+      "tech_stack": [],
+      "industry_tags": [],
+      "summary": "无具体事件信息"
+    },
+    {
+      "title": "福建省政府办公厅深入开展“尊老爱幼、扶困助残”志愿服务活动",
+      "url": "http://fj.people.cn/",
+      "event_date": null,
+      "event_type": "签约",
+      "main_org": "福建省政府办公厅",
+      "partner_orgs": [],
+      "products": [],
+      "tech_stack": [],
+      "industry_tags": [
+        "公益",
+        "政务"
+      ],
+      "summary": "福建省政府办公厅开展尊老爱幼扶困助残志愿服务活动"
+    },
+    {
+      "title": "豆包",
+      "url": "https://doubao.zube.cn/index.html",
+      "event_date": "2025-06",
+      "event_type": "发布",
+      "main_org": "字节跳动",
+      "partner_orgs": [],
+      "products": [
+        "豆包"
+      ],
+      "tech_stack": [
+        "Transformer",
+        "多模态",
+        "SeedEdit3.0",
+        "Seedance",
+        "大模型",
+        "256k超长上下文"
+      ],
+      "industry_tags": [
+        "人工智能",
+        "教育",
+        "金融",
+        "文档处理"
+      ],
+      "summary": "字节跳动发布AI助手豆包，提供多模态对话与文档处理功能"
+    },
+    {
+      "title": "豆包网页版入口官网",
+      "url": "https://tubatool.github.io/",
+      "event_date": null,
+      "event_type": "发布",
+      "main_org": "福建联通",
+      "partner_orgs": [],
+      "products": [
+        "豆包AI智能体平台"
+      ],
+      "tech_stack": [
+        "AI"
+      ],
+      "industry_tags": [
+        "人工智能"
+      ],
+      "summary": "福建联通发布豆包AI智能体平台"
+    },
+    {
+      "title": "豆包",
+      "url": "https://baike.baidu.com/item/%E8%B1%86%E5%8C%85/63344333",
+      "event_date": "2026-05-18",
+      "event_type": "上线",
+      "main_org": "字节跳动",
+      "partner_orgs": [],
+      "products": [
+        "豆包",
+        "博物馆讲解模式"
+      ],
+      "tech_stack": [
+        "大模型",
+        "DiT架构",
+        "MoE",
+        "RLHF"
+      ],
+      "industry_tags": [
+        "人工智能",
+        "内容生成",
+        "教育"
+      ],
+      "summary": "字节跳动于2026-05-18上线豆包博物馆讲解模式"
+    },
+    {
+      "title": "豆包app-官方正版软件2026最新版本免费下载-应用宝官网",
+      "url": "https://sj.qq.com/appdetail/com.larus.nova",
+      "event_date": null,
+      "event_type": "发布",
+      "main_org": "福建联通",
+      "partner_orgs": [
+        "Intel",
+        "腾讯"
+      ],
+      "products": [
+        "豆包"
+      ],
+      "tech_stack": [
+        "AI",
+        "语音输入",
+        "语音输出",
+        "图像生成",
+        "视频生成"
+      ],
+      "industry_tags": [
+        "AI助手",
+        "生活服务"
+      ],
+      "summary": "福建联通发布豆包AI全能生活助手应用"
+    },
+    {
+      "title": "豆包 - 随时帮忙的 AI 助手 App - App Store",
+      "url": "https://apps.apple.com/cn/app/%E8%B1%86%E5%8C%85-%E9%9A%8F%E6%97%B6%E5%B8%AE%E5%BF%99%E7%9A%84-ai-%E5%8A%A9%E6%89%8B/id6459478672",
+      "event_date": null,
+      "event_type": "上线",
+      "main_org": "北京春田知韵科技有限公司",
+      "partner_orgs": [],
+      "products": [
+        "豆包"
+      ],
+      "tech_stack": [
+        "AI",
+        "Seedance 2.0 视频生成模型"
+      ],
+      "industry_tags": [
+        "移动应用",
+        "人工智能助手"
+      ],
+      "summary": "北京春田知韵科技有限公司上线 AI 助手 App 豆包"
+    }
+  ],
+  "failures": []
+}

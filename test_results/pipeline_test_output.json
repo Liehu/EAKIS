@@ -1,0 +1,149 @@
+{
+  "pipeline_version": "2.0",
+  "timestamp": "2026-05-18T11:19:11.135852",
+  "company_name": "福建联通",
+  "total_elapsed_ms": 12,
+  "steps": {
+    "1_title_dedup": {
+      "status": "completed",
+      "input_count": 8,
+      "unique_count": 7,
+      "duplicate_count": 1,
+      "threshold": 0.9,
+      "duplicates_removed": [
+        {
+          "title": "福建联通两大智·云数据中心启用 以更精的网络打造坚实底座 ",
+          "url": "http://iot.china.com.cn/content/2023-09/12/content_42517212.html",
+          "similar_to": "福建联通两大智·云数据中心启用 以更精的网络打造坚实底座"
+        }
+      ],
+      "similarity_matrix": [
+        {
+          "title_a": "福建联通两大智·云数据中心启用 以更精的网络打造坚实底座",
+          "title_b": "福建联通两大智·云数据中心启用 以更精的网络打造坚实底座 ",
+          "similarity": 1.0,
+          "is_duplicate": true
+        }
+      ]
+    },
+    "2_content_extraction": {
+      "status": "skipped"
+    },
+    "3_cleaner_quality_score_sha256_dedup": {
+      "status": "completed",
+      "input_count": 7,
+      "output_count": 7,
+      "avg_quality_score": 1.0,
+      "documents": [
+        {
+          "source_name": "百度新闻",
+          "source_url": "https://fjca.miit.gov.cn/xwdt/xydt/art/2025/art_b8a7742d0f824d04849852c4fd199e00.html",
+          "quality_score": 1.0,
+          "checksum": "80b938e9c3ee8ecc...",
+          "entities": [
+            "Kubernetes",
+            "微服务",
+            "以更精的网络"
+          ],
+          "content_length": 180,
+          "content_preview": "标题: 福建联通两大智·云数据中心启用 以更精的网络打造坚实底座 链接: https://fjca.miit.gov.cn/xwdt/xydt/art/2025/art_b8a7742d0f824d04849852c4fd199e00.html 摘要: 福建联通今日宣布，两大智·云数据中心正式启用。"
+        },
+        {
+          "source_name": "百度新闻",
+          "source_url": "http://www.fj.xinhuanet.com/20250531/8b78d1bf6f6d45e0ae3e403886fcb77b/c.html",
+          "quality_score": 1.0,
+          "checksum": "6621684513f13b71...",
+          "entities": [],
+          "content_length": 146,
+          "content_preview": "标题: 福建联通：擘画低空经济发展新图景 链接: http://www.fj.xinhuanet.com/20250531/8b78d1bf6f6d45e0ae3e403886fcb77b/c.html 摘要: 福建联通积极探索低空经济领域，结合5G网络优势和物联网平台打造新型基础设施..."
+        },
+        {
+          "source_name": "必应搜索",
+          "source_url": "https://www.thepaper.cn/newsDetail_forward_9503975",
+          "quality_score": 1.0,
+          "checksum": "0fdb0e8e9987d671...",
+          "entities": [
+            "Spring Boot",
+            "Docker",
+            "微服务",
+            "容器化"
+          ],
+          "content_length": 141,
+          "content_preview": "标题: 以数为擎 打造福建工业互联网第一品牌 链接: https://www.thepaper.cn/newsDetail_forward_9503975 摘要: 福建联通工业互联网平台已接入企业超过3000家，采用Spring Boot微服务框架，基于Docker容器化部署..."
+        },
+        {
+          "source_name": "百度新闻",
+          "source_url": "https://fj.sina.cn/news/2025-04-21/detail-inetxncu5046871.d.html",
+          "quality_score": 1.0,
+          "checksum": "814c6c54c561796e...",
+          "entities": [
+            "Nginx",
+            "负载均衡等方面的技术"
+          ],
+          "content_length": 145,
+          "content_preview": "标题: 福建联通发布数字化转型白皮书 涉及AI与大数据 链接: https://fj.sina.cn/news/2025-04-21/detail-inetxncu5046871.d.html 摘要: 白皮书详细阐述了福建联通在人工智能、大数据分析、Nginx负载均衡等方面的技术积累..."
+        },
+        {
+          "source_name": "必应搜索",
+          "source_url": "https://fj.sina.cn/news/2025-02-26/detail-inemuvpm8940850.d.html",
+          "quality_score": 1.0,
+          "checksum": "e7422c85e96a28d7...",
+          "entities": [
+            "福建联通与华为技术有限公司"
+          ],
+          "content_length": 138,
+          "content_preview": "标题: 福建联通携手华为建设5G+工业互联网标杆项目 链接: https://fj.sina.cn/news/2025-02-26/detail-inemuvpm8940850.d.html 摘要: 福建联通与华为技术有限公司合作，在福建省内开展5G+工业互联网创新应用..."
+        },
+        {
+          "source_name": "百度新闻",
+          "source_url": "https://example.com/fj-unicom-csr-2024",
+          "quality_score": 1.0,
+          "checksum": "e291a6055f978783...",
+          "entities": [],
+          "content_length": 106,
+          "content_preview": "标题: 福建联通2024年度社会责任报告发布 链接: https://example.com/fj-unicom-csr-2024 摘要: 报告显示福建联通全年营收突破200亿元，数据中心业务同比增长45%..."
+        },
+        {
+          "source_name": "百度搜索",
+          "source_url": "https://example.com/bid-security-platform",
+          "quality_score": 1.0,
+          "checksum": "8bf7acc21ff0ab87...",
+          "entities": [
+            "Nginx",
+            "Redis",
+            "PostgreSQL",
+            "中国联通福建省分公司网络"
+          ],
+          "content_length": 127,
+          "content_preview": "标题: 中国联通福建省分公司网络安全态势感知平台招标公告 链接: https://example.com/bid-security-platform 摘要: 项目预算500万元，要求支持Nginx反向代理、Redis缓存、PostgreSQL数据库..."
+        }
+      ]
+    },
+    "4_llm_summarization": {
+      "status": "completed",
+      "method": "llm_map_reduce",
+      "business_info": "基于模拟摘要的业务描述",
+      "tech_mentions": [
+        "微服务",
+        "Kubernetes",
+        "5G",
+        "Spring Boot",
+        "Docker",
+        "容器化",
+        "AI",
+        "大数据",
+        "Nginx",
+        "Redis"
+      ],
+      "entity_mentions": [
+        "保留最关键的信息",
+        "企业攻击面相关的关键信息",
+        "以更精的网络",
+        "负载均衡等方面的技术",
+        "福建联通与华为技术有限公司"
+      ],
+      "product_mentions": [],
+      "elapsed_ms": 4
+    }
+  }
+}

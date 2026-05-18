@@ -1,0 +1,319 @@
+{
+  "summary": {
+    "target": "福建联通",
+    "domains": [
+      "chinaunicom.com",
+      "fj.chinaunicom.com"
+    ],
+    "action_words": [
+      "打造",
+      "发布",
+      "招标"
+    ],
+    "object_words": [
+      "系统",
+      "平台"
+    ],
+    "total_queries": 6,
+    "total_raw_docs": 50,
+    "total_unique_output": 20,
+    "engines_used": [
+      "bing",
+      "sogou",
+      "so360",
+      "baidu"
+    ],
+    "dsl_generated": {
+      "bing": [
+        {
+          "raw_query": "福建联通 打造 系统",
+          "dsl_broad": "\"福建联通\" 打造 系统",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 打造 系统\""
+        },
+        {
+          "raw_query": "福建联通 打造 平台",
+          "dsl_broad": "\"福建联通\" 打造 平台",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 打造 平台\""
+        },
+        {
+          "raw_query": "福建联通 发布 系统",
+          "dsl_broad": "\"福建联通\" 发布 系统",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 发布 系统\""
+        },
+        {
+          "raw_query": "福建联通 发布 平台",
+          "dsl_broad": "\"福建联通\" 发布 平台",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 发布 平台\""
+        },
+        {
+          "raw_query": "福建联通 招标 系统",
+          "dsl_broad": "\"福建联通\" 招标 系统",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 招标 系统\""
+        },
+        {
+          "raw_query": "福建联通 招标 平台",
+          "dsl_broad": "\"福建联通\" 招标 平台",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 招标 平台\""
+        }
+      ],
+      "sogou": [
+        {
+          "raw_query": "福建联通 打造 系统",
+          "dsl_broad": "\"福建联通\" 打造 系统",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 打造 系统\""
+        },
+        {
+          "raw_query": "福建联通 打造 平台",
+          "dsl_broad": "\"福建联通\" 打造 平台",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 打造 平台\""
+        },
+        {
+          "raw_query": "福建联通 发布 系统",
+          "dsl_broad": "\"福建联通\" 发布 系统",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 发布 系统\""
+        },
+        {
+          "raw_query": "福建联通 发布 平台",
+          "dsl_broad": "\"福建联通\" 发布 平台",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 发布 平台\""
+        },
+        {
+          "raw_query": "福建联通 招标 系统",
+          "dsl_broad": "\"福建联通\" 招标 系统",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 招标 系统\""
+        },
+        {
+          "raw_query": "福建联通 招标 平台",
+          "dsl_broad": "\"福建联通\" 招标 平台",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 招标 平台\""
+        }
+      ],
+      "so360": [
+        {
+          "raw_query": "福建联通 打造 系统",
+          "dsl_broad": "\"福建联通\" 打造 系统",
+          "dsl_site_scoped": "福建联通 打造 系统"
+        },
+        {
+          "raw_query": "福建联通 打造 平台",
+          "dsl_broad": "\"福建联通\" 打造 平台",
+          "dsl_site_scoped": "福建联通 打造 平台"
+        },
+        {
+          "raw_query": "福建联通 发布 系统",
+          "dsl_broad": "\"福建联通\" 发布 系统",
+          "dsl_site_scoped": "福建联通 发布 系统"
+        },
+        {
+          "raw_query": "福建联通 发布 平台",
+          "dsl_broad": "\"福建联通\" 发布 平台",
+          "dsl_site_scoped": "福建联通 发布 平台"
+        },
+        {
+          "raw_query": "福建联通 招标 系统",
+          "dsl_broad": "\"福建联通\" 招标 系统",
+          "dsl_site_scoped": "福建联通 招标 系统"
+        },
+        {
+          "raw_query": "福建联通 招标 平台",
+          "dsl_broad": "\"福建联通\" 招标 平台",
+          "dsl_site_scoped": "福建联通 招标 平台"
+        }
+      ],
+      "baidu": [
+        {
+          "raw_query": "福建联通 打造 系统",
+          "dsl_broad": "\"福建联通\" 打造 系统",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 打造 系统\""
+        },
+        {
+          "raw_query": "福建联通 打造 平台",
+          "dsl_broad": "\"福建联通\" 打造 平台",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 打造 平台\""
+        },
+        {
+          "raw_query": "福建联通 发布 系统",
+          "dsl_broad": "\"福建联通\" 发布 系统",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 发布 系统\""
+        },
+        {
+          "raw_query": "福建联通 发布 平台",
+          "dsl_broad": "\"福建联通\" 发布 平台",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 发布 平台\""
+        },
+        {
+          "raw_query": "福建联通 招标 系统",
+          "dsl_broad": "\"福建联通\" 招标 系统",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 招标 系统\""
+        },
+        {
+          "raw_query": "福建联通 招标 平台",
+          "dsl_broad": "\"福建联通\" 招标 平台",
+          "dsl_site_scoped": "site:chinaunicom.com intitle:\"福建联通 招标 平台\""
+        }
+      ]
+    }
+  },
+  "results": [
+    {
+      "rank": 1,
+      "title": "数智融合 八闽“智造” ——福建联通助力福建新型工业化发展",
+      "url": "https://www.toutiao.com",
+      "snippet": "2025年4月26日 · 福建联通抢抓技术革新窗口期，加速AI与实体经济融合进程。 基于联通“元景大模型”，福建联通打造“福睿”AI能力平台，全面接入DeepSeek大模型，联合长源纺织打造纺织行业大模型 …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:49.518012+00:00"
+    },
+    {
+      "rank": 2,
+      "title": "三十向新·联通先锋 | 奋进八闽 联通未来|福建|通信|运营商|中国 ...",
+      "url": "https://www.163.com",
+      "snippet": "2024年7月10日 · 服务数字政府，2013年， 福建联通建成了全国首个省级电子政务移动办公云服务平台；到现在，联通发挥大数据能力优势，打造经济运行平台，定期为国家发改委和地方政府提供宏观经 …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:49.607399+00:00"
+    },
+    {
+      "rank": 3,
+      "title": "福建联通深度助力福建产业转型升级-社会 - 东南网",
+      "url": "https://fjnews.fjsen.com",
+      "snippet": "2023年4月29日 · 福建联通作为扎根八闽大地的国资央企，积极融入“数字福建”建设，全面布局“新基建”，夯实产业数字化转型底座；充分发挥大联接、大计算、大数据、大应用、大安全的能力优势，落 …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:49.856666+00:00"
+    },
+    {
+      "rank": 4,
+      "title": "向优向新 联通八闽大地数智未来_福建_低空_建设 - 搜狐",
+      "url": "https://www.sohu.com",
+      "snippet": "2025年6月20日 · 福建联通秉承“我为群众办实事”的理念，创新构建“通信+异业”生态联盟，深度整合通信服务与生活、健康、教育、出行等多元领域资源，通过场景化服务创新，为客户打造差异化权益体 …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:49.964377+00:00"
+    },
+    {
+      "rank": 5,
+      "title": "福建联通筑牢“云底座” 激发数字福建“云动能”|福州市|中国 ...",
+      "url": "https://finance.sina.cn",
+      "snippet": "2023年6月30日 · 七一前夕，新型数字经济基础设施高峰论坛暨联通云能力发布会在福州长乐召开，福州、厦门两大智·云数据中心正式启用，发布以联通云为基座的工业云、信创云、医疗云、视频云等算 …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:50.065266+00:00"
+    },
+    {
+      "rank": 6,
+      "title": "福建联通：以创新为“钥”加快“数字蝶变”",
+      "url": "https://m.thepaper.cn",
+      "snippet": "",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:50.145714+00:00"
+    },
+    {
+      "rank": 7,
+      "title": "福建联通筑牢“云底座”激发数字福建“云动能”_央广网 - cnr.cn",
+      "url": "https://www.cnr.cn",
+      "snippet": "2023年6月30日 · 据悉，福建联通将打造坚实“云底座”，构建强大“云引擎”，助力激发数字福建“云动能”，为福建打造数字经济新高地提供有力支撑。 福建省数字福建建设领导小组办公室副主任陈同彩， …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:50.248667+00:00"
+    },
+    {
+      "rank": 8,
+      "title": "福建联通全面启动“数智全面赋能新型工业化八闽行”专项行动",
+      "url": "https://news.10jqka.com.cn",
+      "snippet": "2026年5月7日 · 目前，已经在福建打造惠安石雕、福州光电、泉州 人工智能（885728） 等产业链公共服务基地。 接下来，将继续推进地方政府+平台型企业共同建设基于产业链的公共服务载体，服务产业 …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:50.332368+00:00"
+    },
+    {
+      "rank": 9,
+      "title": "福建联通：深化数智融合创新 服务数字福建建设",
+      "url": "https://fjca.miit.gov.cn",
+      "snippet": "2025年5月19日 · 近年来，福建联通打造“低空+”多元化应用场景的“1+1+3+N”能力体系，开展龙岩低空消防救援、莆田木兰溪空天地一体化治理、福建福州闽侯低空经济发展规划等实践，服务福建省“低空 …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:50.421670+00:00"
+    },
+    {
+      "rank": 10,
+      "title": "百年传承 三十向新 | 福建联通∶奋进八闽，书写精彩联通 …",
+      "url": "https://www.cww.net.cn",
+      "snippet": "",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:50.500200+00:00"
+    },
+    {
+      "rank": 11,
+      "title": "中国联通AI成果亮相数字中国建设峰会--经济·科技--人民网",
+      "url": "https://finance.people.com.cn",
+      "snippet": "4月29日，第九届数字中国建设峰会在福建福州正式开幕。作为本届峰会重要参展单位，中国联通以“数智强基，创新致远”为主题，精心打造“AI ...",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:51.880841+00:00"
+    },
+    {
+      "rank": 12,
+      "title": "2025年中国联通创新技术布局分析：光通信与数字基建双轮 ...",
+      "url": "https://www.vzkoo.com",
+      "snippet": "2025年8月4日 · 2025年中国联通创新技术布局分析：光通信与数字基建双轮驱动下的产业升级 来源：其他 发布时间：2025/08/04 浏览次数：534 举报",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:52.125486+00:00"
+    },
+    {
+      "rank": 13,
+      "title": "深耕八闽制造赋能产业升级 中国联通数智助工专项行动正式 ...",
+      "url": "https://www.shoujihao.com",
+      "snippet": "在\"线\"的维度，中国联通将聚焦纺织鞋服、陶瓷、装备制造等福建特色产业链，建设一批行业级工业互联网平台与数智化转型基地。依托5G专网、工业大数据、AI大模型等技术能力，打通从研发设计、生 …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:52.302092+00:00"
+    },
+    {
+      "rank": 14,
+      "title": "中国联通智慧轻工军团落户福建 “福”平台、“天”应用、“轻 ...",
+      "url": "https://zhuanlan.zhihu.com",
+      "snippet": "中国联通宣布成立第二批7个行业8大军团，聚焦垂直行业数字化转型，形成专精特新能力。 其中智慧轻工军团落户福建，由福建联通牵头组建。 在9月13日召开的智慧轻工高质量发展大会上，智慧轻工军 …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:57.149411+00:00"
+    },
+    {
+      "rank": 15,
+      "title": "向优向新 联通八闽大地数智未来|联通|福建省|无人机_新浪科技 ...",
+      "url": "https://finance.sina.com.cn",
+      "snippet": "从1996年联通在福建各地市陆续开通GSM网、2000年实现省内网络覆盖“县县通”，到截至目前在全省开通5.1万个5G基站，移动网人口覆盖率达99.9%、行政村覆盖率达99.9%，福建联通已实现5G网络覆 …",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:57.336401+00:00"
+    },
+    {
+      "rank": 16,
+      "title": "三十向新·联通先锋 | 奋进八闽 联通未来_腾讯新闻",
+      "url": "https://news.qq.com",
+      "snippet": "",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:57.654131+00:00"
+    },
+    {
+      "rank": 17,
+      "title": "福建联通： 点亮“千兆时代” 助力“数字福建”_中国网",
+      "url": "http://iot.china.com.cn",
+      "snippet": "2023年2月16日 · 福建联通在本届双千兆网络数字政府应用论坛上,面向政务服务正式发布了“联通智慧会务服务”,吸引广泛关注。 该系统将实现会议信息互联互通互控,有效保障会议有序、高效召开进行。",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:57.756784+00:00"
+    },
+    {
+      "rank": 18,
+      "title": "福建省信息通信行业协会",
+      "url": "http://fjica.cn",
+      "snippet": "2 天之前 · SiteServer CMS 是开源、跨平台、企业级的CMS内容管理系统，能够以最低的成本、最少的人力投入在最短的时间内架设一个功能齐全、性能优异、规模庞大并易于维护的网站平台。",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:57.848523+00:00"
+    },
+    {
+      "rank": 19,
+      "title": "中国联通“百年传承 三十向新”系列报道 奋进八闽 联通未 …",
+      "url": "https://www.c114.com.cn",
+      "snippet": "",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:57.943688+00:00"
+    },
+    {
+      "rank": 20,
+      "title": "福建联通助力开启“数字福建”新篇章_澎湃号·政务_澎湃新 …",
+      "url": "https://www.thepaper.cn",
+      "snippet": "",
+      "source_engine": "Bing",
+      "collected_at": "2026-05-15T03:31:58.102312+00:00"
+    }
+  ]
+}

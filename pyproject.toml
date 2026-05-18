@@ -40,6 +40,9 @@ minio = "^7.2"
 prometheus-client = "^0.20"
 opentelemetry-api = "^1.25"
 opentelemetry-sdk = "^1.25"
+# Content extraction
+trafilatura = "^2.0"
+readability-lxml = "^0.8"
 # Utilities
 pydantic = "^2.7"
 pydantic-settings = "^2.2"

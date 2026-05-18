@@ -3,7 +3,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from typing import Any
+
 from src.intelligence.agents.cleaner import CleanerAgent
+from src.intelligence.agents.content_extractor import ContentExtractorAgent
 from src.intelligence.agents.crawler import CrawlerAgent
 from src.intelligence.agents.datasource import DataSourceAgent
 from src.intelligence.agents.dsl import DSLAgent
@@ -20,6 +23,7 @@ from src.intelligence.models import (
 from src.intelligence.services.base import BaseLLMClient, BaseRAGClient, BaseScraper
 from src.intelligence.services.llm_client import StubLLMClient
 from src.intelligence.services.rag_client import StubRAGClient
+from src.intelligence.anti_crawl.middleware import AntiCrawlMiddleware
 from src.shared.event_bus import EventBus
 
 logger = logging.getLogger("eakis.intelligence")
@@ -33,6 +37,7 @@ class IntelligenceModule:
         rag_client: BaseRAGClient | None = None,
         event_bus: EventBus | None = None,
         scraper_overrides: dict[str, BaseScraper] | None = None,
+        anti_crawl: AntiCrawlMiddleware | None = None,
     ) -> None:
         self.config = config or IntelligenceConfig()
         self.rag_client = rag_client or StubRAGClient()
@@ -41,8 +46,14 @@ class IntelligenceModule:
 
         self.datasource_agent = DataSourceAgent(self.rag_client)
         self.dsl_agent = DSLAgent(self.llm_client)
-        self.crawler_agent = CrawlerAgent(event_bus=self.event_bus, scraper_overrides=scraper_overrides)
+        self.crawler_agent = CrawlerAgent(
+            event_bus=self.event_bus, scraper_overrides=scraper_overrides, anti_crawl=anti_crawl,
+        )
+        self.extractor_agent = ContentExtractorAgent(
+            event_bus=self.event_bus, anti_crawl=anti_crawl,
+        )
         self.cleaner_agent = CleanerAgent(self.rag_client)
+        self._summary: dict[str, Any] = {}
 
         self._sources: list[DataSource] = []
         self._dsl_queries: list[DslQuery] = []
@@ -78,10 +89,20 @@ class IntelligenceModule:
             )
             logger.info("[%s] 爬取完成：%d 条原始文档", task_id, len(self._raw_docs))
 
+            if self.config.extract.enabled:
+                self._raw_docs = await self.extractor_agent.extract(
+                    self._raw_docs, self.config.extract,
+                )
+                logger.info("[%s] 全文提取完成：%d 条文档", task_id, len(self._raw_docs))
+
             self._cleaned_docs = await self.cleaner_agent.clean(
                 self._raw_docs, task_id, self.config.clean
             )
             logger.info("[%s] 清洗完成：%d 条有效文档", task_id, len(self._cleaned_docs))
+
+            if self._cleaned_docs:
+                self._summary = await self._summarize(self._cleaned_docs, company_name)
+                logger.info("[%s] 摘要生成完成", task_id)
 
             failed = sum(1 for s in self._sources if s.error_message)
             self._status = CollectionStatus.PARTIAL_FAILURE if failed else CollectionStatus.COMPLETED
@@ -103,6 +124,41 @@ class IntelligenceModule:
             ),
             errors=errors,
         )
+
+    async def _summarize(
+        self,
+        documents: list[CleanedDocument],
+        company_name: str,
+    ) -> dict[str, Any]:
+        """对清洗后的文档生成结构化摘要。
+
+        优先使用 keywords.summarizer 的 LLM 摘要，不可用时回退为统计摘要。
+        """
+        try:
+            from src.keywords.summarizer import SummarizerAgent, SummarizerConfig
+
+            summarizer = SummarizerAgent(self.llm_client, SummarizerConfig())
+            doc_texts = [d.content for d in documents if d.content]
+            summary = await summarizer.summarize(doc_texts)
+            return {
+                "business_info": summary.business_info,
+                "tech_mentions": summary.tech_mentions,
+                "entity_mentions": summary.entity_mentions,
+                "product_mentions": summary.product_mentions,
+                "source_count": len(doc_texts),
+            }
+        except Exception:
+            logger.debug("LLM 摘要不可用，回退统计摘要", exc_info=True)
+            all_entities: list[str] = []
+            for d in documents:
+                all_entities.extend(d.entities)
+            return {
+                "business_info": "",
+                "tech_mentions": list(dict.fromkeys(all_entities))[:20],
+                "entity_mentions": [],
+                "product_mentions": [],
+                "source_count": len(documents),
+            }
 
     def get_status(self) -> dict[str, Any]:
         return {
@@ -130,7 +186,11 @@ class IntelligenceModule:
                 sum(d.quality_score for d in self._cleaned_docs) / len(self._cleaned_docs)
                 if self._cleaned_docs else 0.0
             ),
+            "summary": self._summary,
         }
+
+    def get_summary(self) -> dict[str, Any]:
+        return self._summary
 
     def get_documents(self, min_quality: float = 0.0, limit: int = 500) -> list[dict[str, Any]]:
         docs = [d for d in self._cleaned_docs if d.quality_score >= min_quality][:limit]

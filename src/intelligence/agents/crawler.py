@@ -1,11 +1,14 @@
 import asyncio
 import logging
 
+from src.core.config_paths import CRAWLER_YAML
 from src.intelligence.anti_crawl.middleware import AntiCrawlMiddleware, RequestContext
+from src.intelligence.anti_crawl.ua_pool import AntiCrawlProfile
 from src.intelligence.config import CrawlConfig
 from src.intelligence.engine_specs import load_engine_specs
 from src.intelligence.models import CollectionStatus, DataSource, DslQuery, RawDocument
 from src.intelligence.services.base import BaseScraper
+from src.intelligence.scrapers.cdp_scraper import CDPScraperManager, load_crawler_config
 from src.intelligence.scrapers.generic_scraper import GenericEngineScraper
 from src.intelligence.scrapers.legal_scraper import LegalScraper
 from src.intelligence.scrapers.news_scraper import NewsScraper
@@ -15,7 +18,19 @@ from src.shared.event_bus import EventBus
 logger = logging.getLogger("eakis.intelligence.crawler")
 
 
-def _build_scraper_map() -> dict[str, BaseScraper]:
+def _build_scraper_map(
+    cdp_mode: bool = False,
+    cdp_manager: CDPScraperManager | None = None,
+) -> dict[str, BaseScraper]:
+    """构建爬虫映射，支持 CDP 模式。
+
+    Args:
+        cdp_mode: 是否启用 CDP 爬虫模式
+        cdp_manager: CDP 爬虫管理器
+
+    Returns:
+        爬虫映射字典
+    """
     scrapers: dict[str, BaseScraper] = {
         "baidu_news": NewsScraper(),
         "wechat": NewsScraper(),
@@ -28,8 +43,17 @@ def _build_scraper_map() -> dict[str, BaseScraper]:
         "bidding": LegalScraper(),
     }
 
+    # 资产引擎 - 始终使用 API 调用
     for engine_name in load_engine_specs():
         scrapers[engine_name] = GenericEngineScraper(engine_name)
+
+    # 普通搜索引擎 - CDP 模式下使用 CDP 爬虫
+    if cdp_mode and cdp_manager:
+        scrapers.update({
+            "baidu": cdp_manager.get_scraper("baidu"),
+            "bing": cdp_manager.get_scraper("bing"),
+            "google": cdp_manager.get_scraper("google"),
+        })
 
     return scrapers
 
@@ -40,10 +64,30 @@ class CrawlerAgent:
         event_bus: EventBus | None = None,
         scraper_overrides: dict[str, BaseScraper] | None = None,
         anti_crawl: AntiCrawlMiddleware | None = None,
+        cdp_mode: bool | None = None,
     ) -> None:
         self.event_bus = event_bus
         self.anti_crawl = anti_crawl
-        self._scrapers = _build_scraper_map()
+
+        # 加载 CDP 配置
+        cdp_config = load_crawler_config()
+        if cdp_mode is None:
+            cdp_mode = cdp_config.enabled
+
+        # 初始化 CDP 管理器
+        self._cdp_manager: CDPScraperManager | None = None
+        if cdp_mode:
+            # 使用反爬中间件的 UA 池
+            anti_crawl_profile = AntiCrawlProfile() if anti_crawl else None
+            self._cdp_manager = CDPScraperManager(
+                anti_crawl=anti_crawl_profile,
+                config=cdp_config,
+            )
+
+        self._scrapers = _build_scraper_map(
+            cdp_mode=cdp_mode,
+            cdp_manager=self._cdp_manager,
+        )
         if scraper_overrides:
             self._scrapers.update(scraper_overrides)
 
@@ -115,3 +159,9 @@ class CrawlerAgent:
             if ctx:
                 await self.anti_crawl.after_request(ctx, success=False)
             raise
+
+    async def cleanup(self) -> None:
+        """清理资源，包括 CDP 管理器。"""
+        if self._cdp_manager:
+            await self._cdp_manager.cleanup()
+            self._cdp_manager = None

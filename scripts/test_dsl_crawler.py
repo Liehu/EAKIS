@@ -31,14 +31,14 @@ from uuid import uuid4
 sys.path.insert(0, ".")
 
 from src.intelligence.agents.crawler import CrawlerAgent
-from src.intelligence.agents.dsl import DSLAgent
+from src.intelligence.agents.dsl_generator import UnifiedDSLGenerator
 from src.intelligence.agents.datasource import DataSourceAgent
 from src.intelligence.config import CrawlConfig, IntelligenceConfig
 from src.intelligence.models import DataSource, SourceCategory
 from src.intelligence.services.base import BaseLLMClient, BaseRAGClient, BaseScraper
 from src.intelligence.services.llm_client import StubLLMClient
 from src.intelligence.services.rag_client import StubRAGClient
-from src.intelligence.services.generic_scraper import build_scraper_map
+from src.intelligence.scrapers.generic_scraper import build_scraper_map
 from src.core.config_paths import get_engine_specs
 
 # 配置日志
@@ -93,29 +93,27 @@ class DSLCrawlerTester:
         logger.info("=" * 60)
 
         llm_client = StubLLMClient()
-        dsl_agent = DSLAgent(llm_client)
+        dsl_agent = UnifiedDSLGenerator(llm_client)
 
         keywords = target.get("keywords", [])
         domains = target.get("domains", [])
 
-        # 根据模式选择平台
-        engine_specs = get_engine_specs()
-        if self.real_mode:
-            # 真实模式：只使用已配置 API Key 的引擎
-            platforms = [k for k, v in engine_specs.items()
-                        if v.get("enabled") and v.get("api_key")]
-            if not platforms:
-                logger.warning("未配置任何有效的 API Key，降级为 stub 模式")
-                platforms = ["fofa", "hunter", "quake"]
-            logger.info(f"真实模式启用的平台: {', '.join(platforms)}")
-        else:
-            platforms = ["fofa", "hunter", "quake"]
+        # 使用预设的资产引擎平台
+        platforms = ["fofa", "hunter"]
 
         logger.info(f"目标平台: {', '.join(platforms)}")
         logger.info(f"关键词: {', '.join(keywords)}")
         logger.info(f"域名: {', '.join(domains)}")
 
-        dsl_queries = await dsl_agent.generate(keywords, domains, platforms)
+        # 创建搜索上下文
+        from src.intelligence.agents.dsl_generator import SearchContext
+        context = SearchContext(
+            keywords=keywords,
+            domains=domains,
+            company_name=target.get("company_name", "")
+        )
+
+        dsl_queries = await dsl_agent.generate(context, platforms)
 
         logger.info(f"\n生成的 DSL 查询 ({len(dsl_queries)} 条):")
         for query in dsl_queries:

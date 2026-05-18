@@ -31,7 +31,31 @@ class CleanConfig:
 
 
 @dataclass
+class ExtractionConfig:
+    """全文内容提取配置。"""
+    enabled: bool = True
+    fast_mode_timeout: float = 15.0
+    cdp_mode_timeout: float = 30.0
+    cdp_wait_for_content: float = 2.0
+    max_content_length: int = 5_000_000
+    max_concurrent_extractions: int = 5
+    min_content_length: int = 100
+    auto_cdp_fallback: bool = True
+    title_dedup_enabled: bool = True
+    title_similarity_threshold: float = 0.9
+    cdp_required_domains: list[str] = field(default_factory=lambda: [
+        "mp.weixin.qq.com", "weibo.com", "x.com", "twitter.com",
+    ])
+    skip_url_patterns: list[str] = field(default_factory=lambda: [
+        r"baidu\.com/s\?", r"bing\.com/search", r"google\.com/search",
+        r"sogou\.com/web", r"so\.com/s",
+        r"\.(pdf|zip|rar|exe|jpg|png|gif|svg|mp4)$",
+    ])
+
+
+@dataclass
 class IntelligenceConfig:
     crawl: CrawlConfig = field(default_factory=CrawlConfig)
+    extract: ExtractionConfig = field(default_factory=ExtractionConfig)
     clean: CleanConfig = field(default_factory=CleanConfig)
     use_stubs: bool = True

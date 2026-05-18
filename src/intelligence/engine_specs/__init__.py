@@ -34,6 +34,31 @@ class EngineSpec:
     rate_limit: float = 1.0
 
 
+def _resolve_engine_cfg(cfg: dict) -> dict:
+    """将嵌套的 base/api/cdp 结构扁平化为顶层字典。
+
+    兼容两种格式：
+    1. 扁平格式: {search_url, fields, query_param, ...}
+    2. 嵌套格式: {base: {search_url, fields, ...}, api: {...}, cdp: {...}}
+    """
+    if "base" in cfg and isinstance(cfg["base"], dict):
+        # 嵌套格式：将 base 下的字段提升到顶层
+        flat = dict(cfg)
+        base = flat.pop("base")
+        for key in ("search_url", "query_param", "auth_type", "query_encoding",
+                     "fields", "operators"):
+            if key in base and key not in flat:
+                flat[key] = base[key]
+        # api 配置中的分页和响应路径
+        api = flat.get("api", {})
+        if isinstance(api, dict):
+            for key in ("pagination", "response_path", "rate_limit", "request_timeout"):
+                if key in api and key not in flat:
+                    flat[key] = api[key]
+        return flat
+    return cfg
+
+
 def load_engine_specs() -> dict[str, EngineSpec]:
     if not SPECS_FILE.exists():
         logger.warning("引擎规格文件不存在: %s", SPECS_FILE)
@@ -43,25 +68,33 @@ def load_engine_specs() -> dict[str, EngineSpec]:
         raw = yaml.safe_load(f)
 
     engines: dict[str, EngineSpec] = {}
-    for name, cfg in raw.get("engines", {}).items():
-        pag_cfg = cfg.get("pagination", {})
-        engines[name] = EngineSpec(
-            name=name,
-            display_name=cfg.get("display_name", name),
-            search_url=cfg.get("search_url", ""),
-            auth_type=cfg.get("auth_type", "apikey"),
-            fields=cfg.get("fields", {}),
-            query_param=cfg.get("query_param", "query"),
-            query_encoding=cfg.get("query_encoding", "none"),
-            operators=cfg.get("operators", []),
-            pagination=EnginePagination(
-                param=pag_cfg.get("param", "page"),
-                size_param=pag_cfg.get("size_param"),
-                default_size=pag_cfg.get("default_size", 100),
-            ),
-            response_path=cfg.get("response_path", "results"),
-            rate_limit=cfg.get("rate_limit", 1.0),
-        )
+    for category_name, category_data in raw.get("engines", {}).items():
+        if not isinstance(category_data, dict):
+            continue
+
+        for name, cfg in category_data.items():
+            if name == "settings":
+                continue
+
+            cfg = _resolve_engine_cfg(cfg)
+            pag_cfg = cfg.get("pagination", {})
+            engines[name] = EngineSpec(
+                name=name,
+                display_name=cfg.get("display_name", name),
+                search_url=cfg.get("search_url", ""),
+                auth_type=cfg.get("auth_type", "apikey"),
+                fields=cfg.get("fields", {}),
+                query_param=cfg.get("query_param", "query"),
+                query_encoding=cfg.get("query_encoding", "none"),
+                operators=cfg.get("operators", []),
+                pagination=EnginePagination(
+                    param=pag_cfg.get("param", "page"),
+                    size_param=pag_cfg.get("size_param"),
+                    default_size=pag_cfg.get("default_size", 100),
+                ),
+                response_path=cfg.get("response_path", "results"),
+                rate_limit=cfg.get("rate_limit", 1.0),
+            )
 
     logger.info("加载了 %d 个引擎规格: %s", len(engines), list(engines.keys()))
     return engines

@@ -15,7 +15,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from src.core.config_paths import GENERAL_ENGINES_YAML
 from src.intelligence.engine_specs import (
+    EnginePagination,
     EngineSpec,
     build_all_field_docs,
     load_engine_specs,
@@ -208,7 +210,35 @@ class UnifiedDSLGenerator:
 
     def __init__(self, llm_client: BaseLLMClient | None = None) -> None:
         self.llm_client = llm_client
+
+        # 加载资产引擎配置
         self.specs = load_engine_specs()
+
+        # 加载普通搜索引擎配置（如果文件存在）
+        if GENERAL_ENGINES_YAML.exists():
+            import yaml
+            with open(GENERAL_ENGINES_YAML, "r", encoding="utf-8") as f:
+                general_data = yaml.safe_load(f)
+                for name, cfg in general_data.get("engines", {}).items():
+                    pag_cfg = cfg.get("pagination", {})
+                    self.specs[name] = EngineSpec(
+                        name=name,
+                        display_name=cfg.get("display_name", name),
+                        search_url=cfg.get("search_url", ""),
+                        auth_type=cfg.get("auth_type", "none"),
+                        fields=cfg.get("fields", {}),
+                        query_param=cfg.get("query_param", "q"),
+                        query_encoding=cfg.get("query_encoding", "none"),
+                        operators=cfg.get("operators", []),
+                        pagination=EnginePagination(
+                            param=pag_cfg.get("param", "page"),
+                            size_param=pag_cfg.get("size_param"),
+                            default_size=pag_cfg.get("default_size", 100),
+                        ),
+                        response_path=cfg.get("response_path", "results"),
+                        rate_limit=cfg.get("rate_limit", 1.0),
+                    )
+
         logger.info(
             "DSL生成器初始化完成，支持 %d 个引擎: %s",
             len(self.specs),
@@ -495,72 +525,6 @@ class UnifiedDSLGenerator:
             for engine in self.specs.keys()
             if self.get_engine_type(engine) == engine_type
         ]
-
-    def translate_dsl(self, dsl: str, from_engine: str, to_engine: str) -> str | None:
-        """
-        跨引擎 DSL 转换
-
-        Args:
-            dsl: 源 DSL 查询
-            from_engine: 源引擎
-            to_engine: 目标引擎
-
-        Returns:
-            转换后的 DSL，转换失败返回 None
-        """
-        from_type = self.get_engine_type(from_engine)
-        to_type = self.get_engine_type(to_engine)
-        to_spec = self.specs.get(to_engine)
-
-        if not to_spec:
-            return None
-
-        # 同类型引擎直接返回
-        if from_type == to_type:
-            return dsl
-
-        # 资产引擎 → 普通搜索
-        if from_type == EngineType.ASSET and to_type == EngineType.GENERAL:
-            return self._asset_to_general(dsl, to_spec)
-
-        # 普通搜索 → 资产引擎
-        if from_type == EngineType.GENERAL and to_type == EngineType.ASSET:
-            return self._general_to_asset(dsl, to_spec)
-
-        return None
-
-    def _asset_to_general(self, dsl: str, to_spec: EngineSpec) -> str:
-        """资产引擎 DSL 转普通搜索 DSL"""
-        result = dsl
-        mappings = {
-            'domain="': "site:",
-            'title="': 'intitle:"',
-            'body="': 'inbody:"',
-            'header="': "inheader:",
-            " && ": " ",
-            " || ": " OR ",
-        }
-        for old, new in mappings.items():
-            result = result.replace(old, new)
-        # 去掉闭合引号后的引号，转换为普通搜索格式
-        result = result.replace('")', '"')
-        return result
-
-    def _general_to_asset(self, dsl: str, to_spec: EngineSpec) -> str:
-        """普通搜索 DSL 转资产引擎 DSL"""
-        result = dsl
-        mappings = {
-            "site:": 'domain="',
-            "intitle:": 'title="',
-            "inurl:": 'url="',
-            "inbody:": 'body="',
-            '"': '"',
-            " ": " && ",
-            " OR ": " || ",
-        }
-        for old, new in mappings.items():
-            result = result.replace(old, new)
-        return result
 
 
 # 向后兼容的 DSLAgent 类（保持原有接口）

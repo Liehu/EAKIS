@@ -77,7 +77,7 @@ class CleanerAgent:
             score *= 0.6
 
         if published_at:
-            days_old = (datetime.now(timezone.utc) - published_at).days
+            days_old = (datetime.now(timezone.utc) - published_at.astimezone(timezone.utc)).days
             if days_old > config.staleness_days:
                 score *= 0.5
 

@@ -20,7 +20,9 @@ PROMPTS_DIR = CONFIG_DIR / "prompts"
 
 # Specific files
 ENGINES_YAML = ENGINES_DIR / "engines.yaml"
+GENERAL_ENGINES_YAML = ENGINES_DIR / "general_engines.yaml"
 DATASOURCES_YAML = CONFIG_DIR / "datasources.yaml"
+CRAWLER_YAML = CONFIG_DIR / "crawler.yaml"
 
 
 def get_domain_dict_path(filename: str) -> Path:
