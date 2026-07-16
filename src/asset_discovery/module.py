@@ -32,7 +32,13 @@ class AssetDiscoveryModule:
         vector_store: BaseVectorStore | None = None,
     ) -> None:
         self.config = config or AssetDiscoveryConfig()
-        self.search_client = search_client or StubSearchClient()
+        # S5: use ToolBackedSearchClient (real CLI tools) unless caller injects one
+        # or settings.asset_discovery_use_stubs is True.
+        if search_client is not None:
+            self.search_client = search_client
+        else:
+            from src.asset_discovery.services.tool_client import get_search_client
+            self.search_client = get_search_client()
         self.vector_store = vector_store or StubVectorStore()
 
         self.search_agent = AssetSearchAgent(self.search_client, self.config.search)

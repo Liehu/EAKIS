@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Table, Switch, Drawer, Form, InputNumber, Input, Button, message } from 'antd';
+import { Table, Switch, Drawer, Form, InputNumber, Input, Button, message } from 'antd';
 import { getAgentConfigs, updateAgentConfig } from '@/api/system';
 import type { AgentConfig } from '@/api/system';
 
@@ -46,21 +46,22 @@ const AgentManagement: React.FC = () => {
 
   return (
     <div>
-      <Card title="Agent 管理" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}>
-        <Table size="small" loading={loading}
-          dataSource={Object.entries(agents).map(([name, config]) => ({ key: name, name, ...config }))}
-          pagination={false}
-          columns={[
-            { title: 'Agent', dataIndex: 'name', key: 'name', render: (v: string) => <div><strong>{v}</strong><br /><span style={{ fontSize: 11, color: '#888' }}>{agentDescriptions[v] || ''}</span></div> },
-            { title: '模型', dataIndex: 'model', key: 'model' },
-            { title: 'Temperature', dataIndex: 'temperature', key: 'temp', width: 100 },
-            { title: 'Max Tokens', dataIndex: 'max_tokens', key: 'tokens', width: 100 },
-            { title: '超时(s)', dataIndex: 'timeout_s', key: 'timeout', width: 80 },
-            { title: '状态', dataIndex: 'enabled', key: 'enabled', width: 70, render: (v: boolean, record) => <Switch size="small" checked={v} onChange={(val) => handleToggle(record.name, val)} /> },
-            { title: '操作', key: 'action', width: 80, render: (_, record) => <Button size="small" onClick={() => openEdit(record.name, record)}>配置</Button> },
-          ]}
-        />
-      </Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>Agent 管理</span>
+      </div>
+      <Table size="small" loading={loading}
+        dataSource={Object.entries(agents).map(([name, config]) => ({ key: name, name, ...config }))}
+        pagination={false}
+        columns={[
+          { title: 'Agent', dataIndex: 'name', key: 'name', render: (v: string) => <div><strong>{v}</strong><br /><span style={{ fontSize: 11, color: '#888' }}>{agentDescriptions[v] || ''}</span></div> },
+          { title: '模型', dataIndex: 'model', key: 'model' },
+          { title: 'Temperature', dataIndex: 'temperature', key: 'temp', width: 100 },
+          { title: 'Max Tokens', dataIndex: 'max_tokens', key: 'tokens', width: 100 },
+          { title: '超时(s)', dataIndex: 'timeout_s', key: 'timeout', width: 80 },
+          { title: '状态', dataIndex: 'enabled', key: 'enabled', width: 70, render: (v: boolean, record) => <Switch size="small" checked={v} onChange={(val) => handleToggle(record.name, val)} /> },
+          { title: '操作', key: 'action', width: 80, render: (_, record) => <Button size="small" onClick={() => openEdit(record.name, record)}>配置</Button> },
+        ]}
+      />
 
       <Drawer title={`编辑 Agent: ${editing}`} open={!!editing} onClose={() => setEditing(null)} width={400}
         extra={<Button type="primary" size="small" onClick={handleSave}>保存</Button>}>

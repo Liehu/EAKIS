@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, Table, Tag, Button, Space, Modal, Form, Select, Input, Statistic, Row, Col, message } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getKeywords, addKeyword, deleteKeyword } from '@/api/keywords';
+import { useTaskStore } from '@/store/taskStore';
 import type { Keyword, KeywordType } from '@/types/keyword';
 
 const typeColors: Record<KeywordType, string> = { business: '#378ADD', tech: '#BA7517', entity: '#534AB7' };
@@ -14,18 +15,22 @@ const Keywords: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [form] = Form.useForm();
 
+  const currentTask = useTaskStore((s) => s.currentTask);
+  const taskId = currentTask?.task_id;
+
   const fetchKeywords = async () => {
+    if (!taskId) return;
     setLoading(true);
     try {
-      const res = await getKeywords('task_01J9XXXXX', { type: filterType });
+      const res = await getKeywords(taskId, { type: filterType });
       setKeywords(res.data);
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchKeywords(); }, [filterType]);
+  useEffect(() => { fetchKeywords(); }, [filterType, taskId]);
 
   const handleAdd = async (values: { word: string; type: KeywordType; weight: number }) => {
-    await addKeyword('task_01J9XXXXX', { ...values, reason: '人工添加' });
+    await addKeyword(taskId!, { ...values, reason: '人工添加' });
     message.success('关键词已添加');
     setModalOpen(false);
     form.resetFields();
@@ -33,7 +38,7 @@ const Keywords: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    await deleteKeyword('task_01J9XXXXX', id);
+    await deleteKeyword(taskId!, id);
     message.success('已删除');
     fetchKeywords();
   };
@@ -49,15 +54,15 @@ const Keywords: React.FC = () => {
         <Col span={8}><Card size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}><Statistic title={<span style={{ color: '#888' }}>技术词</span>} value={techCount} valueStyle={{ color: typeColors.tech }} /></Card></Col>
         <Col span={8}><Card size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}><Statistic title={<span style={{ color: '#888' }}>主体词</span>} value={entityCount} valueStyle={{ color: typeColors.entity }} /></Card></Col>
       </Row>
-      <Card title="关键词列表" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}
-        extra={
-          <Space>
-            <Select placeholder="筛选类型" allowClear size="small" style={{ width: 120 }} value={filterType} onChange={setFilterType}
-              options={[{ value: 'business', label: '业务词' }, { value: 'tech', label: '技术词' }, { value: 'entity', label: '主体词' }]} />
-            <Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>添加</Button>
-          </Space>
-        }>
-        <Table size="small" loading={loading} dataSource={keywords} rowKey="id" pagination={{ pageSize: 20 }}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>关键词列表</span>
+        <Space>
+          <Select placeholder="筛选类型" allowClear size="small" style={{ width: 120 }} value={filterType} onChange={setFilterType}
+            options={[{ value: 'business', label: '业务词' }, { value: 'tech', label: '技术词' }, { value: 'entity', label: '主体词' }]} />
+          <Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>添加</Button>
+        </Space>
+      </div>
+      <Table size="small" loading={loading} dataSource={keywords} rowKey="id" pagination={{ pageSize: 20 }}
           columns={[
             { title: '关键词', dataIndex: 'word', key: 'word' },
             { title: '类型', dataIndex: 'type', key: 'type', render: (type: KeywordType) => <Tag color={typeColors[type]}>{typeLabels[type]}</Tag> },
@@ -68,7 +73,6 @@ const Keywords: React.FC = () => {
             { title: '操作', key: 'action', render: (_, record) => <Button size="small" type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)} /> },
           ]}
         />
-      </Card>
       <Modal title="添加关键词" open={modalOpen} onCancel={() => setModalOpen(false)} onOk={() => form.submit()}>
         <Form form={form} layout="vertical" onFinish={handleAdd}>
           <Form.Item name="word" label="关键词" rules={[{ required: true }]}><Input /></Form.Item>

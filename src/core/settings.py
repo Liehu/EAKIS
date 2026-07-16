@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "eakis-dev-secret-change-in-production"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
+    jwt_refresh_expire_days: int = 30
 
     # Storage (MinIO)
     minio_endpoint: str = "localhost:9000"
@@ -46,6 +47,7 @@ class Settings(BaseSettings):
     app_version: str = "2.0.0"
     debug: bool = True
     cors_origins: list[str] = ["*"]
+    default_org_slug: str = "default"
 
     # Qdrant / RAG
     qdrant_url: str = "http://localhost:6333"
@@ -60,6 +62,15 @@ class Settings(BaseSettings):
     crawler_use_stubs: bool = True
     asset_discovery_use_stubs: bool = True
     asset_discovery_vector_store: bool = False
+
+    # 云图 (YunTu) 商业 API — 企业主体关联信息采集 (A.1 企业关系穿透)
+    # session cookie 认证（过期时改这里重启即可）；自建服务通常自签证书。
+    yuntu_base_url: str = "https://175.42.168.117:68"
+    yuntu_session: str = ""
+    yuntu_workspace_id: str = "98"
+    yuntu_verify_tls: bool = False
+    yuntu_request_timeout: float = 30.0
+    yuntu_use_stubs: bool = True  # 未配置 session 时走 stub（返回模拟关联企业）
 
     model_config = {
         "env_file": ".env",

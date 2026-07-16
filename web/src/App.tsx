@@ -17,22 +17,20 @@ const App: React.FC = () => (
         colorBorderSecondary: '#2a2a4e',
       },
       components: {
-        Layout: {
-          siderBg: '#141422',
-          headerBg: '#141422',
-          bodyBg: '#0d0d1a',
-        },
-        Menu: {
-          darkItemBg: 'transparent',
-          darkItemSelectedBg: '#378ADD22',
-          darkItemHoverBg: '#ffffff0a',
-        },
         Table: {
-          headerBg: '#1a1a2e',
+          headerBg: '#141422',
           rowHoverBg: '#ffffff0a',
+          borderColor: '#2a2a4e',
         },
-        Card: {
-          colorBorderSecondary: '#2a2a4e',
+        Tabs: {
+          inkBarColor: '#378ADD',
+          itemActiveColor: '#378ADD',
+          itemSelectedColor: '#378ADD',
+          itemHoverColor: '#378ADD',
+        },
+        Modal: {
+          contentBg: '#1a1a2e',
+          headerBg: '#1a1a2e',
         },
       },
     }}

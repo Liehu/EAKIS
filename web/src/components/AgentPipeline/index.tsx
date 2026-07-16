@@ -33,7 +33,8 @@ interface AgentPipelineProps {
 
 const AgentPipeline: React.FC<AgentPipelineProps> = ({ stageDetails }) => {
   const items = (Object.keys(stageConfig) as StageName[]).map((stage) => {
-    const detail = stageDetails[stage];
+    // 防御性兜底: stageDetails 可能缺少某些阶段 (后端未返回时), 用 pending 占位避免崩溃
+    const detail = stageDetails?.[stage] ?? { status: 'pending' as const };
     const config = stageConfig[stage];
     const isDone = detail.status === 'completed';
     const isRunning = detail.status === 'running';

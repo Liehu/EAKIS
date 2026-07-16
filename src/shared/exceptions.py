@@ -92,3 +92,12 @@ class ValidationError(EAKISBaseError):
 class PipelineError(EAKISBaseError):
     code = "PIPELINE_ERROR"
     http_status = 500
+
+
+# -- Company enrichment (商业 API 采集) (502) ---------------------------------
+
+class CompanyEnrichmentError(EAKISBaseError):
+    """外部商业 API（云图/天眼查/企查查 等）采集企业主体信息失败。"""
+
+    code = "COMPANY_ENRICHMENT_ERROR"
+    http_status = 502

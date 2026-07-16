@@ -1,85 +1,90 @@
-import { Layout, Button, Select, Badge } from 'antd';
-import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
-import { Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { useAppStore } from '@/store/appStore';
-import { useTaskStore } from '@/store/taskStore';
+import RightPanel from './RightPanel';
+import ResizeHandle from '@/components/GraphPanel/ResizeHandle';
+import { useGraphStore } from '@/store/graphStore';
+import { useRightPanelStore, type PanelKind } from '@/store/rightPanelStore';
 
-const { Header, Content } = Layout;
+// 关系图谱页面（右侧显示 GraphPanel）
+const GRAPH_ROUTES = ['/companies', '/assets', '/vulnerabilities'];
+
+function routeToPanelKind(pathname: string): PanelKind | null {
+  if (GRAPH_ROUTES.some((p) => pathname === p || pathname.startsWith(p + '/'))) return 'graph';
+  if (pathname.startsWith('/tasks')) return 'task';
+  if (pathname.startsWith('/knowledge')) return 'knowledge';
+  if (pathname.startsWith('/templates')) return 'template';
+  if (pathname.startsWith('/tools')) return 'tool';
+  if (pathname.startsWith('/reports')) return 'report';
+  return null; // dashboard/admin 等：不显示右侧栏
+}
 
 const AppLayout: React.FC = () => {
-  const collapsed = useAppStore((s) => s.sidebarCollapsed);
-  const toggleSidebar = useAppStore((s) => s.toggleSidebar);
-  const currentTask = useTaskStore((s) => s.currentTask);
-  const setCurrentTask = useTaskStore((s) => s.setCurrentTask);
+  const location = useLocation();
+  const setGraphTypeByRoute = useGraphStore((s) => s.setGraphTypeByRoute);
+  const clearGraphData = useGraphStore((s) => s.clearGraphData);
+  const clearPanel = useRightPanelStore((s) => s.clear);
+  const [rightWidth, setRightWidth] = useState(400);
+
+  const panelKind = routeToPanelKind(location.pathname);
+  const showRight = panelKind !== null;
+
+  // 路由变化时更新图谱类型 + 清空面板状态
+  useEffect(() => {
+    setGraphTypeByRoute(location.pathname);
+    clearGraphData();
+    clearPanel();
+  }, [location.pathname, setGraphTypeByRoute, clearGraphData, clearPanel]);
 
   return (
-    <Layout style={{ height: '100vh' }}>
+    <div style={{
+      display: 'flex',
+      height: '100vh',
+      width: '100%',
+      overflow: 'hidden',
+      background: '#0d0d1a',
+    }}>
+      {/* 左侧菜单栏 */}
       <Sidebar />
-      <Layout>
-        <Header
-          style={{
-            padding: '0 20px',
-            background: '#141422',
-            borderBottom: '1px solid #2a2a4e',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            height: 48,
-            lineHeight: '48px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={toggleSidebar}
-              style={{ color: '#aaa' }}
-            />
-            <Select
-              value={currentTask?.task_id}
-              style={{ width: 280 }}
-              placeholder="选择任务"
-              size="small"
-              options={[{ value: 'task_01J9XXXXX', label: '某金融科技公司' }]}
-              onChange={() => {
-                setCurrentTask({
-                  task_id: 'task_01J9XXXXX',
-                  company_name: '某金融科技公司',
-                  status: 'running',
-                  current_stage: 'api_crawl',
-                  progress: 0.68,
-                  stats: { assets_found: 247, assets_confirmed: 189, interfaces_crawled: 1832, vulns_detected: 43, vulns_confirmed: 31 },
-                  stage_details: {
-                    intelligence: { status: 'completed', duration_s: 180, items: 1250 },
-                    keyword_gen: { status: 'completed', keywords: 113 },
-                    asset_discovery: { status: 'completed', assets: 247, confirmed: 189 },
-                    api_crawl: { status: 'running', progress: 0.76, interfaces: 1832 },
-                    pentest: { status: 'pending' },
-                    report_gen: { status: 'pending' },
-                  },
-                  created_at: '2024-01-01T08:00:00Z',
-                  started_at: '2024-01-01T08:01:00Z',
-                  estimated_completion: '2024-01-01T16:00:00Z',
-                });
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {currentTask && (
-              <Badge status={currentTask.status === 'running' ? 'processing' : 'default'} text={
-                <span style={{ fontSize: 12, color: currentTask.status === 'running' ? '#52c41a' : '#999' }}>
-                  {currentTask.status === 'running' ? '执行中' : currentTask.status}
-                </span>
-              } />
-            )}
-          </div>
-        </Header>
-        <Content style={{ overflow: 'auto', padding: 20, background: '#0d0d1a' }}>
+
+      {/* 右侧主体区域 */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        padding: '20px 20px 20px 12px',
+        gap: showRight ? 20 : 0,
+        overflow: 'hidden',
+      }}>
+        {/* 中间数据面板 */}
+        <div style={{
+          flex: 1,
+          background: '#1a1a2e',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          transition: 'all 0.2s',
+          minWidth: 0,
+        }}>
           <Outlet />
-        </Content>
-      </Layout>
-    </Layout>
+        </div>
+
+        {/* 右侧面板（关系图谱 or 详情预览） */}
+        {showRight && (
+          <>
+            <ResizeHandle onResize={setRightWidth} />
+            <div style={{
+              width: rightWidth,
+              minWidth: 280,
+              maxWidth: 800,
+              flexShrink: 0,
+            }}>
+              <RightPanel />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 };
 

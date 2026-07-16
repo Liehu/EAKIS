@@ -32,4 +32,9 @@ htmlcov/
 #编辑器配置
 .claude/
 .superpowers/
+.zcode/
 .env
+
+# 测试产物 / 临时文件
+test_results/
+plan.md

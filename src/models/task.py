@@ -5,7 +5,7 @@ Based on the SQL definition in docs/extract/10_数据模型设计.md.
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import (
-    Column, String, Text, Float, Integer, JSON, DateTime, Enum, CheckConstraint,
+    Column, String, Text, Float, Integer, JSON, DateTime, Enum, CheckConstraint, ForeignKey,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ARRAY
 from sqlalchemy.orm import relationship
@@ -23,6 +23,8 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # A.1: link task to a Company entity (nullable during migration; company_name kept for back-compat)
+    company_id = Column(PG_UUID(as_uuid=True), ForeignKey("companies.id"), nullable=True, index=True)
     company_name = Column(String(200), nullable=False)
     company_aliases = Column(_CompanyAliasesType, nullable=True)
     industry = Column(String(50), nullable=True)
@@ -45,6 +47,7 @@ class Task(Base):
     agent_logs = relationship("AgentLog", back_populates="task", cascade="all, delete-orphan")
     reports = relationship("Report", back_populates="task", cascade="all, delete-orphan")
     vulnerabilities = relationship("Vulnerability", back_populates="task", cascade="all, delete-orphan")
+    company = relationship("Company", back_populates="tasks")
 
     __table_args__ = (
         CheckConstraint("progress BETWEEN 0 AND 1", name="ck_progress_range"),

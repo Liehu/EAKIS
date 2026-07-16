@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>安鉴·天穹 | 企业攻击面管理平台</title>
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, 'Roboto', sans-serif;
+            background: #f1f5f9;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 布局 */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* 左侧菜单栏 可收缩 */
+        .sidebar {
+            width: 280px;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.2s ease;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            z-index: 20;
+            overflow-x: hidden;
+            flex-shrink: 0;
+        }
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        .sidebar.collapsed .nav-item span,
+        .sidebar.collapsed .logo-area p,
+        .sidebar.collapsed .logo-area h2 span,
+        .sidebar.collapsed .menu-footer-text,
+        .sidebar.collapsed .sub-menu {
+            display: none;
+        }
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 12px 0;
+        }
+        .sidebar.collapsed .logo-area h2 i {
+            margin-right: 0;
+        }
+
+        .logo-area {
+            padding: 24px 20px;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo-area h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .collapse-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .nav-menu {
+            flex: 1;
+            padding: 20px 12px;
+            overflow-y: auto;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 16px;
+            margin-bottom: 4px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #cbd5e6;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .nav-item i {
+            width: 24px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        .nav-item.active {
+            background: #2d3a5e;
+            color: white;
+        }
+        .nav-item:hover {
+            background: #1e293b;
+            color: #f1f5f9;
+        }
+        /* 二级菜单 */
+        .sub-menu {
+            margin-left: 38px;
+            padding-left: 8px;
+            border-left: 1px solid #334155;
+            margin-bottom: 8px;
+        }
+        .sub-item {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #b9c7d9;
+            white-space: nowrap;
+        }
+        .sub-item:hover, .sub-item.active {
+            background: #1e293b;
+            color: white;
+        }
+        .menu-footer {
+            padding: 16px 12px;
+            border-top: 1px solid #1e293b;
+            font-size: 0.8rem;
+        }
+        .menu-footer-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+        .menu-footer-item:hover {
+            background: #1e293b;
+            color: white;
+        }
+
+        /* 右侧主区域 */
+        .main-area {
+            flex: 1;
+            display: flex;
+            padding: 20px 20px 20px 12px;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        /* 中间数据区 */
+        .data-panel {
+            flex: 2.2;
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* Tab栏 */
+        .tabs-header {
+            display: flex;
+            padding: 0 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #eef2f6;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 14px 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #4b5565;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active {
+            color: #1e40af;
+            border-bottom: 2px solid #1e40af;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            padding: 12px 20px;
+            background: white;
+            border-bottom: 1px solid #eef2f6;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .search-area {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex: 2;
+        }
+        .search-box {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: #f1f5f9;
+            border-radius: 40px;
+            padding: 6px 16px;
+            gap: 8px;
+            max-width: 320px;
+        }
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            width: 100%;
+            outline: none;
+            font-size: 0.85rem;
+        }
+        .filter-select {
+            background: #f1f5f9;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            outline: none;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-sm {
+            background: #eef2ff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #1e40af;
+        }
+
+        /* 表格区域 */
+        .table-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 20px 20px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 700px;
+        }
+        .data-table th {
+            text-align: left;
+            padding: 14px 8px;
+            background: #f8fafc;
+            font-weight: 600;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+        }
+        .data-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #ecf3fa;
+        }
+        .badge {
+            background: #e6f0ff;
+            color: #1e40af;
+            padding: 4px 8px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+        }
+        .empty-placeholder {
+            text-align: center;
+            padding: 48px;
+            color: #94a3b8;
+        }
+
+        /* 右侧关系图谱 */
+        .graph-panel {
+            flex: 1;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: flex 0.2s;
+            min-width: 280px;
+        }
+        .graph-header {
+            padding: 16px 20px;
+            font-weight: 700;
+            border-bottom: 1px solid #eef2f6;
+            display: flex;
+            justify-content: space-between;
+        }
+        .graph-chart {
+            flex: 1;
+            width: 100%;
+        }
+        .resize-handle {
+            width: 6px;
+            background: #e2e8f0;
+            cursor: col-resize;
+            transition: 0.1s;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 16px;
+        }
+        .info-card {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <!-- 左侧菜单栏（多级） -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo-area">
+            <h2><i class="fas fa-shield-hog"></i> <span>安鉴·天穹</span></h2>
+            <button class="collapse-btn" id="collapseBtn"><i class="fas fa-bars"></i></button>
+        </div>
+        <div class="nav-menu" id="mainMenu">
+            <!-- 一级菜单 总览 -->
+            <div class="nav-item" data-parent="overview" data-menu="overview"><i class="fas fa-chart-pie"></i><span>总览</span></div>
+            
+            <!-- 任务管理 (一级，含二级菜单) -->
+            <div class="nav-item" data-parent="taskRoot" data-menu="taskRoot"><i class="fas fa-tasks"></i><span>任务管理</span></div>
+            <div class="sub-menu" id="sub-taskRoot" style="display: none;">
+                <div class="sub-item" data-menu="task_scan">扫描任务</div>
+                <div class="sub-item" data-menu="task_import">导入任务</div>
+                <div class="sub-item" data-menu="task_export">导出任务</div>
+                <div class="sub-item" data-menu="task_drill">演练任务</div>
+            </div>
+
+            <!-- 企业管理 -->
+            <div class="nav-item" data-menu="enterprise"><i class="fas fa-building"></i><span>企业管理</span></div>
+            <!-- 资产管理 -->
+            <div class="nav-item" data-menu="asset"><i class="fas fa-database"></i><span>资产管理</span></div>
+            <!-- 漏洞管理 -->
+            <div class="nav-item" data-menu="vulnerability"><i class="fas fa-bug"></i><span>漏洞管理</span></div>
+            <!-- 知识库管理 -->
+            <div class="nav-item" data-parent="knowledgeRoot" data-menu="knowledgeRoot"><i class="fas fa-book"></i><span>知识库管理</span></div>
+            <div class="sub-menu" id="sub-knowledgeRoot" style="display: none;">
+                <div class="sub-item" data-menu="knowledge_nuclei">Nuclei POC</div>
+                <div class="sub-item" data-menu="knowledge_keyword">关键词库</div>
+                <div class="sub-item" data-menu="knowledge_datasource">数据源定义</div>
+                <div class="sub-item" data-menu="knowledge_pathdict">路径字典</div>
+                <div class="sub-item" data-menu="knowledge_passdict">密码字典</div>
+                <div class="sub-item" data-menu="knowledge_handbook">攻防经验手册</div>
+                <div class="sub-item" data-menu="knowledge_fingerprint">指纹库</div>
+            </div>
+            <!-- 工具管理 -->
+            <div class="nav-item" data-menu="tool"><i class="fas fa-toolbox"></i><span>工具管理</span></div>
+            <!-- 模板管理 -->
+            <div class="nav-item" data-parent="templateRoot" data-menu="templateRoot"><i class="fas fa-layer-group"></i><span>模板管理</span></div>
+            <div class="sub-menu" id="sub-templateRoot" style="display: none;">
+                <div class="sub-item" data-menu="template_task">任务模板</div>
+                <div class="sub-item" data-menu="template_prompt">提示词</div>
+                <div class="sub-item" data-menu="template_attack">可视化攻击路径</div>
+            </div>
+            <!-- 报告管理 -->
+            <div class="nav-item" data-menu="report"><i class="fas fa-file-alt"></i><span>报告管理</span></div>
+        </div>
+        <div class="menu-footer">
+            <div class="menu-footer-item" data-menu="system"><i class="fas fa-cog"></i><span class="menu-footer-text">系统设置</span></div>
+            <div class="menu-footer-item" data-menu="logout"><i class="fas fa-sign-out-alt"></i><span class="menu-footer-text">用户退出</span></div>
+            <div class="menu-footer-item" data-menu="status"><i class="fas fa-microchip"></i><span class="menu-footer-text">系统状态</span></div>
+        </div>
+    </div>
+
+    <!-- 右侧主体 -->
+    <div class="main-area">
+        <div class="data-panel" id="dataPanel">
+            <div class="tabs-header" id="tabHeader"></div>
+            <div class="toolbar" id="toolbarArea"></div>
+            <div class="table-wrapper" id="tableWrapper"></div>
+        </div>
+        <div class="resize-handle" id="resizeHandle"></div>
+        <div class="graph-panel" id="graphPanel">
+            <div class="graph-header"><span><i class="fas fa-project-diagram"></i> 关系图谱</span><span id="graphHint"></span></div>
+            <div id="relationGraph" class="graph-chart"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ------------------------ 模拟数据（保留原有企业设计与资产）------------------------
+    const companies = {
+        "company_1": { id: "company_1", name: "云创科技集团", holder: "张伟(60%)", type: "parent", corpInfo: { fullName: "云创科技集团有限公司", industry: "软件与信息技术服务", creditCode: "91110000MA01XXXXX", emailDomain: "yunchuangtech.com", staffCodeRule: "YC-${年份}-####", status: "存续", regCapital: "1.2亿元", establishDate: "2010-03-18", legalPerson: "张伟", tags: ["高新技术企业","专精特新"], remark: "核心安全业务，覆盖云原生安全、数据安全", icon: "cloud", keywords: ["云计算","网络安全"] } },
+        "company_2": { id: "company_2", name: "云创智能云", holder: "云创科技(80%)", type: "sub", corpInfo: { fullName: "云创智能云科技有限公司", industry: "云计算", creditCode: "91440300MA5G8XXXX", emailDomain: "yunchuangcloud.com", staffCodeRule: "YCIC-${工号}", status: "存续", regCapital: "5000万元", establishDate: "2018-06-01", legalPerson: "李想", tags: ["边缘计算"], remark: "核心云平台底座", icon: "server", keywords: ["Iaas","容器"] } },
+        "company_3": { id: "company_3", name: "云创数据安全", holder: "云创科技(55%)", type: "sub", corpInfo: { fullName: "云创数据安全技术有限公司", industry: "数据安全", creditCode: "91310115MA1K3XXXX", emailDomain: "data-safe.cn", staffCodeRule: "DS-${部门}-${序号}", status: "存续", regCapital: "3000万元", establishDate: "2019-11-20", legalPerson: "王磊", tags: ["数据加密","DSMM"], remark: "主导数据防泄漏", icon: "lock", keywords: ["加密","DLP"] } },
+        "company_4": { id: "company_4", name: "智联未来科技", holder: "云创科技(20%)+外部资本", type: "sub", corpInfo: { fullName: "智联未来科技发展有限公司", industry: "产业互联网", creditCode: "91370212MA3RXXXX", emailDomain: "zlfuture.tech", staffCodeRule: "ZLW-${序号}", status: "存续", regCapital: "8000万元", establishDate: "2020-05-17", legalPerson: "陈思远", tags: ["A轮"], remark: "投资生态", icon: "link", keywords: ["智能硬件","物联网"] } },
+        "company_5": { id: "company_5", name: "智创应用实验室", holder: "智联未来(100%)", type: "sub", corpInfo: { fullName: "智创应用安全实验室", industry: "安全研究", creditCode: "91440101MA9WXXXX", emailDomain: "applab.zone", staffCodeRule: "LAB-${YYYY}-${num}", status: "存续", regCapital: "500万元", establishDate: "2021-08-22", legalPerson: "周明", tags: ["攻防实验室"], remark: "红蓝队孵化", icon: "flask", keywords: ["渗透测试","漏洞挖掘"] } },
+        "company_6": { id: "company_6", name: "云安全研究院", holder: "云创数据安全(70%)", type: "sub", corpInfo: { fullName: "云安全技术研究院", industry: "安全服务", creditCode: "91320105MA27XXXX", emailDomain: "sec-lab.org", staffCodeRule: "YJY-${岗位}-${编号}", status: "存续", regCapital: "2000万元", establishDate: "2022-02-10", legalPerson: "韩冰", tags: ["APT研究"], remark: "国家级课题", icon: "microscope", keywords: ["威胁情报","溯源"] } }
+    };
+    const equityLinks = [
+        { source: "company_1", target: "company_2", ratio: "80%" }, { source: "company_1", target: "company_3", ratio: "55%" },
+        { source: "company_1", target: "company_4", ratio: "20%" }, { source: "company_4", target: "company_5", ratio: "100%" },
+        { source: "company_3", target: "company_6", ratio: "70%" }
+    ];
+    let assetDB = {
+        "company_1": { domains: [{ domain: "yunchuangtech.com", status: "正常" }], ips: [{ ip: "203.0.113.10", region: "北京" }], certs: [{ name: "*.yunchuangtech.com", expire: "2026-12" }], apps: [{ name: "云创门户", type: "网站" }], vulns: [{ vulnId: "CVE-2024-6387", severity: "高危" }], osint: [{ title: "安全创新奖", source: "安全内参" }] },
+        "company_2": { domains: [{ domain: "yunchuangcloud.com", status: "正常" }], ips: [{ ip: "198.51.100.22", region: "香港" }], certs: [{ name: "cloud.yunchuang.com", expire: "2025-09" }], apps: [{ name: "智能云控制台", type: "网站" }], vulns: [{ vulnId: "CVE-2025-1234", severity: "中危" }], osint: [{ title: "信创联盟", source: "公众号" }] },
+        "company_3": { domains: [{ domain: "data-safe.cn", status: "WAF保护" }], ips: [{ ip: "192.0.2.55", region: "杭州" }], certs: [], apps: [], vulns: [], osint: [] },
+        "company_4": { domains: [{ domain: "zlfuture.tech", status: "正常" }], ips: [], certs: [], apps: [], vulns: [], osint: [] },
+        "company_5": { domains: [], ips: [], certs: [], apps: [], vulns: [], osint: [] },
+        "company_6": { domains: [], ips: [], certs: [], apps: [], vulns: [], osint: [] }
+    };
+    for(let cid in companies) if(!assetDB[cid]) assetDB[cid] = { domains:[], ips:[], certs:[], apps:[], vulns:[], osint:[] };
+
+    let currentMenu = "enterprise";
+    let currentCompanyId = "company_1";
+    let currentTab = "companyInfo";
+    let filterText = "", extraFilter = "all";
+    let graphChart = null;
+
+    // 右侧图谱渲染
+    function renderGraph() {
+        if(!graphChart) return;
+        let nodes = [], links = [];
+        if(currentMenu === "enterprise") {
+            Object.values(companies).forEach(c => nodes.push({ id: c.id, name: c.name, symbolSize: 30 }));
+            equityLinks.forEach(l => links.push({ source: l.source, target: l.target, label: l.ratio }));
+        } else if(currentMenu === "asset") {
+            nodes = [{ id: "asset_root", name: "资产总览", symbolSize: 36 }, { id: "ip", name: "IP" }, { id: "domain", name: "域名" }, { id: "cert", name: "证书" }, { id: "app", name: "应用" }];
+            links = [{ source: "asset_root", target: "ip" },{ source: "asset_root", target: "domain" },{ source: "asset_root", target: "cert" },{ source: "asset_root", target: "app" }];
+        } else {
+            nodes = [{ id: "demo", name: "当前功能模块", symbolSize: 30 }];
+        }
+        const option = { tooltip: { trigger: 'item' }, series: [{ type: 'graph', layout: 'force', force: { repulsion: 500, edgeLength: 150 }, roam: true, data: nodes, links: links, label: { show: true, position: 'right' }, lineStyle: { color: '#94a3b8' } }] };
+        graphChart.setOption(option, true);
+        document.getElementById("graphHint").innerHTML = currentMenu === "enterprise" ? "股权控制链" : (currentMenu === "asset" ? "资产分类拓扑" : "关联关系");
+    }
+
+    // 企业管理（完整展示企业信息、子单位、资产、风险、情报）
+    function renderEnterpriseView() {
+        const comp = companies[currentCompanyId];
+        if(!comp) return;
+        const tabs = ["companyInfo", "subUnits", "assets", "risks", "osint"];
+        const tabNames = { companyInfo: "企业信息", subUnits: "子单位", assets: "相关资产", risks: "风险漏洞", osint: "开源情报" };
+        let htmlTabs = tabs.map(t => `<button class="tab-btn ${currentTab===t ? 'active' : ''}" data-tab="${t}">${tabNames[t]}</button>`).join("");
+        document.getElementById("tabHeader").innerHTML = htmlTabs;
+        if(currentTab === "companyInfo") {
+            document.getElementById("toolbarArea").innerHTML = `<div></div><div class="action-buttons"><button class="btn-sm" id="editCompanyBtn"><i class="fas fa-edit"></i> 编辑企业</button></div>`;
+            document.getElementById("editCompanyBtn")?.addEventListener("click", ()=> alert("编辑企业信息演示"));
+            let info = comp.corpInfo;
+            let html = `<div class="info-grid"><div class="info-card"><b>企业全称</b><br>${info.fullName}</div><div class="info-card"><b>行业</b><br>${info.industry}</div><div class="info-card"><b>信用代码</b><br>${info.creditCode}</div><div class="info-card"><b>邮箱域名</b><br>${info.emailDomain}</div><div class="info-card"><b>工号规则</b><br>${info.staffCodeRule}</div><div class="info-card"><b>存续状态</b><br>${info.status}</div><div class="info-card"><b>注册资本</b><br>${info.regCapital}</div><div class="info-card"><b>成立时间</b><br>${info.establishDate}</div><div class="info-card"><b>法定代表人</b><br>${info.legalPerson}</div><div class="info-card"><b>标签</b><br>${info.tags.join(", ")}</div><div class="info-card" style="grid-column:span 2"><b>备注</b><br>${info.remark}</div><div class="info-card"><b>关键词</b><br>${info.keywords.join(", ")}</div></div>`;
+            document.getElementById("tableWrapper").innerHTML = html;
+        } else {
+            document.getElementById("toolbarArea").innerHTML = `<div class="search-area"><div class="search-box"><i class="fas fa-search"></i><input id="searchInput" placeholder="搜索..."></div></div><div class="action-buttons"><button class="btn-sm" id="batchAddBtn">批量添加</button></div>`;
+            let data = [];
+            if(currentTab === "subUnits") data = Object.values(companies).filter(c => c.id !== currentCompanyId && (c.holder.includes(comp.name) || equityLinks.some(l => l.source === currentCompanyId && l.target === c.id))).map(s => ({name:s.name, holder:s.holder, id:s.id}));
+            else if(currentTab === "assets") data = [...(assetDB[currentCompanyId]?.domains.map(d=>({type:"域名",value:d.domain})) || []), ...(assetDB[currentCompanyId]?.ips.map(i=>({type:"IP",value:i.ip})) || [])];
+            else if(currentTab === "risks") data = assetDB[currentCompanyId]?.vulns.map(v=>({id:v.vulnId, severity:v.severity})) || [];
+            else if(currentTab === "osint") data = assetDB[currentCompanyId]?.osint.map(o=>({title:o.title, source:o.source})) || [];
+            let columns = currentTab === "subUnits" ? ["名称","持股关系"] : (currentTab === "assets" ? ["类型","标识"] : (currentTab === "risks" ? ["漏洞编号","严重程度"] : ["情报标题","来源"]));
+            let rows = data.map(row => `<tr><td>${Object.values(row)[0]}</td><td>${Object.values(row)[1] || ''}</td>${currentTab==="subUnits"?`<td><button class="btn-sm view-sub" data-id="${row.id}">查看</button></td>`:''}</tr>`).join("");
+            document.getElementById("tableWrapper").innerHTML = `<table class="data-table"><thead><tr>${columns.map(c=>`<th>${c}</th>`).join('')}${currentTab==="subUnits"?"<th>操作</th>":""}</tr></thead><tbody>${rows||'<tr><td colspan="3">暂无数据</td></tr>'}</tbody></table>`;
+            document.querySelectorAll(".view-sub").forEach(btn => btn.addEventListener("click", (e) => { currentCompanyId = btn.dataset.id; renderEnterpriseView(); renderGraph(); }));
+        }
+        attachTabEvents();
+    }
+
+    // 资产管理占位展示（IP/域名/证书/小程序APP）
+    function renderAssetManagement() { 
+        document.getElementById("tabHeader").innerHTML = `<div></div>`;
+        document.getElementById("toolbarArea").innerHTML = `<div class="search-box"><input placeholder="搜索资产"></div><div class="action-buttons"><button class="btn-sm">批量添加</button><button class="btn-sm">编辑</button></div>`;
+        document.getElementById("tableWrapper").innerHTML = `<div class="empty-placeholder">资产管理维度：IP · 证书 · 域名 · 小程序/APP <br> 示例数据：<br> 1. 203.0.113.10 (北京)<br>2. yunchuangtech.com<br>3. 小程序「云创助手」</div>`;
+    }
+    function renderVulnerability() { document.getElementById("tabHeader").innerHTML = ``; document.getElementById("toolbarArea").innerHTML = `<div class="search-box"><input placeholder="CVE/漏洞名称"></div>`; document.getElementById("tableWrapper").innerHTML = `<div class="empty-placeholder">漏洞管理库 (CVE-2024-6387, CVE-2025-1234) 及POC状态</div>`; }
+    function renderKnowledge(type) { document.getElementById("tabHeader").innerHTML = ``; document.getElementById("toolbarArea").innerHTML = ``; document.getElementById("tableWrapper").innerHTML = `<div class="empty-placeholder">知识库 - ${type || 'Nuclei POC / 字典 / 指纹库 / 经验手册'}</div>`; }
+    function renderTool() { document.getElementById("tableWrapper").innerHTML = `<div class="empty-placeholder">CLI工具集：nmap, ffuf, 自定义渗透脚本</div>`; }
+    function renderTemplate(type) { document.getElementById("tableWrapper").innerHTML = `<div class="empty-placeholder">模板管理：${type || '任务模板 / 攻击路径可视化'}</div>`; }
+    function renderTaskManage(sub) { document.getElementById("tableWrapper").innerHTML = `<div class="empty-placeholder">任务管理 - ${sub} : 支持多企业扫描、导入导出、演练任务编排</div>`; }
+    function renderReport() { document.getElementById("tableWrapper").innerHTML = `<div class="empty-placeholder">报告管理：生成PDF/HTML渗透测试报告</div>`; }
+    function renderOverview() { document.getElementById("tableWrapper").innerHTML = `<div class="empty-placeholder">总览仪表板：资产趋势、风险TOP5、近期任务</div>`; }
+    function renderSystemSettings() { document.getElementById("tableWrapper").innerHTML = `<div class="empty-placeholder">系统设置：角色权限、API密钥、通知配置</div>`; }
+
+    // 二级菜单分发核心
+    function handleSubMenu(menuId) {
+        if(menuId.startsWith("task_")) {
+            let sub = { task_scan:"扫描任务", task_import:"导入任务", task_export:"导出任务", task_drill:"演练任务" }[menuId];
+            renderTaskManage(sub);
+        } else if(menuId.startsWith("knowledge_")) {
+            let map = { knowledge_nuclei:"Nuclei POC", knowledge_keyword:"关键词库", knowledge_datasource:"数据源定义", knowledge_pathdict:"路径字典", knowledge_passdict:"密码字典", knowledge_handbook:"攻防经验手册", knowledge_fingerprint:"指纹库" };
+            renderKnowledge(map[menuId]);
+        } else if(menuId.startsWith("template_")) {
+            let tmap = { template_task:"任务模板", template_prompt:"提示词", template_attack:"可视化攻击路径" };
+            renderTemplate(tmap[menuId]);
+        } else if(menuId === "enterprise") renderEnterpriseView();
+        else if(menuId === "asset") renderAssetManagement();
+        else if(menuId === "vulnerability") renderVulnerability();
+        else if(menuId === "tool") renderTool();
+        else if(menuId === "report") renderReport();
+        else if(menuId === "overview") renderOverview();
+        else if(menuId === "system") renderSystemSettings();
+        else if(menuId === "logout") alert("退出登录演示");
+        else if(menuId === "status") alert("系统状态: 组件健康  CPU 23% 内存 41%");
+        else document.getElementById("tableWrapper").innerHTML = `<div class="empty-placeholder">功能开发中</div>`;
+        renderGraph();
+    }
+
+    // 菜单交互与二级菜单折叠
+    function initMenuSystem() {
+        // 一级菜单展开/收起二级菜单逻辑
+        document.querySelectorAll('.nav-item[data-parent]').forEach(parent => {
+            parent.addEventListener('click', (e) => {
+                let parentId = parent.getAttribute('data-parent');
+                let sub = document.getElementById(`sub-${parentId}`);
+                if(sub) sub.style.display = sub.style.display === 'none' ? 'block' : 'none';
+                e.stopPropagation();
+            });
+        });
+        // 点击非父级菜单
+        document.querySelectorAll('.nav-item:not([data-parent])').forEach(item => {
+            item.addEventListener('click', () => {
+                let menu = item.getAttribute('data-menu');
+                if(menu) { currentMenu = menu; handleSubMenu(menu); }
+                document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+        document.querySelectorAll('.sub-item').forEach(sub => {
+            sub.addEventListener('click', (e) => {
+                let menuId = sub.getAttribute('data-menu');
+                if(menuId) handleSubMenu(menuId);
+                document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+                e.stopPropagation();
+            });
+        });
+        document.querySelectorAll('.menu-footer-item').forEach(foot => {
+            foot.addEventListener('click', () => { let m = foot.getAttribute('data-menu'); if(m) handleSubMenu(m); });
+        });
+        document.getElementById("collapseBtn").addEventListener("click", () => { document.getElementById("sidebar").classList.toggle("collapsed"); });
+        // 右侧拖动
+        const handle = document.getElementById("resizeHandle");
+        handle.addEventListener("mousedown", (e) => {
+            let startX = e.clientX, startWidth = document.getElementById("graphPanel").offsetWidth;
+            document.onmousemove = (m) => { let w = startWidth - (m.clientX - startX); if(w>200 && w<800) document.getElementById("graphPanel").style.flex = `0 0 ${w}px`; };
+            document.onmouseup = () => { document.onmousemove = null; };
+        });
+    }
+
+    function attachTabEvents() {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.removeEventListener('click', tabHandler);
+            btn.addEventListener('click', tabHandler);
+        });
+        function tabHandler(e) { let tab = e.currentTarget.getAttribute('data-tab'); if(tab) { currentTab = tab; renderEnterpriseView(); } }
+    }
+
+    function init() {
+        const chartDom = document.getElementById("relationGraph");
+        graphChart = echarts.init(chartDom);
+        initMenuSystem();
+        currentMenu = "enterprise";
+        handleSubMenu("enterprise");
+        window.addEventListener("resize", () => graphChart?.resize());
+    }
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+# 1.添加企业名称
+POST /api/v1/seed/enterprise/batch-create HTTP/1.1
+Host: 175.42.168.117:68
+Connection: keep-alive
+Content-Length: 96
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Accept: application/json, text/plain, */*
+sec-ch-ua: "Microsoft Edge";v="147", "Not.A/Brand";v="8", "Chromium";v="147"
+Content-Type: application/json
+Workspace: 98
+sec-ch-ua-mobile: ?0
+Origin: https://175.42.168.117:68
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: https://175.42.168.117:68/assets/seed/enterprise?space=93
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: zh-CN,zh;q=0.9,en-GB;q=0.8,en;q=0.7,en-US;q=0.6
+Cookie: session=.eJwdjTESwjAMBP_imkKSz5LCZzK2JQ-0CVQMfydDucXufsr-PvPYn1HupeXWR62hbQjIpqfaCpfoHYray63s68jzUe6v450X_bXhSpgGY9NqQ2aLVA11GCatrExOc0U37sEMyYW0nHAWXzKuoU7XxSSElCsG5T6VRmO31etwZDMIKlcXttgYGBEU6c1a-f4A5BQ2cw.alWWBQ.DG1WkCwfrs8TebrsZXhWWIrE5OA
+
+{"confidence":"100","level":1,"name":["中国联合网络通信有限公司福建省分公司"]}
+
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Tue, 14 Jul 2026 01:53:07 GMT
+Content-Type: application/json
+Connection: keep-alive
+Vary: Cookie
+Content-Length: 67
+
+{"code": 200, "message": "", "data": {"affected": 1, "ignored": 0}}
+
+# 2.获取企业种子信息（提取ID，name，）
+GET /api/v1/seed/enterprise?enable=&name=&page=1&size=20&sort=level HTTP/1.1
+Host: 175.42.168.117:68
+Connection: keep-alive
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Accept: application/json, text/plain, */*
+sec-ch-ua: "Microsoft Edge";v="147", "Not.A/Brand";v="8", "Chromium";v="147"
+Workspace: 98
+sec-ch-ua-mobile: ?0
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: https://175.42.168.117:68/assets/seed/enterprise?space=93
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: zh-CN,zh;q=0.9,en-GB;q=0.8,en;q=0.7,en-US;q=0.6
+Cookie: session=.eJwdjTESwjAMBP_imkKSz5LCZzK2JQ-0CVQMfydDucXufsr-PvPYn1HupeXWR62hbQjIpqfaCpfoHYray63s68jzUe6v450X_bXhSpgGY9NqQ2aLVA11GCatrExOc0U37sEMyYW0nHAWXzKuoU7XxSSElCsG5T6VRmO31etwZDMIKlcXttgYGBEU6c1a-f4A5BQ2cw.alWWBQ.DG1WkCwfrs8TebrsZXhWWIrE5OA
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Tue, 14 Jul 2026 01:53:07 GMT
+Content-Type: application/json
+Connection: keep-alive
+Vary: Cookie
+Content-Length: 518
+
+{"code": 200, "message": "", "data": {"current": 1, "size": 20, "total": 1, "items": [{"name: "\u4e2d\u56fd\u8054\u5408\u7f51\u7edc\u901a\u4fe1\u6709\u9650\u516c\u53f8\u798f\u5efa\u7701\u5206\u516c\u53f8", "equity_string": "100%", "level": 1, "is_history": false, "updated_at": "2026-07-14 09:53:07", "status": "\u5b58\u7eed", "level_string": "1\u7ea7", "enable": true, "investment_path": "\u8fd0\u8425\u4eba\u5de5\u5f55\u5165", "id": 10091, "created_at": "2026-07-14 09:53:07", "equity": 100}]}}
+# 获取分子公司信息（提取分子公司ID）
+POST /api/v1/seed/enterprise/10091/load HTTP/1.1
+Host: 175.42.168.117:68
+Connection: keep-alive
+Content-Length: 56
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Accept: application/json, text/plain, */*
+sec-ch-ua: "Microsoft Edge";v="147", "Not.A/Brand";v="8", "Chromium";v="147"
+Content-Type: application/json
+Workspace: 98
+sec-ch-ua-mobile: ?0
+Origin: https://175.42.168.117:68
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: https://175.42.168.117:68/assets/seed/enterprise?space=93
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: zh-CN,zh;q=0.9,en-GB;q=0.8,en;q=0.7,en-US;q=0.6
+Cookie: session=.eJwdjTESwjAMBP_imkKSz5LCZzK2JQ-0CVQMfydDucXufsr-PvPYn1HupeXWR62hbQjIpqfaCpfoHYray63s68jzUe6v450X_bXhSpgGY9NqQ2aLVA11GCatrExOc0U37sEMyYW0nHAWXzKuoU7XxSSElCsG5T6VRmO31etwZDMIKlcXttgYGBEU6c1a-f4A5BQ2cw.alWWBQ.DG1WkCwfrs8TebrsZXhWWIrE5OA
+
+{"level":3,"equity":50,"enable":true,"confidence":"100"}
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Tue, 14 Jul 2026 01:53:55 GMT
+Content-Type: application/json
+Connection: keep-alive
+Vary: Cookie
+Content-Length: 67
+
+{
+    "code": 200,
+    "message": "",
+    "data": {
+        "current": 1,
+        "size": 20,
+        "total": 24,
+        "items": [
+            {
+                "confidence": "100",
+                "name": "\u4e2d\u56fd\u8054\u5408\u7f51\u7edc\u901a\u4fe1\u6709\u9650\u516c\u53f8",
+                "equity_string": "100%",
+                "level": 1,
+                "is_history": false,
+                "updated_at": "2026-07-14 10:51:38",
+                "status": "\u5f00\u4e1a",
+                "level_string": "1\u7ea7",
+                "enable": true,
+                "investment_path": "\u8fd0\u8425\u4eba\u5de5\u5f55\u5165",
+                "id": 10120,
+                "created_at": "2026-07-14 10:47:18",
+                "equity": 100
+            },
+    }
+
+}
+# 删除企业信息
+DELETE /api/v1/seed/enterprise/batch-delete HTTP/1.1
+Host: 175.42.168.117:68
+Connection: keep-alive
+Content-Length: 14
+sec-ch-ua-platform: "Windows"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+Accept: application/json, text/plain, */*
+sec-ch-ua: "Microsoft Edge";v="147", "Not.A/Brand";v="8", "Chromium";v="147"
+Content-Type: application/json
+Workspace: 98
+sec-ch-ua-mobile: ?0
+Origin: https://175.42.168.117:68
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: https://175.42.168.117:68/assets/seed/enterprise?space=93
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: zh-CN,zh;q=0.9,en-GB;q=0.8,en;q=0.7,en-US;q=0.6
+Cookie: session=.eJwdjTESwjAMBP_imkKSz5LCZzK2JQ-0CVQMfydDucXufsr-PvPYn1HupeXWR62hbQjIpqfaCpfoHYray63s68jzUe6v450X_bXhSpgGY9NqQ2aLVA11GCatrExOc0U37sEMyYW0nHAWXzKuoU7XxSSElCsG5T6VRmO31etwZDMIKlcXttgYGBEU6c1a-f4A5BQ2cw.alWWBQ.DG1WkCwfrs8TebrsZXhWWIrE5OA
+
+{"pk":[10091]}
+
+HTTP/1.1 200 OK
+Server: nginx
+Date: Tue, 14 Jul 2026 01:54:03 GMT
+Content-Type: application/json
+Connection: keep-alive
+Vary: Cookie
+Content-Length: 67
+
+{"code": 200, "message": "", "data": {"affected": 1, "ignored": 0}}

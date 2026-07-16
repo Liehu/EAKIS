@@ -5,7 +5,8 @@ export interface GenerateReportRequest {
   format: ('markdown' | 'pdf')[];
   sections: ('summary' | 'assets' | 'interfaces' | 'vulns' | 'remediation')[];
   language: string;
-  template: 'standard' | 'detailed' | 'executive';
+  template: string;
+  use_llm?: boolean;
 }
 
 export interface ReportJob {
@@ -25,6 +26,7 @@ export interface Report {
     actionability: number;
   };
   files: Record<string, string>;
+  content?: string | null;  // S2: 渲染后的 Markdown 内容
   page_count: number;
   word_count: number;
   generated_at: string;

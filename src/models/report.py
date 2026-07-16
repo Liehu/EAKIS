@@ -27,6 +27,9 @@ class Report(Base):
     language = Column(String(10), nullable=True, server_default="zh-CN")
     markdown_path = Column(Text, nullable=True)
     pdf_path = Column(Text, nullable=True)
+    # S2: rendered report content (Markdown). markdown_path 指向 MinIO 持久化副本;
+    # content 用于 API 直接返回, 避免每次下载.
+    content = Column(Text, nullable=True)
     page_count = Column(Integer, nullable=True)
     word_count = Column(Integer, nullable=True)
     quality_score = Column(JSON, default=dict, nullable=True)

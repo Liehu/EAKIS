@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Card, Table, Button, Space, Select, Tag, Modal, Form, Input, Drawer, Descriptions, message, Popconfirm } from 'antd';
+import { Table, Button, Space, Select, Tag, Modal, Form, Input, message, Popconfirm } from 'antd';
 import { PlusOutlined, PauseCircleOutlined, PlayCircleOutlined, CloseCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { listTasks, pauseTask, resumeTask, cancelTask, retryTask, batchCancelTasks, batchResumeTasks } from '@/api/tasks';
 import type { Task, TaskStatus } from '@/types/task';
+import { useRightPanelStore } from '@/store/rightPanelStore';
 
 const statusColors: Record<TaskStatus, string> = {
   pending: 'default', running: 'processing', paused: 'warning', completed: 'success', failed: 'error', cancelled: 'default',
@@ -14,7 +15,7 @@ const TaskManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<TaskStatus | undefined>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
-  const [detailTask, setDetailTask] = useState<Task | null>(null);
+  const setPanelItem = useRightPanelStore((s) => s.setItem);
   const [form] = Form.useForm();
 
   const fetchTasks = async () => {
@@ -45,46 +46,45 @@ const TaskManagement: React.FC = () => {
 
   return (
     <div>
-      <Card title="任务管理" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}
-        extra={
-          <Space>
-            <Select placeholder="状态筛选" allowClear size="small" style={{ width: 120 }} value={statusFilter} onChange={setStatusFilter}
-              options={['pending', 'running', 'paused', 'completed', 'failed', 'cancelled'].map((s) => ({ value: s, label: s }))} />
-            {selectedRowKeys.length > 0 && (
-              <>
-                <Popconfirm title={`确认批量取消 ${selectedRowKeys.length} 个任务?`} onConfirm={() => handleBatch('cancel')}>
-                  <Button size="small" danger>批量取消</Button>
-                </Popconfirm>
-                <Button size="small" onClick={() => handleBatch('resume')}>批量恢复</Button>
-              </>
-            )}
-            <Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>新建任务</Button>
-          </Space>
-        }>
-        <Table size="small" loading={loading} dataSource={tasks} rowKey="task_id" pagination={{ pageSize: 20 }}
-          rowSelection={{ selectedRowKeys, onChange: (keys) => setSelectedRowKeys(keys as string[]) }}
-          onRow={(record) => ({ onClick: () => setDetailTask(record), style: { cursor: 'pointer' } })}
-          columns={[
-            { title: '任务ID', dataIndex: 'task_id', key: 'id', width: 160, ellipsis: true },
-            { title: '企业', dataIndex: 'company_name', key: 'company' },
-            { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (v: TaskStatus) => <Tag color={statusColors[v]}>{v}</Tag> },
-            { title: '当前阶段', dataIndex: 'current_stage', key: 'stage', width: 120 },
-            { title: '进度', key: 'progress', width: 80, render: (_, r) => `${Math.round(r.progress * 100)}%` },
-            { title: '资产/漏洞', key: 'stats', width: 100, render: (_, r) => `${r.stats.assets_found} / ${r.stats.vulns_detected}` },
-            { title: '创建时间', dataIndex: 'created_at', key: 'created', width: 160, render: (v: string) => new Date(v).toLocaleString('zh-CN') },
-            {
-              title: '操作', key: 'action', width: 160, render: (_, r) => (
-                <Space size={4}>
-                  {r.status === 'running' && <Button size="small" type="text" icon={<PauseCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'pause'); }} />}
-                  {r.status === 'paused' && <Button size="small" type="text" icon={<PlayCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'resume'); }} />}
-                  {(r.status === 'running' || r.status === 'paused') && <Button size="small" type="text" danger icon={<CloseCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'cancel'); }} />}
-                  {r.status === 'failed' && <Button size="small" type="text" icon={<ReloadOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'retry'); }} />}
-                </Space>
-              ),
-            },
-          ]}
-        />
-      </Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>任务管理</span>
+        <Space>
+          <Select placeholder="状态筛选" allowClear size="small" style={{ width: 120 }} value={statusFilter} onChange={setStatusFilter}
+            options={['pending', 'running', 'paused', 'completed', 'failed', 'cancelled'].map((s) => ({ value: s, label: s }))} />
+          {selectedRowKeys.length > 0 && (
+            <>
+              <Popconfirm title={`确认批量取消 ${selectedRowKeys.length} 个任务?`} onConfirm={() => handleBatch('cancel')}>
+                <Button size="small" danger>批量取消</Button>
+              </Popconfirm>
+              <Button size="small" onClick={() => handleBatch('resume')}>批量恢复</Button>
+            </>
+          )}
+          <Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>新建任务</Button>
+        </Space>
+      </div>
+      <Table size="small" loading={loading} dataSource={tasks} rowKey="task_id" pagination={{ pageSize: 20 }}
+        rowSelection={{ selectedRowKeys, onChange: (keys) => setSelectedRowKeys(keys as string[]) }}
+        onRow={(record) => ({ onClick: () => { setPanelItem('task', record as unknown as Record<string, unknown>); }, style: { cursor: 'pointer' } })}
+        columns={[
+          { title: '任务ID', dataIndex: 'task_id', key: 'id', width: 160, ellipsis: true },
+          { title: '企业', dataIndex: 'company_name', key: 'company' },
+          { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (v: TaskStatus) => <Tag color={statusColors[v]}>{v}</Tag> },
+          { title: '当前阶段', dataIndex: 'current_stage', key: 'stage', width: 120 },
+          { title: '进度', key: 'progress', width: 80, render: (_, r) => `${Math.round(r.progress * 100)}%` },
+          { title: '资产/漏洞', key: 'stats', width: 100, render: (_, r) => `${r.stats.assets_found} / ${r.stats.vulns_detected}` },
+          { title: '创建时间', dataIndex: 'created_at', key: 'created', width: 160, render: (v: string) => new Date(v).toLocaleString('zh-CN') },
+          {
+            title: '操作', key: 'action', width: 160, render: (_, r) => (
+              <Space size={4}>
+                {r.status === 'running' && <Button size="small" type="text" icon={<PauseCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'pause'); }} />}
+                {r.status === 'paused' && <Button size="small" type="text" icon={<PlayCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'resume'); }} />}
+                {(r.status === 'running' || r.status === 'paused') && <Button size="small" type="text" danger icon={<CloseCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'cancel'); }} />}
+                {r.status === 'failed' && <Button size="small" type="text" icon={<ReloadOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'retry'); }} />}
+              </Space>
+            ),
+          },
+        ]}
+      />
 
       <Modal title="新建探测任务" open={createOpen} onCancel={() => setCreateOpen(false)} onOk={() => form.submit()} width={600}>
         <Form form={form} layout="vertical" onFinish={() => { message.success('任务创建成功'); setCreateOpen(false); form.resetFields(); }}>
@@ -98,22 +98,6 @@ const TaskManagement: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-
-      <Drawer title={`任务详情: ${detailTask?.task_id}`} open={!!detailTask} onClose={() => setDetailTask(null)} width={520}>
-        {detailTask && (
-          <Descriptions column={1} size="small" bordered>
-            <Descriptions.Item label="企业">{detailTask.company_name}</Descriptions.Item>
-            <Descriptions.Item label="状态"><Tag color={statusColors[detailTask.status]}>{detailTask.status}</Tag></Descriptions.Item>
-            <Descriptions.Item label="当前阶段">{detailTask.current_stage}</Descriptions.Item>
-            <Descriptions.Item label="进度">{Math.round(detailTask.progress * 100)}%</Descriptions.Item>
-            <Descriptions.Item label="发现资产">{detailTask.stats.assets_found} (确认 {detailTask.stats.assets_confirmed})</Descriptions.Item>
-            <Descriptions.Item label="爬取接口">{detailTask.stats.interfaces_crawled}</Descriptions.Item>
-            <Descriptions.Item label="检出漏洞">{detailTask.stats.vulns_detected} (确认 {detailTask.stats.vulns_confirmed})</Descriptions.Item>
-            <Descriptions.Item label="创建时间">{new Date(detailTask.created_at).toLocaleString('zh-CN')}</Descriptions.Item>
-            {detailTask.estimated_completion && <Descriptions.Item label="预计完成">{new Date(detailTask.estimated_completion).toLocaleString('zh-CN')}</Descriptions.Item>}
-          </Descriptions>
-        )}
-      </Drawer>
     </div>
   );
 };
