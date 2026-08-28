@@ -376,12 +376,18 @@ class CDPScraper(BaseScraper):
         return False
 
     async def _cleanup(self) -> None:
-        """清理资源。"""
+        """清理资源（浏览器/上下文可能已关闭，需容忍）。"""
         if self._context:
-            await self._context.close()
+            try:
+                await self._context.close()
+            except Exception:  # noqa: BLE001 — TargetClosedError 等
+                pass
             self._context = None
         if self._browser:
-            await self._browser.close()
+            try:
+                await self._browser.close()
+            except Exception:  # noqa: BLE001
+                pass
             self._browser = None
 
 

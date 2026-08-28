@@ -13,10 +13,26 @@ Endpoints:
 from __future__ import annotations
 
 import math
+from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query
 
+def _to_dt(val) -> datetime | None:
+    """将字符串/None 转为 datetime（SQLite DateTime 列不接受字符串）。"""
+    if val is None or isinstance(val, datetime):
+        return val
+    if isinstance(val, str):
+        try:
+            return datetime.fromisoformat(val.replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            return None
+    return None
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.api.dependencies import get_async_db
 from src.api.schemas.intelligence import (
     DslListResponse,
     IntelligenceDocumentItem,
@@ -36,6 +52,9 @@ from src.intelligence.models import SourceCategory
 from src.intelligence.module import IntelligenceModule
 from src.intelligence.services.rag_client import create_rag_client
 from src.intelligence.services.base import BaseRAGClient
+from src.models.company import Company
+from src.models.intel_document import IntelDocument
+from src.models.task import Task
 
 router = APIRouter(tags=["intelligence"])
 
@@ -63,7 +82,19 @@ def _get_or_create_module(task_id: str) -> IntelligenceModule:
 async def start_intelligence(
     task_id: UUID,
     body: IntelligenceStartRequest,
+    db: AsyncSession = Depends(get_async_db),
 ) -> IntelligenceStartResponse:
+    # 桥接企业信息：从 Task.company_id 取企业 name/industry/domains 作为情报输入
+    task = await db.get(Task, task_id)
+    company = None
+    if task and task.company_id:
+        company = await db.get(Company, task.company_id)
+
+    company_name = body.company_name or (company.name if company else (task.company_name if task else ""))
+    industry = body.industry or (company.industry if company else (task.industry if task else None))
+    domains = body.domains or (company.domains if company else None)
+    keywords = body.keywords or (company.aliases if company else None)
+
     categories = None
     if body.enabled_categories:
         categories = [SourceCategory(c) for c in body.enabled_categories]
@@ -71,12 +102,36 @@ async def start_intelligence(
     module = _get_or_create_module(str(task_id))
     result = await module.run(
         task_id=str(task_id),
-        company_name=body.company_name,
-        industry=body.industry,
-        domains=body.domains,
-        keywords=body.keywords,
+        company_name=company_name,
+        industry=industry,
+        domains=domains,
+        keywords=keywords,
         enabled_categories=categories,
     )
+
+    # 持久化 CleanedDocument → IntelDocument（get_documents 返回 dict）
+    saved = 0
+    for doc in module.get_documents():
+        checksum = doc.get("checksum") if isinstance(doc, dict) else getattr(doc, "checksum", "")
+        if not checksum:
+            continue
+        existing = (await db.execute(
+            select(IntelDocument).where(IntelDocument.checksum == checksum).limit(1)
+        )).scalar_one_or_none()
+        if existing is None:
+            db.add(IntelDocument(
+                task_id=task_id,
+                source_type=doc.get("source_type") if isinstance(doc, dict) else doc.source_type.value,
+                source_name=doc.get("source_name") if isinstance(doc, dict) else doc.source_name,
+                source_url=doc.get("source_url") if isinstance(doc, dict) else doc.source_url,
+                content=doc.get("content") if isinstance(doc, dict) else doc.content,
+                quality_score=doc.get("quality_score", 0.0) if isinstance(doc, dict) else doc.quality_score,
+                published_at=_to_dt(doc.get("published_at") if isinstance(doc, dict) else doc.published_at),
+                entities=doc.get("entities", []) if isinstance(doc, dict) else doc.entities,
+                checksum=checksum,
+            ))
+            saved += 1
+    await db.commit()
 
     return IntelligenceStartResponse(
         task_id=task_id,

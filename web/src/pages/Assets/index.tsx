@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Table, Tabs, Tag, Button, Drawer, Descriptions, Space, Input, Select, message, Popconfirm } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getTypedAssets, getAssetFull } from '@/api/assets';
 import RiskTag from '@/components/RiskTag';
 import type { TypedAsset, TypedAssetType, AssetFull, VulnCount } from '@/types/asset';
@@ -19,6 +19,7 @@ const vulnTotal = (vc?: VulnCount) => (vc ? vc.critical + vc.high + vc.medium + 
 
 const Assets: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [type, setType] = useState<TypedAssetType>('ip');
   const [assets, setAssets] = useState<TypedAsset[]>([]);
   const [total, setTotal] = useState(0);
@@ -42,6 +43,15 @@ const Assets: React.FC = () => {
 
   useEffect(() => { setPage(1); setSelectedRowKeys([]); fetchAssets(1); }, [type, q, riskFilter]); // eslint-disable-line
   useEffect(() => { fetchAssets(page); }, [page]); // eslint-disable-line
+
+  // 支持 URL ?asset=<id> 自动打开资产详情
+  useEffect(() => {
+    const assetId = searchParams.get('asset');
+    if (assetId) {
+      setDrawerOpen(true);
+      getAssetFull(assetId).then(setDetail).catch(() => setDrawerOpen(false));
+    }
+  }, [searchParams]); // eslint-disable-line
 
   const viewDetail = async (a: TypedAsset) => {
     setDrawerOpen(true);
@@ -194,7 +204,13 @@ const Assets: React.FC = () => {
               <Descriptions.Item label="类型"><Tag>{detail.asset_type}</Tag></Descriptions.Item>
               <Descriptions.Item label="域名/IP">{detail.domain || detail.ip_address || '—'}</Descriptions.Item>
               <Descriptions.Item label="风险"><RiskTag level={detail.risk_level as any} /></Descriptions.Item>
-              <Descriptions.Item label="关联单位">{detail.company_name || '—'}</Descriptions.Item>
+              <Descriptions.Item label="关联单位">
+                {detail.company_id ? (
+                  <a style={{ color: '#378ADD' }} onClick={() => navigate(`/companies?company=${detail.company_id}`)}>
+                    {detail.company_name || '查看企业'} →
+                  </a>
+                ) : (detail.company_name || '—')}
+              </Descriptions.Item>
               <Descriptions.Item label="指纹">{detail.tech_stack?.map((t) => <Tag key={t}>{t}</Tag>) || '—'}</Descriptions.Item>
               <Descriptions.Item label="开放端口">{detail.open_ports?.join(', ') || '—'}</Descriptions.Item>
               <Descriptions.Item label="ICP主体">{detail.icp_entity || '—'}</Descriptions.Item>
@@ -210,10 +226,11 @@ const Assets: React.FC = () => {
             )}
             {detail.vulnerabilities && detail.vulnerabilities.length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>关联漏洞 ({detail.vulnerabilities.length})</div>
+                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>关联漏洞 ({detail.vulnerabilities.length})（点击查看详情）</div>
                 {detail.vulnerabilities.map((v) => (
-                  <div key={v.id} style={{ padding: '6px 0', borderBottom: '1px solid #1f2937' }}>
-                    <RiskTag level={v.severity as any} /> <span>{v.title || '未命名'}</span>
+                  <div key={v.id} onClick={() => navigate(`/vulnerabilities?asset_id=${detail.id}`)}
+                    style={{ padding: '6px 0', borderBottom: '1px solid #1f2937', cursor: 'pointer' }}>
+                    <RiskTag level={v.severity as any} /> <a style={{ color: '#e2e8f0' }}>{v.title || '未命名'}</a>
                     <span style={{ color: '#666', fontSize: 11, marginLeft: 8 }}>{v.vuln_type || ''}</span>
                   </div>
                 ))}

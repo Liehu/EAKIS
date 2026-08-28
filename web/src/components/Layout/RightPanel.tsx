@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Descriptions, Tag, Empty, Typography } from 'antd';
 import GraphPanel from '@/components/GraphPanel';
 import { useRightPanelStore, type PanelKind } from '@/store/rightPanelStore';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const { Text } = Typography;
 
@@ -31,31 +31,106 @@ function DocPreview({ content, label }: { content: string | null | undefined; la
 }
 
 function TaskDetail({ item }: { item: Record<string, any> }) {
+  const navigate = useNavigate();
+  const modules = item.config?.modules || [];
+  const moduleLabels: Record<string, string> = {
+    M0: '采集企业主体', M1: '情报采集', M2: '关键词生成', M3: '资产发现', M4: '接口爬取',
+  };
+  const stats = item.stats || {};
+  const companyId = item.company_id;
+
+  // 可跳转的统计卡片（无 companyId 时不可跳转）
+  const statCards = [
+    {
+      label: '关联企业', value: stats.assets_found || 0, color: '#378ADD',
+      clickable: !!companyId, onClick: () => navigate(`/companies?company=${companyId}`),
+    },
+    {
+      label: '情报文档', value: stats.interfaces_crawled || 0, color: '#639922',
+      clickable: !!companyId, onClick: () => navigate(`/companies?company=${companyId}`),
+    },
+    {
+      label: '关键词', value: stats.vulns_detected || 0, color: '#BA7517',
+      clickable: !!companyId, onClick: () => navigate(`/knowledge/keywords?company_id=${companyId}`),
+    },
+    {
+      label: '漏洞', value: stats.vulns_confirmed || 0, color: '#e74c3c',
+      clickable: !!companyId, onClick: () => navigate(`/vulnerabilities?company=${companyId}`),
+    },
+  ];
   return (
-    <Descriptions column={1} size="small" bordered
-      labelStyle={{ background: '#141422', color: '#888', width: 110, whiteSpace: 'nowrap' }}
-      contentStyle={{ background: '#1a1a2e', color: '#e2e8f0' }}>
-      <Descriptions.Item label="任务ID">{item.task_id || '-'}</Descriptions.Item>
-      <Descriptions.Item label="企业">{item.company_name || '-'}</Descriptions.Item>
-      <Descriptions.Item label="状态">
-        {item.status ? <Tag color={statusColor(item.status)}>{item.status}</Tag> : '-'}
-      </Descriptions.Item>
-      <Descriptions.Item label="当前阶段">{item.current_stage || '-'}</Descriptions.Item>
-      <Descriptions.Item label="进度">
-        {item.progress != null ? `${Math.round(item.progress * 100)}%` : '-'}
-      </Descriptions.Item>
-      {item.stats && (
-        <Descriptions.Item label="统计">
-          资产 {item.stats.assets_found || 0}(确认{item.stats.assets_confirmed || 0}) ·
-          接口 {item.stats.interfaces_crawled || 0} ·
-          漏洞 {item.stats.vulns_detected || 0}(确认{item.stats.vulns_confirmed || 0})
+    <div>
+      <Descriptions column={1} size="small" bordered
+        labelStyle={{ background: '#141422', color: '#888', width: 100, whiteSpace: 'nowrap' }}
+        contentStyle={{ background: '#1a1a2e', color: '#e2e8f0' }}>
+        <Descriptions.Item label="任务ID">{(item.task_id || '').slice(0, 12)}...</Descriptions.Item>
+        <Descriptions.Item label="企业">{item.company_name || '-'}</Descriptions.Item>
+        <Descriptions.Item label="状态">
+          {item.status ? <Tag color={statusColor(item.status)}>{item.status}</Tag> : '-'}
         </Descriptions.Item>
+        <Descriptions.Item label="进度">
+          {item.progress != null ? `${Math.round(item.progress * 100)}%` : '-'}
+        </Descriptions.Item>
+      </Descriptions>
+
+      {/* 模块执行情况 */}
+      {modules.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <Text type="secondary" style={{ fontSize: 12 }}>执行模块</Text>
+          <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {modules.map((m: string) => (
+              <Tag key={m} color={item.status === 'completed' ? 'success' : (item.status === 'running' ? 'processing' : 'default')}>
+                {m} {moduleLabels[m] || ''}
+              </Tag>
+            ))}
+          </div>
+        </div>
       )}
-      <Descriptions.Item label="创建时间">{item.created_at?.slice(0, 19).replace('T', ' ') || '-'}</Descriptions.Item>
-      {item.started_at && (
-        <Descriptions.Item label="开始时间">{item.started_at.slice(0, 19).replace('T', ' ')}</Descriptions.Item>
+
+      {/* 采集结果统计（可点击跳转） */}
+      <div style={{ marginTop: 16 }}>
+        <Text type="secondary" style={{ fontSize: 12 }}>采集结果（点击查看详情）</Text>
+        <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {statCards.map((card) => (
+            <div
+              key={card.label}
+              onClick={card.clickable ? card.onClick : undefined}
+              style={{
+                background: '#141422', borderRadius: 6, padding: '8px 12px', textAlign: 'center',
+                cursor: card.clickable ? 'pointer' : 'default',
+                transition: 'background 0.2s',
+                border: '1px solid transparent',
+              }}
+              onMouseEnter={(e) => { if (card.clickable) { e.currentTarget.style.background = '#1e1e3a'; e.currentTarget.style.borderColor = '#3a3a5e'; } }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#141422'; e.currentTarget.style.borderColor = 'transparent'; }}
+            >
+              <div style={{ color: '#888', fontSize: 11 }}>{card.label}</div>
+              <div style={{ color: card.color, fontSize: 20, fontWeight: 600 }}>{card.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 时间信息 */}
+      <Descriptions column={1} size="small" bordered style={{ marginTop: 16 }}
+        labelStyle={{ background: '#141422', color: '#888', width: 100, whiteSpace: 'nowrap' }}
+        contentStyle={{ background: '#1a1a2e', color: '#e2e8f0' }}>
+        <Descriptions.Item label="创建时间">{item.created_at?.slice(0, 19).replace('T', ' ') || '-'}</Descriptions.Item>
+        {item.started_at && (
+          <Descriptions.Item label="开始时间">{item.started_at.slice(0, 19).replace('T', ' ')}</Descriptions.Item>
+        )}
+        {item.completed_at && (
+          <Descriptions.Item label="完成时间">{item.completed_at.slice(0, 19).replace('T', ' ')}</Descriptions.Item>
+        )}
+      </Descriptions>
+
+      {/* 错误信息 */}
+      {item.error_message && (
+        <div style={{ marginTop: 12, padding: 10, background: '#3d1a1a', borderRadius: 6, border: '1px solid #5a2a2a' }}>
+          <Text type="danger" style={{ fontSize: 12 }}>错误: {item.error_message}</Text>
+        </div>
       )}
-    </Descriptions>
+    </div>
   );
 }
 

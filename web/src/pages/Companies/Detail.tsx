@@ -299,12 +299,14 @@ const CompanyDetail: React.FC<DetailProps> = ({ companyId, onBack, onSelectCompa
           </div>
           <Table size="small" dataSource={companyAssetsList}
             rowKey="_rowKey" pagination={false}
+            onRow={(r: any) => ({ onClick: () => navigate(`/assets?asset=${r.id}`), style: { cursor: 'pointer' } })}
             columns={[
               { title: '类型', dataIndex: '_category', key: 'cat', width: 60, render: (v: string) => <Tag>{v}</Tag> },
-              { title: '标识', key: 'identifier', ellipsis: true, render: (_: any, r: any) => r.ip_address || r.domain || r.url || r.name || '-' },
+              { title: '标识', key: 'identifier', ellipsis: true, render: (_: any, r: any) => <a style={{ color: '#378ADD' }}>{r.ip_address || r.domain || r.url || r.name || '-'}</a> },
               { title: '关联单位', dataIndex: 'related_units', key: 'units', width: 150, render: (v: string[]) => v?.join(', ') || '-' },
               { title: '风险', dataIndex: 'risk_level', key: 'risk', width: 60, render: (v: string) => <RiskTag level={v as any} /> },
               { title: '漏洞数', key: 'vuln', width: 60, render: (_: any, r: any) => renderVulnCount(r.vuln_count, r.id) },
+              { title: '操作', key: 'act', width: 70, render: (_: any, r: any) => <Button size="small" type="link" onClick={(e) => { e.stopPropagation(); navigate(`/assets?asset=${r.id}`); }}>详情</Button> },
             ]}
           />
         </div>
@@ -314,7 +316,9 @@ const CompanyDetail: React.FC<DetailProps> = ({ companyId, onBack, onSelectCompa
       key: 'risks',
       label: `企业风险 (${totalVulns})`,
       children: (
-        <Table size="small" dataSource={vulnData} rowKey="id" pagination={false} columns={vulnColumns} />
+        <Table size="small" dataSource={vulnData} rowKey="id" pagination={false} columns={vulnColumns}
+          onRow={(r: any) => ({ onClick: () => navigate(`/vulnerabilities?company_id=${companyId}&asset_id=${r.asset_id}`), style: { cursor: 'pointer' } })}
+        />
       ),
     },
     {

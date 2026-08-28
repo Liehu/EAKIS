@@ -25,6 +25,7 @@ kafka-python = "^2.0"
 # Agent orchestration
 langgraph = "^0.2"
 langchain-core = "^0.3"
+langgraph-checkpoint-sqlite = "^2.0"
 # LLM
 openai = "^1.30"
 # Engine specs
@@ -68,6 +69,7 @@ select = ["E", "F", "I", "N", "W", "UP"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+asyncio_mode = "auto"
 
 [tool.mypy]
 python_version = "3.11"

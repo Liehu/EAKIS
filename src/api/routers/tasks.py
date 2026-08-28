@@ -40,6 +40,7 @@ from src.api.schemas.task import (
     derive_stage_details,
 )
 from src.models.asset import Asset
+from src.models.company import Company
 from src.models.task import Task
 from src.models.vulnerability import Vulnerability
 
@@ -59,6 +60,7 @@ def _task_to_item(task: Task) -> TaskItem:
     return TaskItem(
         task_id=str(task.id),
         task_type=task_type,
+        company_id=str(task.company_id) if task.company_id else None,
         company_name=task.company_name,
         company_aliases=task.company_aliases or [],
         industry=task.industry,
@@ -147,7 +149,17 @@ async def create_task(
     config = body.config or {}
     config["task_type"] = body.task_type
 
+    # populate company_id：优先用请求传入的 company_id，否则按 company_name 查找
+    company_id = body.company_id
+    if company_id is None:
+        existing_company = (await db.execute(
+            select(Company).where(Company.name == body.company_name).limit(1)
+        )).scalar_one_or_none()
+        if existing_company is not None:
+            company_id = existing_company.id
+
     task = Task(
+        company_id=company_id,
         company_name=body.company_name,
         company_aliases=body.company_aliases,
         industry=body.industry,
@@ -389,8 +401,37 @@ async def retry_task(
 
 
 # ---------------------------------------------------------------------------
-# Batch endpoints
+# Task execution (下发/执行)
 # ---------------------------------------------------------------------------
+
+@router.post("/tasks/{task_id}/start", response_model=TaskDetailResponse)
+async def start_task(
+    task_id: UUID,
+    db: AsyncSession = Depends(get_async_db),
+    _user=Depends(get_current_user),
+) -> TaskDetailResponse:
+    """下发并执行任务：按 config.modules 顺序运行各模块（M0采集→M1情报→M2关键词...）。
+
+    同步执行（阻塞请求直到管线完成），实时更新 task.status/progress/current_stage。
+    """
+    task = await db.get(Task, task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.status == "running":
+        raise HTTPException(status_code=400, detail="Task is already running")
+
+    # 延迟导入避免循环依赖
+    from src.api.services.task_runner import run_task_pipeline
+    try:
+        await run_task_pipeline(db, task)
+    except Exception as exc:  # noqa: BLE001
+        task.status = "failed"
+        task.error_message = str(exc)
+        await db.commit()
+        raise HTTPException(status_code=500, detail=f"Task execution failed: {exc}") from exc
+
+    await db.refresh(task)
+    return await _build_detail_response(db, task)
 
 @router.post("/tasks/batch/cancel", status_code=status.HTTP_204_NO_CONTENT)
 async def batch_cancel_tasks(

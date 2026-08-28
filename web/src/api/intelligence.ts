@@ -1,8 +1,18 @@
 import client from './client';
 
+export interface IntelligenceStartRequest {
+  company_name?: string;
+  industry?: string;
+  domains?: string[];
+  keywords?: string[];
+  enabled_categories?: string[];
+  crawl_depth?: number;
+}
+
 // Intelligence API - M1 情报采集
-export const startIntelligence = (taskId: string) =>
-  client.post(`/v1/tasks/${taskId}/intelligence`).then((r) => r.data);
+// body 可为空 —— 后端会从 Task.company_id 自动取企业信息
+export const startIntelligence = (taskId: string, data?: IntelligenceStartRequest) =>
+  client.post(`/v1/tasks/${taskId}/intelligence`, data || {}).then((r) => r.data);
 
 export const getIntelligenceStatus = (taskId: string) =>
   client.get(`/v1/tasks/${taskId}/intelligence`).then((r) => r.data);

@@ -36,6 +36,9 @@ class Task(Base):
     error_message = Column(Text, nullable=True)
     retry_count = Column(Integer, default=0)
     created_by = Column(String(100), nullable=True)
+    # RBAC scoping: which org + user owns this task.
+    org_id = Column(PG_UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True, index=True)
+    created_by_user_id = Column(PG_UUID(as_uuid=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)

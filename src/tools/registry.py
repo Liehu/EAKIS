@@ -121,8 +121,8 @@ def register_all(executor: ToolExecutor) -> None:
         name="dnsx", binary="dnsx", category="dns",
         description="ProjectDiscovery DNS 解析与反查",
         params=[
-            ToolParam(name="domain", input_type="domain", flag="-d", multiple=True),
-            ToolParam(name="ip", input_type="ip", flag="-d", multiple=True),
+            ToolParam(name="domain", input_type="domain", flag="-l", multiple=True),
+            ToolParam(name="ip", input_type="ip", flag="-l", multiple=True),
         ],
         fixed_flags=["-silent", "-json", "-a", "-resp"],
         allowed_flags={"-reverse", "-cname"},

@@ -70,6 +70,10 @@ class Company(Base):
     ip_ranges = Column(_ArrayType, nullable=True, comment="IP 段")
     notes = Column(Text, nullable=True, comment="备注")
 
+    # ── ICP 备案回填（S-B：IcpScraper 查询结果） ──
+    icp_number = Column(String(100), nullable=True, comment="主域名 ICP 备案号")
+    icp_entity = Column(String(300), nullable=True, comment="ICP 备案主体（单位名称）")
+
     # ── 采集元信息 ──
     data_source = Column(String(50), nullable=True, comment="数据来源 (商业API/ICP/OSINT)")
     last_collected_at = Column(DateTime(timezone=True), nullable=True, comment="最近采集时间")
@@ -91,6 +95,7 @@ class Company(Base):
         back_populates="parent", cascade="all, delete-orphan",
     )
     tasks = relationship("Task", back_populates="company")
+    keyword_entries = relationship("Keyword", back_populates="company", cascade="all, delete-orphan", foreign_keys="Keyword.company_id")
 
     __table_args__ = (
         Index("idx_companies_org", "org_id"),

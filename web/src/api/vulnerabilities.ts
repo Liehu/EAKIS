@@ -20,3 +20,15 @@ export const updateVulnerability = (taskId: string, vulnId: string, data: Update
 
 export const getVulnStatistics = (taskId: string) =>
   client.get<VulnStatistics>(`/v1/tasks/${taskId}/vulnerabilities/statistics`).then((r) => r.data);
+
+// 全局漏洞列表（非任务上下文，支持 asset_id / company_id 过滤）
+export const getGlobalVulnerabilities = (params?: PaginationParams & {
+  severity?: string;
+  asset_id?: string;
+  company_id?: string;
+}) =>
+  client.get<PaginatedResponse<Vulnerability> & { summary: VulnStatistics }>('/v1/vulnerabilities', { params }).then((r) => r.data);
+
+// 全局漏洞详情（非任务上下文）
+export const getGlobalVulnerability = (vulnId: string) =>
+  client.get<Vulnerability>(`/v1/vulnerabilities/${vulnId}`).then((r) => r.data);

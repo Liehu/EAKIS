@@ -23,6 +23,7 @@ from src.api.schemas.vulnerability import (
     VulnerabilityItem,
     VulnStatistics,
 )
+from src.models.asset import Asset
 from src.models.vulnerability import Vulnerability
 
 router = APIRouter(tags=["vulnerabilities"])
@@ -190,4 +191,62 @@ async def update_vulnerability(
 
     await db.commit()
     await db.refresh(vuln)
+    return _vuln_to_item(vuln)
+
+
+# ---------------------------------------------------------------------------
+# 全局漏洞端点（非任务上下文，支持按 asset_id / company_id 过滤）
+# ---------------------------------------------------------------------------
+
+@router.get("/vulnerabilities", response_model=VulnListResponse)
+async def list_global_vulnerabilities(
+    severity: str | None = Query(default=None),
+    asset_id: str | None = Query(default=None),
+    company_id: UUID | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    db: AsyncSession = Depends(get_async_db),
+) -> VulnListResponse:
+    """全局漏洞列表（支持按 asset_id / company_id 过滤）。
+
+    company_id 过滤通过 JOIN Asset 实现。
+    """
+    stmt = select(Vulnerability)
+    count_stmt = select(func.count(Vulnerability.id))
+
+    if asset_id:
+        stmt = stmt.where(Vulnerability.asset_id == asset_id)
+        count_stmt = count_stmt.where(Vulnerability.asset_id == asset_id)
+    if company_id:
+        stmt = stmt.join(Asset, Vulnerability.asset_id == Asset.id).where(Asset.company_id == company_id)
+        count_stmt = count_stmt.join(Asset, Vulnerability.asset_id == Asset.id).where(Asset.company_id == company_id)
+    if severity:
+        stmt = stmt.where(Vulnerability.severity == severity)
+        count_stmt = count_stmt.where(Vulnerability.severity == severity)
+
+    total = (await db.execute(count_stmt)).scalar() or 0
+    total_pages = max(1, math.ceil(total / page_size))
+    stmt = stmt.order_by(Vulnerability.discovered_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    vulns = (await db.execute(stmt)).scalars().all()
+
+    return VulnListResponse(
+        data=[_vuln_to_item(v) for v in vulns],
+        summary=VulnStatistics(),
+        pagination={"page": page, "page_size": page_size, "total": total, "total_pages": total_pages},
+    )
+
+
+@router.get("/vulnerabilities/{vuln_id}", response_model=VulnerabilityItem)
+async def get_global_vulnerability(
+    vuln_id: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> VulnerabilityItem:
+    """全局漏洞详情（非任务上下文）。"""
+    try:
+        vid = UUID(vuln_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid vulnerability ID")
+    vuln = await db.get(Vulnerability, vid)
+    if vuln is None:
+        raise HTTPException(status_code=404, detail="Vulnerability not found")
     return _vuln_to_item(vuln)

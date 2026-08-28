@@ -52,7 +52,7 @@ const TemplateManagement: React.FC = () => {
     setEditing(null);
     form.resetFields();
     form.setFieldsValue({ template_type: type, scope: 'org' });
-    if (type === 'task') form.setFieldsValue({ content: { target_depth: 3, modules: ['M1', 'M3'], concurrency: 5, smart_c_segment: true } });
+    if (type === 'task') form.setFieldsValue({ content: { target_depth: 3, modules: ['M0', 'M1', 'M2'], enrich_provider: 'yuntu', enrich_depth: 3, holding_min: 50, intel_categories: ['news', 'official', 'legal'], crawl_depth: 2, concurrency: 5, smart_c_segment: true } });
     if (type === 'report') form.setFieldsValue({ content: { report_type: 'asset', fields: ['ip', 'domain', 'risk_level'], format: 'md', cover: true } });
     if (type === 'prompt') form.setFieldsValue({ content: { agent: '', template: '', variables: [] } });
     if (type === 'attack_path') form.setFieldsValue({ content: { nodes: [], edges: [] } });
@@ -86,10 +86,29 @@ const TemplateManagement: React.FC = () => {
     if (type === 'task') {
       return (
         <>
-          <Form.Item name={['content', 'target_depth']} label="穿透深度"><InputNumber min={1} max={10} /></Form.Item>
           <Form.Item name={['content', 'modules']} label="启用模块">
-            <Checkbox.Group options={[{label:'M1 情报',value:'M1'},{label:'M2 关键词',value:'M2'},{label:'M3 资产',value:'M3'},{label:'M4 接口',value:'M4'}]} />
+            <Checkbox.Group options={[
+              {label:'M0 采集企业主体',value:'M0'},
+              {label:'M1 情报采集',value:'M1'},
+              {label:'M2 关键词生成',value:'M2'},
+              {label:'M3 资产发现',value:'M3'},
+              {label:'M4 接口爬取',value:'M4'},
+            ]} />
           </Form.Item>
+          <Form.Item name={['content', 'target_depth']} label="穿透深度"><InputNumber min={1} max={10} /></Form.Item>
+          <Form.Item label="M0 采集配置" colon={false}><span style={{ color: '#666', fontSize: 12 }}>企业主体关联信息采集</span></Form.Item>
+          <Form.Item name={['content', 'enrich_provider']} label="采集数据源">
+            <Select options={[{value:'yuntu',label:'云图'},{value:'tianyancha',label:'天眼查(预留)'}]} />
+          </Form.Item>
+          <Form.Item name={['content', 'holding_min']} label="持股阈值(%)"><InputNumber min={0} max={100} /></Form.Item>
+          <Form.Item label="M1 情报配置" colon={false}><span style={{ color: '#666', fontSize: 12 }}>开源情报采集</span></Form.Item>
+          <Form.Item name={['content', 'intel_categories']} label="情报源类别">
+            <Checkbox.Group options={[
+              {label:'新闻',value:'news'},{label:'官网',value:'official'},
+              {label:'工商/法务',value:'legal'},{label:'安全',value:'security'},
+            ]} />
+          </Form.Item>
+          <Form.Item name={['content', 'crawl_depth']} label="爬取深度"><InputNumber min={1} max={5} /></Form.Item>
           <Form.Item name={['content', 'concurrency']} label="并发数"><InputNumber min={1} max={50} /></Form.Item>
           <Form.Item name={['content', 'smart_c_segment']} label="智能C段" valuePropName="checked"><Switch /></Form.Item>
           <Form.Item name={['content', 'smart_asset_link']} label="智能资产关联" valuePropName="checked"><Switch /></Form.Item>

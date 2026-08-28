@@ -57,3 +57,7 @@ export const batchCancelTasks = (taskIds: string[]) =>
 
 export const batchResumeTasks = (taskIds: string[]) =>
   client.post('/v1/tasks/batch/resume', { task_ids: taskIds });
+
+// 下发并执行任务（按 config.modules 顺序运行 M0采集→M1情报→M2关键词...）
+export const startTask = (taskId: string) =>
+  client.post<Task>(`/v1/tasks/${taskId}/start`).then((r) => r.data);

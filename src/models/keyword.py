@@ -20,6 +20,9 @@ class Keyword(Base):
 
     id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     task_id = Column(PG_UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    # 企业维度归属（情报采集生成的关键词关联到企业，便于企业关键词管理）。
+    # nullable 兼容旧数据（仅按 task_id 关联）。
+    company_id = Column(PG_UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=True, index=True)
     word = Column(String(200), nullable=False)
     type = Column(KeywordTypeEnum, nullable=False)
     weight = Column(Float, nullable=False)
@@ -32,6 +35,7 @@ class Keyword(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     task = relationship("Task", back_populates="keywords")
+    company = relationship("Company", back_populates="keyword_entries", foreign_keys=[company_id])
     parent = relationship("Keyword", remote_side=[id], backref="children")
 
     __table_args__ = (

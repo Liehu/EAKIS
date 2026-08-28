@@ -8,8 +8,10 @@ from src.intelligence.config import CrawlConfig
 from src.intelligence.engine_specs import load_engine_specs
 from src.intelligence.models import CollectionStatus, DataSource, DslQuery, RawDocument
 from src.intelligence.services.base import BaseScraper
+from src.intelligence.scrapers.bidding_scraper import BiddingScraper
 from src.intelligence.scrapers.cdp_scraper import CDPScraperManager, load_crawler_config
 from src.intelligence.scrapers.generic_scraper import GenericEngineScraper
+from src.intelligence.scrapers.icp_scraper import IcpScraper
 from src.intelligence.scrapers.legal_scraper import LegalScraper
 from src.intelligence.scrapers.news_scraper import NewsScraper
 from src.intelligence.scrapers.official_scraper import OfficialScraper
@@ -38,9 +40,9 @@ def _build_scraper_map(
         "official_site": OfficialScraper(),
         "github_org": OfficialScraper(),
         "tech_blog": OfficialScraper(),
-        "icp_query": LegalScraper(),
+        "icp_query": IcpScraper(),
         "business_info": LegalScraper(),
-        "bidding": LegalScraper(),
+        "bidding": BiddingScraper(),
     }
 
     # 资产引擎 - 始终使用 API 调用

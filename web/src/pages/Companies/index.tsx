@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Table, Tag, Button, Modal, Form, Input, Select, message, Popconfirm, Space, Checkbox, Switch } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined, MonitorOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import { getCompanies, createCompany, deleteCompany, updateCompany, batchEnrich } from '@/api/companies';
@@ -8,11 +9,12 @@ import CompanyDetail from './Detail';
 const industryLabels: Record<string, string> = { fintech: '金融科技', ecommerce: '电商', tech: '互联网', government: '政务', healthcare: '医疗', finance: '金融', security: '安全', other: '其他' };
 
 const Companies: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [batchEditOpen, setBatchEditOpen] = useState(false);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(searchParams.get('company'));
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);

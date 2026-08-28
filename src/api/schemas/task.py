@@ -13,12 +13,17 @@ from pydantic import BaseModel, Field
 
 
 class TaskCreateRequest(BaseModel):
-    task_type: Literal["enterprise_penetration", "asset_detection", "risk_assessment"] = (
-        "enterprise_penetration"
-    )
+    task_type: Literal[
+        "enterprise_penetration",
+        "asset_detection",
+        "risk_assessment",
+        "company_info_collection",
+    ] = "enterprise_penetration"
     company_name: str = Field(..., min_length=1, max_length=200)
     company_aliases: list[str] | None = None
     industry: str | None = None
+    # 可选：直接指定已存在的企业 ID（推荐，前端通过搜索选择企业后传入）
+    company_id: UUID | None = None
     authorized_scope: dict = Field(default_factory=dict)
     config: dict | None = None
 
@@ -98,6 +103,7 @@ class TaskItem(BaseModel):
 
     task_id: str
     task_type: str | None = None
+    company_id: str | None = None
     company_name: str
     company_aliases: list[str] | None = None
     industry: str | None = None

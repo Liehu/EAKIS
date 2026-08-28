@@ -15,7 +15,7 @@ from src.intelligence.models import (
     SourceCategory,
 )
 from src.intelligence.services.base import BaseLLMClient, BaseRAGClient, BaseScraper
-from src.intelligence.services.generic_scraper import GenericEngineScraper
+from src.intelligence.scrapers.generic_scraper import GenericEngineScraper
 
 
 # --- Stub implementations for testing ---

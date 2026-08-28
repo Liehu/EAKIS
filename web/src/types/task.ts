@@ -1,6 +1,7 @@
 export type TaskStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
 export type StageName = 'intelligence' | 'keyword_gen' | 'asset_discovery' | 'api_crawl' | 'pentest' | 'report_gen';
 export type StageStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type TaskType = 'enterprise_penetration' | 'asset_detection' | 'risk_assessment' | 'company_info_collection';
 
 export interface TaskStage {
   stage: StageName;
@@ -8,20 +9,27 @@ export interface TaskStage {
 }
 
 export interface CreateTaskRequest {
+  task_type?: TaskType;
   company_name: string;
-  company_aliases: string[];
-  industry: string;
-  authorized_scope: {
+  company_id?: string;
+  company_aliases?: string[];
+  industry?: string;
+  authorized_scope?: {
     domains: string[];
     ip_ranges: string[];
     exclude: string[];
   };
-  config: {
-    keyword_types: string[];
-    asset_platforms: string[];
-    crawl_depth: number;
-    pentest_enabled: boolean;
-    pentest_intensity: string;
+  config?: {
+    modules?: string[];
+    enrich_provider?: string;
+    enrich_depth?: number;
+    holding_min?: number;
+    intel_categories?: string[];
+    crawl_depth?: number;
+    keyword_types?: string[];
+    asset_platforms?: string[];
+    pentest_enabled?: boolean;
+    pentest_intensity?: string;
     notification_webhook?: string;
   };
 }

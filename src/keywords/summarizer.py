@@ -9,6 +9,7 @@ Uses a Map-Reduce strategy:
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -119,6 +120,29 @@ class SummarizerAgent:
         self._llm = llm
         self._config = config or SummarizerConfig()
 
+    @staticmethod
+    def _fallback_extract(text: str) -> StructuredSummary:
+        """LLM 不可用时，用正则从原始文本提取实体/技术词（兜底）。"""
+        # 中文公司/实体名（含"公司/集团/有限/科技/技术/网络"等关键词的词组）
+        entity_re = re.compile(r'[\u4e00-\u9fff（）()a-zA-Z0-9]{2,30}(?:有限公司|股份公司|集团|科技|技术|网络|服务|控股)')
+        entities = list(set(entity_re.findall(text)))[:20]
+
+        # 技术词汇（英文技术名词、常见技术栈）
+        tech_re = re.compile(r'\b(?:Java|Python|Go|Node\.?js|React|Vue|Spring|Docker|Kubernetes|K8s|Redis|MySQL|PostgreSQL|MongoDB|Nginx|Apache|Linux|Cloud|API|REST|GraphQL|gRPC|Microservice|微服务|容器|DevOps|CI/?CD|SSL|TLS|DNS|HTTP|HTTPS)\b', re.IGNORECASE)
+        techs = list(set(m.lower() if len(m) > 2 else m for m in tech_re.findall(text)))[:20]
+
+        # 产品名（"XX系统/平台/APP/小程序"）
+        product_re = re.compile(r'[\u4e00-\u9fff]{2,10}(?:系统|平台|APP|小程序|客户端|应用)')
+        products = list(set(product_re.findall(text)))[:10]
+
+        return StructuredSummary(
+            business_info=text[:100].strip(),
+            tech_mentions=techs,
+            entity_mentions=entities,
+            product_mentions=products,
+            raw_text=text[:500],
+        )
+
     async def summarize(self, documents: list[str]) -> StructuredSummary:
         """Summarize a collection of intelligence documents."""
         combined = "\n\n".join(documents)
@@ -138,7 +162,8 @@ class SummarizerAgent:
                 continue
 
         if not chunk_summaries:
-            return StructuredSummary()
+            # LLM 不可用 —— 用正则兜底提取
+            return self._fallback_extract(combined)
 
         if len(chunk_summaries) == 1:
             return chunk_summaries[0]

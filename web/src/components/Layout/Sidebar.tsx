@@ -58,6 +58,7 @@ const menuItems: MenuItem[] = [
   {
     key: 'taskRoot', icon: <UnorderedListOutlined />, label: '任务管理',
     children: [
+      { key: 'task_list', label: '全部任务', route: '/tasks' },
       { key: 'task_scan', label: '扫描任务', route: '/tasks/scan' },
       { key: 'task_import', label: '导入任务', route: '/tasks/import' },
       { key: 'task_export', label: '导出任务', route: '/tasks/export' },
