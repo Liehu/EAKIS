@@ -1,8 +1,11 @@
 import { useMemo } from 'react';
 import type { DAGNode, DAGEdge } from '@/types/template';
+import { useThemeStore } from '@/store/themeStore';
 
 // 轻量 DAG 可视化 (无第三方图库依赖, 用 SVG + 定位渲染节点和边)
 // 节点按层级自动布局; 仅展示, 编辑通过 JSON 面板。
+// 颜色规范：DAG/canvas 用双主题具体值色板（§03），订阅 useThemeStore(resolved) 随主题重绘；
+// 布局算法与数据逻辑不动。
 
 const NODE_W = 120;
 const NODE_H = 44;
@@ -14,12 +17,57 @@ interface Props {
   edges: DAGEdge[];
 }
 
-const nodeTypeColor: Record<string, string> = {
-  recon: '#3b82f6', vuln_scan: '#f59e0b', exploit: '#ef4444',
-  lateral: '#8b5cf6', data_exfil: '#ec4899',
+/** 节点主题：fill 底色 + ink 文字色（按底色明度就近取，保证双主题可读） */
+interface NodeTheme {
+  fill: string;
+  ink: string;
+}
+
+/**
+ * 双主题色板（规范 light 画布 #ffffff、系['#0066ff','#7c3aed','#20c997','#ffc107','#fd7e14'] 轴线 #e9ecef/字 #6c757d；
+ * dark 画布 #111827、系['#60a5fa','#a78bfa','#2dd4bf','#fbbf24','#fb923c'] 轴线 #263244/字 #a7b0c0）。
+ * 节点类型按色相就近映射原类型色：recon 蓝 · lateral 紫 · data_exfil 青绿 · vuln_scan 黄 · exploit 橙。
+ */
+const PALETTES: Record<'light' | 'dark', {
+  canvas: string;
+  nodeTypes: Record<string, NodeTheme>;
+  fallback: NodeTheme;
+  axis: string;
+  label: string;
+}> = {
+  light: {
+    canvas: '#ffffff',
+    nodeTypes: {
+      recon: { fill: '#0066ff', ink: '#ffffff' },
+      lateral: { fill: '#7c3aed', ink: '#ffffff' },
+      data_exfil: { fill: '#20c997', ink: '#1a1a1a' },
+      vuln_scan: { fill: '#ffc107', ink: '#1a1a1a' },
+      exploit: { fill: '#fd7e14', ink: '#1a1a1a' },
+    },
+    fallback: { fill: '#6c757d', ink: '#ffffff' },
+    axis: '#e9ecef',
+    label: '#6c757d',
+  },
+  dark: {
+    canvas: '#111827',
+    nodeTypes: {
+      recon: { fill: '#60a5fa', ink: '#0b1120' },
+      lateral: { fill: '#a78bfa', ink: '#0b1120' },
+      data_exfil: { fill: '#2dd4bf', ink: '#0b1120' },
+      vuln_scan: { fill: '#fbbf24', ink: '#0b1120' },
+      exploit: { fill: '#fb923c', ink: '#0b1120' },
+    },
+    fallback: { fill: '#a7b0c0', ink: '#0b1120' },
+    axis: '#263244',
+    label: '#a7b0c0',
+  },
 };
 
 const DAGViewer: React.FC<Props> = ({ nodes, edges }) => {
+  // 订阅已解析主题，切换时随主题重绘
+  const resolved = useThemeStore((s) => s.resolved);
+  const palette = PALETTES[resolved];
+
   // 按 BFS 层级布局
   const { positioned, width, height } = useMemo(() => {
     if (nodes.length === 0) return { positioned: [] as Array<DAGNode & { x: number; y: number }>, width: 0, height: 0 };
@@ -69,11 +117,11 @@ const DAGViewer: React.FC<Props> = ({ nodes, edges }) => {
   }, [positioned]);
 
   if (nodes.length === 0) {
-    return <div style={{ color: '#64748b', padding: 24, textAlign: 'center' }}>暂无节点</div>;
+    return <div style={{ color: 'var(--text-secondary)', padding: 24, textAlign: 'center' }}>暂无节点</div>;
   }
 
   return (
-    <div style={{ overflow: 'auto', border: '1px solid #1f2937', borderRadius: 8, background: '#0f172a' }}>
+    <div style={{ overflow: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', background: palette.canvas }}>
       <svg width={Math.max(width, 400)} height={height} style={{ display: 'block' }}>
         {/* edges */}
         {edges.map((e, i) => {
@@ -84,23 +132,26 @@ const DAGViewer: React.FC<Props> = ({ nodes, edges }) => {
           const mx = (x1 + x2) / 2;
           return (
             <g key={i}>
-              <path d={`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`} stroke="#475569" strokeWidth={1.5} fill="none" markerEnd="url(#arrow)" />
-              <text x={mx} y={(y1 + y2) / 2 - 4} fill="#64748b" fontSize={9} textAnchor="middle">{e.action}</text>
+              <path d={`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`} stroke={palette.axis} strokeWidth={1.5} fill="none" markerEnd="url(#arrow)" />
+              <text x={mx} y={(y1 + y2) / 2 - 4} fill={palette.label} fontSize={9} textAnchor="middle">{e.action}</text>
             </g>
           );
         })}
         {/* nodes */}
-        {positioned.map((n) => (
-          <g key={n.id}>
-            <rect x={n.x} y={n.y} width={NODE_W} height={NODE_H} rx={6}
-              fill={nodeTypeColor[n.type] || '#334155'} opacity={0.85} stroke="#cbd5e1" strokeWidth={1} />
-            <text x={n.x + NODE_W / 2} y={n.y + 18} fill="#fff" fontSize={11} fontWeight={600} textAnchor="middle">{n.label}</text>
-            <text x={n.x + NODE_W / 2} y={n.y + 34} fill="#e2e8f0" fontSize={9} textAnchor="middle">{n.type}</text>
-          </g>
-        ))}
+        {positioned.map((n) => {
+          const theme = palette.nodeTypes[n.type] || palette.fallback;
+          return (
+            <g key={n.id}>
+              <rect x={n.x} y={n.y} width={NODE_W} height={NODE_H} rx={6}
+                fill={theme.fill} opacity={0.85} stroke={palette.axis} strokeWidth={1} />
+              <text x={n.x + NODE_W / 2} y={n.y + 18} fill={theme.ink} fontSize={11} fontWeight={600} textAnchor="middle">{n.label}</text>
+              <text x={n.x + NODE_W / 2} y={n.y + 34} fill={theme.ink} opacity={0.75} fontSize={9} textAnchor="middle">{n.type}</text>
+            </g>
+          );
+        })}
         <defs>
           <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L7,3 z" fill="#475569" />
+            <path d="M0,0 L0,6 L7,3 z" fill={palette.axis} />
           </marker>
         </defs>
       </svg>

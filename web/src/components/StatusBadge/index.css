@@ -1,0 +1,13 @@
+/* StatusBadge —— 状态徽章：10% 同色底（currentColor 混色）+ 同色字，尺寸对齐 .severity-badge（§06） */
+.eakis-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}

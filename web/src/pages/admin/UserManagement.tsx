@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Switch, Tag, message, Space, Input as AntInput } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, Switch, message, Space, Input as AntInput } from 'antd';
 import { getUsers, createUser, updateUser, deleteUser } from '@/api/users';
 import type { User, UserRole } from '@/types/user';
 
@@ -11,6 +11,39 @@ const roleLabels: Record<UserRole, string> = {
   analyst: '分析师',
   auditor: '审计员',
 };
+
+// 徽章：语义令牌同色系底 + 同色字（规范 §06 徽章形态：r12 / 12px / 500）
+const TokenBadge: React.FC<{ text: string; color: string; bg: string }> = ({ text, color, bg }) => (
+  <span
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      padding: '4px 12px',
+      borderRadius: 12,
+      fontSize: 12,
+      fontWeight: 500,
+      lineHeight: 1.2,
+      whiteSpace: 'nowrap',
+      color,
+      background: bg,
+    }}
+  >
+    {text}
+  </span>
+);
+
+// 账号状态徽章：启用=success · 停用=muted（10% 同色底 + 同色字）
+const AccountStatusBadge: React.FC<{ active: boolean }> = ({ active }) => (
+  <TokenBadge
+    text={active ? '启用' : '停用'}
+    color={active ? 'var(--success)' : 'var(--text-muted)'}
+    bg={
+      active
+        ? 'color-mix(in srgb, var(--success) 10%, transparent)'
+        : 'color-mix(in srgb, var(--text-muted) 10%, transparent)'
+    }
+  />
+);
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -98,43 +131,46 @@ const UserManagement: React.FC = () => {
   );
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>用户管理</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      {/* 页头：左标题 + 右操作区（规范 §02） */}
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">用户管理</span>
         <Space>
           <AntInput.Search placeholder="搜索邮箱/姓名" allowClear size="small" style={{ width: 200 }} onSearch={setSearch} />
           <Button type="primary" size="small" onClick={openCreate}>新建用户</Button>
         </Space>
       </div>
-      <Table
-        size="small"
-        loading={loading}
-        dataSource={filtered}
-        rowKey="id"
-        pagination={{ pageSize: 20 }}
-        columns={[
-          { title: '姓名', dataIndex: 'display_name', key: 'display_name' },
-          { title: '邮箱', dataIndex: 'email', key: 'email' },
-          { title: '手机', dataIndex: 'phone', key: 'phone' },
-          {
-            title: '状态', dataIndex: 'is_active', key: 'is_active', width: 80,
-            render: (v: boolean) => (v ? <Tag color="green">启用</Tag> : <Tag>停用</Tag>),
-          },
-          {
-            title: '最后登录', dataIndex: 'last_login_at', key: 'last_login', width: 180,
-            render: (v: string | null) => (v ? new Date(v).toLocaleString('zh-CN') : '—'),
-          },
-          {
-            title: '操作', key: 'action', width: 140,
-            render: (_, record) => (
-              <Space>
-                <Button size="small" onClick={() => openEdit(record)}>编辑</Button>
-                <Button size="small" danger onClick={() => handleDelete(record)}>停用</Button>
-              </Space>
-            ),
-          },
-        ]}
-      />
+      <div className="eakis-page-content">
+        <Table
+          size="small"
+          loading={loading}
+          dataSource={filtered}
+          rowKey="id"
+          pagination={{ pageSize: 20 }}
+          columns={[
+            { title: '姓名', dataIndex: 'display_name', key: 'display_name' },
+            { title: '邮箱', dataIndex: 'email', key: 'email' },
+            { title: '手机', dataIndex: 'phone', key: 'phone' },
+            {
+              title: '状态', dataIndex: 'is_active', key: 'is_active', width: 90,
+              render: (v: boolean) => <AccountStatusBadge active={v} />,
+            },
+            {
+              title: '最后登录', dataIndex: 'last_login_at', key: 'last_login', width: 180,
+              render: (v: string | null) => (v ? new Date(v).toLocaleString('zh-CN') : '—'),
+            },
+            {
+              title: '操作', key: 'action', width: 140,
+              render: (_, record) => (
+                <Space size={4}>
+                  <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
+                  <Button type="link" size="small" danger onClick={() => handleDelete(record)}>停用</Button>
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </div>
 
       <Modal
         title={editing ? `编辑用户: ${editing.display_name}` : '新建用户'}

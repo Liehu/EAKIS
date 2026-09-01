@@ -1,0 +1,41 @@
+/* InfoCardGrid —— 网格信息卡：.eakis-panel 形态，hover 与 KPI 卡同规则 */
+.eakis-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+
+.eakis-info-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.eakis-info-card:hover {
+  border-color: var(--accent-alpha-20);
+}
+
+[data-theme='light'] .eakis-info-card {
+  box-shadow: var(--shadow-sm);
+  border-color: transparent;
+}
+
+[data-theme='light'] .eakis-info-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.eakis-info-card-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.eakis-info-card-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  word-break: break-all;
+}

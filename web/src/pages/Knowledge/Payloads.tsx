@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, Select, InputNumber, Tag, message, Space, Tabs, Drawer } from 'antd';
+import { CopyOutlined } from '@ant-design/icons';
 import { getPayloads, createPayload, updatePayload, deletePayload, recordPayloadHit } from '@/api/knowledge';
 import type { Payload, PayloadCategory } from '@/types/knowledge';
 import { useRightPanelStore } from '@/store/rightPanelStore';
@@ -7,9 +8,53 @@ import { useRightPanelStore } from '@/store/rightPanelStore';
 const categoryLabel: Record<PayloadCategory, string> = {
   pass: '密码字典', path: '路径字典', user: '用户名字典', header: '请求头', payload: '攻击载荷', keywords: '关键词库',
 };
-const categoryColor: Record<PayloadCategory, string> = {
-  pass: 'red', path: 'blue', user: 'purple', header: 'cyan', payload: 'orange', keywords: 'green',
+
+// 分类语义令牌（规范 §06 标签：10% 同色底 + 同色字）——按原色相意图映射：
+// pass=error红 · path=accent蓝 · user=high橙 · header=low青绿 · payload=warning黄 · keywords=success绿
+const CATEGORY_TOKENS: Record<PayloadCategory, string> = {
+  pass: 'var(--error)', path: 'var(--accent-color)', user: 'var(--severity-high)',
+  header: 'var(--severity-low)', payload: 'var(--warning)', keywords: 'var(--success)',
 };
+
+// 分类标签：10% 同色底 + 同色字（形态对齐 .severity-badge：4px 12px / r12 / 12px）
+const CategoryTag: React.FC<{ cat: PayloadCategory }> = ({ cat }) => (
+  <span style={{
+    display: 'inline-flex', alignItems: 'center',
+    padding: '4px 12px', borderRadius: 12, fontSize: 12, fontWeight: 500,
+    lineHeight: 1.2, whiteSpace: 'nowrap',
+    color: CATEGORY_TOKENS[cat], background: 'color-mix(in srgb, currentColor 10%, transparent)',
+  }}>{categoryLabel[cat]}</span>
+);
+
+// 代码块规范：bg-secondary + 1px var(--border-color) + r6 + mono 12px/1.5（规范 §05/§06）
+const codeBlockStyle: React.CSSProperties = {
+  margin: 0,
+  padding: 12,
+  background: 'var(--bg-secondary)',
+  border: '1px solid var(--border-color)',
+  borderRadius: 'var(--radius-sm)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 12,
+  lineHeight: 1.5,
+  color: 'var(--text-primary)',
+  overflow: 'auto',
+  whiteSpace: 'pre-wrap',
+};
+
+// 代码块复制按钮（type=text size=small）
+const CopyButton: React.FC<{ text: string }> = ({ text }) => (
+  <Button
+    type="text"
+    size="small"
+    icon={<CopyOutlined />}
+    onClick={(e) => {
+      e.stopPropagation();
+      navigator.clipboard?.writeText(text)
+        .then(() => message.success('已复制'))
+        .catch(() => message.error('复制失败'));
+    }}
+  />
+);
 
 const PayloadsPage: React.FC = () => {
   const [category, setCategory] = useState<PayloadCategory>('pass');
@@ -111,7 +156,7 @@ const PayloadsPage: React.FC = () => {
   const content = (cat: PayloadCategory) => (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>{categoryLabel[cat]}</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{categoryLabel[cat]}</span>
         <Space>
           <Input.Search placeholder="搜索名称/内容" allowClear size="small" style={{ width: 180 }} onSearch={setQ} />
           <Button type="primary" size="small" onClick={openCreate}>新增</Button>
@@ -125,18 +170,19 @@ const PayloadsPage: React.FC = () => {
           { title: '名称', dataIndex: 'name', key: 'name', width: 160, render: (v: string) => v || '—' },
           {
             title: '内容预览', dataIndex: 'content', key: 'content', ellipsis: true,
-            render: (v: string) => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{v?.replace(/\n/g, ' | ').slice(0, 60)}</span>,
+            render: (v: string) => <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{v?.replace(/\n/g, ' | ').slice(0, 60)}</span>,
           },
           { title: '分组', dataIndex: 'group_name', key: 'group', width: 110, render: (v: string) => v ? <Tag>{v}</Tag> : '—' },
           { title: '权重', dataIndex: 'weight', key: 'weight', width: 80, sorter: true },
           { title: '命中', dataIndex: 'hit_count', key: 'hit', width: 80, render: (v: number) => v || 0 },
           {
+            // 行操作统一 type=link size=small（规范 §02 表格页）
             title: '操作', key: 'action', width: 200,
             render: (_, r) => (
               <Space size="small" onClick={(e) => e.stopPropagation()}>
-                <Button size="small" onClick={() => handleHit(r)}>记录命中</Button>
-                <Button size="small" onClick={() => openEdit(r)}>编辑</Button>
-                <Button size="small" danger onClick={() => handleDelete(r)}>删除</Button>
+                <Button type="link" size="small" onClick={() => handleHit(r)}>记录命中</Button>
+                <Button type="link" size="small" onClick={() => openEdit(r)}>编辑</Button>
+                <Button type="link" size="small" danger onClick={() => handleDelete(r)}>删除</Button>
               </Space>
             ),
           },
@@ -146,15 +192,20 @@ const PayloadsPage: React.FC = () => {
   );
 
   return (
-    <div>
-      <Tabs
-        activeKey={category}
-        onChange={(k) => setCategory(k as PayloadCategory)}
-        items={(Object.keys(categoryLabel) as PayloadCategory[]).map((c) => ({
-          key: c, label: <span><Tag color={categoryColor[c]} style={{ marginRight: 4 }}>{categoryLabel[c]}</Tag></span>,
-        }))}
-      />
-      {content(category)}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">Payload 库</span>
+      </div>
+      <div className="eakis-page-content">
+        <Tabs
+          activeKey={category}
+          onChange={(k) => setCategory(k as PayloadCategory)}
+          items={(Object.keys(categoryLabel) as PayloadCategory[]).map((c) => ({
+            key: c, label: <CategoryTag cat={c} />,
+          }))}
+        />
+        {content(category)}
+      </div>
 
       <Modal
         title={editing ? `编辑: ${editing.name || '项'}` : `新增${categoryLabel[category]}项`}
@@ -171,7 +222,7 @@ const PayloadsPage: React.FC = () => {
             <Input placeholder="常见弱口令 / 敏感路径 / ua 等" />
           </Form.Item>
           <Form.Item name="content" label="内容 (支持多行换行)" rules={[{ required: true }]}>
-            <Input.TextArea rows={6} placeholder="每行一个词，或一个多行项" style={{ fontFamily: 'monospace' }} />
+            <Input.TextArea rows={6} placeholder="每行一个词，或一个多行项" style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} />
           </Form.Item>
           <Form.Item name="weight" label="权重 (排序用)" tooltip="数值越大越优先">
             <InputNumber min={0} step={0.1} style={{ width: 120 }} />
@@ -186,13 +237,16 @@ const PayloadsPage: React.FC = () => {
         {detail && (
           <>
             <p><strong>名称:</strong> {detail.name || '—'}</p>
-            <p><strong>类型:</strong> <Tag color={categoryColor[detail.category]}>{categoryLabel[detail.category]}</Tag></p>
+            <p><strong>类型:</strong> <CategoryTag cat={detail.category} /></p>
             <p><strong>分组:</strong> {detail.group_name || '—'}</p>
             <p><strong>权重:</strong> {detail.weight} | <strong>命中:</strong> {detail.hit_count}</p>
             <p><strong>描述:</strong> {detail.description || '—'}</p>
             <div style={{ marginTop: 12 }}>
-              <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>内容</div>
-              <pre style={{ background: '#1a1a2e', padding: 12, borderRadius: 8, fontSize: 12, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{detail.content}</pre>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>内容</span>
+                <CopyButton text={detail.content} />
+              </div>
+              <pre style={codeBlockStyle}>{detail.content}</pre>
             </div>
           </>
         )}

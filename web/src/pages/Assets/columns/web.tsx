@@ -5,16 +5,16 @@ import type { RiskLevel, VulnCount } from '@/types/asset';
 
 const renderVulnCount = (vc: VulnCount, assetId: string, navigate: (url: string) => void) => {
   const total = vc.critical + vc.high + vc.medium + vc.low;
-  if (total === 0) return <span style={{ color: '#666' }}>0</span>;
+  if (total === 0) return <span style={{ color: 'var(--text-muted)' }}>0</span>;
   return (
-    <a onClick={(e) => { e.stopPropagation(); navigate(`/vulnerabilities?asset_id=${assetId}`); }} style={{ color: '#378ADD', cursor: 'pointer' }}>
+    <a onClick={(e) => { e.stopPropagation(); navigate(`/vulnerabilities?asset_id=${assetId}`); }} style={{ color: 'var(--accent-color)', cursor: 'pointer' }}>
       {total}
     </a>
   );
 };
 
 export const getWebColumns = (navigate: (url: string) => void) => [
-  { title: 'URL', dataIndex: 'url', key: 'url', ellipsis: true, render: (v: string) => <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#378ADD', fontSize: 12 }}>{v}</a> },
+  { title: 'URL', dataIndex: 'url', key: 'url', ellipsis: true, render: (v: string) => <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-color)', fontSize: 12 }}>{v}</a> },
   { title: 'Title', dataIndex: 'title', key: 'title', width: 180, ellipsis: true, render: (v: string) => v || '-' },
   { title: 'Icon', dataIndex: 'icon', key: 'icon', width: 40, render: (v: string) => v ? <Avatar src={v} size={24} /> : '-' },
   { title: '截图', dataIndex: 'screenshot', key: 'screenshot', width: 60, render: (v: string) => v ? <Tag color="blue">有</Tag> : <Tag>无</Tag> },

@@ -1,0 +1,279 @@
+/**
+ * EAKIS 全局设计令牌 —— 依据《CyberStrikeAI UI/UX 设计规范 v1.7.12》移植
+ * 双主题：html[data-theme='light' | 'dark']；用户偏好 system|light|dark 存 localStorage('eakis-theme-preference')
+ * 规范锚点：亮 accent #0066ff / 暗 accent #60a5fa；暗色靠描边分层，亮色靠轻投影；语义五级严重度色。
+ */
+
+:root[data-theme='light'] {
+  /* 强调色 */
+  --accent-color: #0066ff;
+  --accent-hover: #0052cc;
+
+  /* 背景三级阶 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f5;
+
+  /* 文字三级 */
+  --text-primary: #1a1a1a;
+  --text-secondary: #6c757d;
+  --text-muted: #adb5bd; /* 弱对比位：仅限 meta/装饰或 ≥18.5px 粗体 */
+
+  /* 边框 */
+  --border-color: #e9ecef;
+  --border-accent: rgba(0, 102, 255, 0.2);
+
+  /* 语义色 */
+  --success: #28a745;
+  --warning: #ffc107;
+  --error: #dc3545;
+
+  /* 严重度五级（critical/high/medium/low/info） */
+  --severity-critical: #dc3545;
+  --severity-high: #fd7e14;
+  --severity-medium: #ffc107;
+  --severity-low: #20c997;
+  --severity-info: #6c757d;
+
+  /* AI 品牌渐变（135deg） */
+  --brand-ai-start: #0066ff;
+  --brand-ai-end: #7c3aed;
+
+  /* 阴影（亮色分层主力） */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+
+  /* 焦点环 */
+  --focus-ring: 0 0 0 3px rgba(0, 102, 255, 0.1);
+
+  /* 强调派生常用 alpha 档 */
+  --accent-alpha-04: rgba(0, 102, 255, 0.04);
+  --accent-alpha-08: rgba(0, 102, 255, 0.08);
+  --accent-alpha-12: rgba(0, 102, 255, 0.12);
+  --accent-alpha-20: rgba(0, 102, 255, 0.2);
+
+  --mask-bg: rgba(15, 23, 42, 0.52);
+}
+
+:root[data-theme='dark'] {
+  --accent-color: #60a5fa;
+  --accent-hover: #93c5fd;
+
+  /* 暗色 Surface 阶：页面 #0b1120 → 主面板 #111827 → 区块 #1f2937 → hover 亮化 #2b374b */
+  --bg-primary: #111827;
+  --bg-secondary: #0b1120;
+  --bg-tertiary: #1f2937;
+  --bg-hover: #2b374b;
+  --bg-thead: #172033;
+
+  --text-primary: #e5e7eb;
+  --text-secondary: #a7b0c0;
+  --text-muted: #6b7280;
+
+  --border-color: #263244;
+  --border-accent: rgba(96, 165, 250, 0.2);
+
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+
+  --severity-critical: #f87171;
+  --severity-high: #fb923c;
+  --severity-medium: #fbbf24;
+  --severity-low: #2dd4bf;
+  --severity-info: #a7b0c0;
+
+  --brand-ai-start: #60a5fa;
+  --brand-ai-end: #a78bfa;
+
+  /* 暗色基本无投影，层级靠明度阶 + 1px 描边；保留大浮层投影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.38);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.45);
+
+  --focus-ring: 0 0 0 3px rgba(96, 165, 250, 0.16);
+
+  --accent-alpha-04: rgba(96, 165, 250, 0.04);
+  --accent-alpha-08: rgba(96, 165, 250, 0.08);
+  --accent-alpha-12: rgba(96, 165, 250, 0.12);
+  --accent-alpha-20: rgba(96, 165, 250, 0.2);
+
+  --mask-bg: rgba(15, 23, 42, 0.52);
+}
+
+:root {
+  /* 亮色主题也提供暗色专属变量的空值兜底，避免 var() 引用报错 */
+  --bg-hover: #f1f3f5;
+  --bg-thead: #f1f3f5;
+
+  /* 字体（规范 §04）：正文系统栈；等宽令牌（修复幽灵令牌 --font-mono） */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, sfmono-regular, menlo, monaco, consolas,
+    'Cascadia Code', 'Courier New', monospace;
+
+  /* 规范刻度 */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --sidebar-width: 224px;
+  --sidebar-collapsed-width: 64px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 基础工具 ---------- */
+
+/* 页面头：12px 20px（规范 §02） */
+.eakis-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.eakis-page-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* 页面内容区：16px 20px，内滚动 */
+.eakis-page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  min-height: 0;
+}
+
+/* 严重度徽章：4px 12px / r12 / 12px / 600 / 大写 / 10% 同色底（规范 §06） */
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.severity-badge.sev-critical { color: var(--severity-critical); background: color-mix(in srgb, var(--severity-critical) 10%, transparent); }
+.severity-badge.sev-high     { color: var(--severity-high);     background: color-mix(in srgb, var(--severity-high) 10%, transparent); }
+.severity-badge.sev-medium   { color: var(--severity-medium);   background: color-mix(in srgb, var(--severity-medium) 10%, transparent); }
+.severity-badge.sev-low      { color: var(--severity-low);      background: color-mix(in srgb, var(--severity-low) 10%, transparent); }
+.severity-badge.sev-info     { color: var(--severity-info);     background: color-mix(in srgb, var(--severity-info) 10%, transparent); }
+
+/* 状态点（运行中脉冲等） */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+@keyframes eakis-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.status-dot.is-pulsing {
+  animation: eakis-pulse 1.5s ease-in-out infinite;
+}
+
+/* 面板：暗色 1px 描边分层 / 亮色轻投影 */
+.eakis-panel {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+[data-theme='light'] .eakis-panel {
+  box-shadow: var(--shadow-sm);
+  border-color: transparent;
+}
+
+/* 键盘焦点环（可交互元素兜底） */
+.eakis-focusable:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* 动效基线：all .2s ease 为主流（规范 §05）；系统关闭动效时全部降级 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.eakis-transition {
+  transition: all 0.2s ease;
+}
+
+/* ---------- 主题地基追加规则（antd v6 适配） ---------- */
+
+/* antd 组件统一过渡基线：与规范 §05 动效主流 all .2s ease 对齐；
+   仅过渡颜色类属性，避免干扰 antd 自带的位移/缩放类动效 */
+.ant-btn,
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-tabs-tab-btn,
+.ant-table-tbody > tr > td {
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* 键盘焦点兜底：仅命中非 antd 的原生交互元素（antd 组件有自己的焦点态）。
+   用 outline 承载，不与组件的 box-shadow 焦点环互相覆盖 */
+a:focus-visible,
+button:focus-visible:not([class*='ant-']),
+[role='button']:focus-visible:not([class*='ant-']) {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* 主题切换平滑过渡：html[data-theme] 切换瞬间背景/文字 0.2s 过渡，减少闪变；
+   prefers-reduced-motion 时已由上方全局规则降级为 0.01ms */
+html,
+body {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}

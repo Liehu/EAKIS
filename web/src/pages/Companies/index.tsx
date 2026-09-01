@@ -1,12 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Table, Tag, Button, Modal, Form, Input, Select, message, Popconfirm, Space, Checkbox, Switch } from 'antd';
+import { Table, Tag, Button, Modal, Form, Input, Select, message, Popconfirm, Checkbox, Switch } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined, MonitorOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import { getCompanies, createCompany, deleteCompany, updateCompany, batchEnrich } from '@/api/companies';
 import type { Company } from '@/types/company';
+import BatchActionBar from '@/components/BatchActionBar';
 import CompanyDetail from './Detail';
 
 const industryLabels: Record<string, string> = { fintech: '金融科技', ecommerce: '电商', tech: '互联网', government: '政务', healthcare: '医疗', finance: '金融', security: '安全', other: '其他' };
+
+// 存续状态语义令牌（状态徽章形态）：存续=success · 迁出=warning · 注销/吊销=中性
+const bizStatusToken = (v: string) =>
+  v === '存续' ? 'var(--success)' : v === '迁出' ? 'var(--warning)' : 'var(--text-muted)';
+
+// 状态徽章：10% 同色底 + 同色字（§06 状态徽章形态）
+const BizStatusBadge: React.FC<{ text: string; token: string }> = ({ text, token }) => (
+  <span style={{
+    display: 'inline-flex', alignItems: 'center',
+    padding: '4px 12px', borderRadius: 12, fontSize: 12, fontWeight: 500,
+    lineHeight: 1.2, whiteSpace: 'nowrap',
+    color: token, background: 'color-mix(in srgb, currentColor 10%, transparent)',
+  }}>{text}</span>
+);
 
 const Companies: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -124,55 +139,59 @@ const Companies: React.FC = () => {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>企业管理</span>
-        <Space>
-          {selectedRowKeys.length > 0 && (
-            <>
-              <span style={{ color: '#378ADD', fontSize: 12 }}>已选 {selectedRowKeys.length}</span>
-              <Button size="small" icon={<MonitorOutlined />} onClick={handleBatchMonitor}>监控</Button>
-              <Button size="small" type="primary" ghost icon={<CloudDownloadOutlined />} loading={batchEnriching} onClick={handleBatchEnrich}>从云图采集</Button>
-              <Button size="small" icon={<EditOutlined />} onClick={() => { batchForm.resetFields(); setBatchEditOpen(true); }}>批量修改</Button>
-              <Button size="small" danger onClick={handleBatchDelete}>批量删除</Button>
-            </>
-          )}
-          <Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>添加企业</Button>
-        </Space>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">企业管理</span>
+        <Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>添加企业</Button>
       </div>
-      <Table size="small" loading={loading} dataSource={companies} rowKey="id"
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          showSizeChanger: true,
-          showTotal: (t) => `共 ${t} 家企业`,
-          onChange: (p, ps) => { setPage(p); setPageSize(ps); fetchCompanies(p, ps); },
-        }}
-        rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
-        onRow={(record) => ({ onClick: () => setSelectedCompanyId(record.id), style: { cursor: 'pointer' } })}
-        columns={[
-          { title: '企业名称', dataIndex: 'name', key: 'name', render: (v: string, r: Company) => (
-            <div>
-              <a onClick={(e) => { e.stopPropagation(); setSelectedCompanyId(r.id); }} style={{ color: '#378ADD' }}>{v}</a>
-              {r.aliases?.length > 0 && <span style={{ color: '#666', fontSize: 11, marginLeft: 8 }}>({r.aliases.join('/')})</span>}
-            </div>
-          )},
-          { title: '全称', key: 'full', width: 200, ellipsis: true, render: (_: any, r: Company) => r.credit_code ? r.name : '—' },
-          { title: '行业', dataIndex: 'industry', key: 'industry', width: 90, render: (v: string) => <Tag>{industryLabels[v] || v || '—'}</Tag> },
-          { title: '状态', dataIndex: 'business_status', key: 'status', width: 70, render: (v: string) => v ? <Tag color="green">{v}</Tag> : '—' },
-          { title: '关联域名', key: 'domains', width: 180, ellipsis: true, render: (_: any, r: Company) => r.domains?.join(', ') || '—' },
-          { title: '关联最近任务', key: 'latest', width: 100, render: (_: any, r: Company) => r.task_count > 0 ? <Tag color="blue">{r.latest_task_status || '—'}</Tag> : <span style={{ color: '#666' }}>无</span> },
-          { title: '工号规则', dataIndex: 'work_id_rule', key: 'workid', width: 90, render: (v: string) => v || '—' },
-          {
-            title: '操作', key: 'action', width: 70, render: (_: any, r: Company) => (
-              <Popconfirm title={`删除 "${r.name}"?`} onConfirm={() => handleDelete(r)}>
-                <Button size="small" type="text" danger icon={<DeleteOutlined />} onClick={(e) => e.stopPropagation()} />
-              </Popconfirm>
-            ),
-          },
-        ]}
-      />
+      <div className="eakis-page-content">
+        <BatchActionBar
+          selectedCount={selectedRowKeys.length}
+          actions={[
+            { label: '监控', icon: <MonitorOutlined />, onClick: handleBatchMonitor },
+            { label: '批量修改', icon: <EditOutlined />, onClick: () => { batchForm.resetFields(); setBatchEditOpen(true); } },
+          ]}
+        >
+          <Button size="small" icon={<CloudDownloadOutlined />} loading={batchEnriching} onClick={handleBatchEnrich}>从云图采集</Button>
+          <Button size="small" danger onClick={handleBatchDelete}>批量删除</Button>
+        </BatchActionBar>
+
+        <Table size="small" loading={loading} dataSource={companies} rowKey="id"
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            showTotal: (t) => `共 ${t} 家企业`,
+            onChange: (p, ps) => { setPage(p); setPageSize(ps); fetchCompanies(p, ps); },
+          }}
+          rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+          onRow={(record) => ({ onClick: () => setSelectedCompanyId(record.id), style: { cursor: 'pointer' } })}
+          columns={[
+            { title: '企业名称', dataIndex: 'name', key: 'name', render: (v: string, r: Company) => (
+              <div>
+                <a onClick={(e) => { e.stopPropagation(); setSelectedCompanyId(r.id); }} style={{ color: 'var(--accent-color)' }}>{v}</a>
+                {r.aliases?.length > 0 && <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 8 }}>({r.aliases.join('/')})</span>}
+              </div>
+            )},
+            { title: '全称', key: 'full', width: 200, ellipsis: true, render: (_: any, r: Company) => r.credit_code ? r.name : '—' },
+            { title: '行业', dataIndex: 'industry', key: 'industry', width: 90, render: (v: string) => <Tag>{industryLabels[v] || v || '—'}</Tag> },
+            { title: '状态', dataIndex: 'business_status', key: 'status', width: 70, render: (v: string) => v ? <BizStatusBadge text={v} token={bizStatusToken(v)} /> : '—' },
+            { title: '关联域名', key: 'domains', width: 180, ellipsis: true, render: (_: any, r: Company) => r.domains?.join(', ') || '—' },
+            { title: '关联最近任务', key: 'latest', width: 100, render: (_: any, r: Company) => r.task_count > 0
+              ? <BizStatusBadge text={r.latest_task_status || '—'} token="var(--accent-color)" />
+              : <span style={{ color: 'var(--text-muted)' }}>无</span> },
+            { title: '工号规则', dataIndex: 'work_id_rule', key: 'workid', width: 90, render: (v: string) => v || '—' },
+            {
+              title: '操作', key: 'action', width: 70, render: (_: any, r: Company) => (
+                <Popconfirm title={`删除 "${r.name}"?`} onConfirm={() => handleDelete(r)}>
+                  <Button size="small" type="text" danger icon={<DeleteOutlined />} onClick={(e) => e.stopPropagation()} />
+                </Popconfirm>
+              ),
+            },
+          ]}
+        />
+      </div>
 
       <Modal title="添加企业" open={createOpen} onCancel={() => setCreateOpen(false)} onOk={() => form.submit()} confirmLoading={creating} width={560}>
         <Form form={form} layout="vertical" onFinish={handleCreate} initialValues={{ auto_enrich: true }}>
@@ -194,7 +213,7 @@ const Companies: React.FC = () => {
 
       <Modal title={`批量修改 ${selectedRowKeys.length} 个企业`} open={batchEditOpen} onCancel={() => setBatchEditOpen(false)} onOk={handleBatchEdit} okText="修改" cancelText="取消" width={520}>
         <Form form={batchForm} layout="vertical">
-          <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>留空的字段不会被修改</div>
+          <div style={{ marginBottom: 8, color: 'var(--text-secondary)', fontSize: 12 }}>留空的字段不会被修改</div>
           <Form.Item name="industry" label="行业">
             <Select allowClear placeholder="不修改" options={Object.entries(industryLabels).map(([k, l]) => ({ value: k, label: l }))} />
           </Form.Item>

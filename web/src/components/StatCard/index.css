@@ -1,0 +1,58 @@
+/* StatCard —— KPI 卡规范（§06）：暗色描边分层 / 亮色轻投影 */
+.eakis-kpi-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: all 0.2s ease;
+}
+
+.eakis-kpi-card.is-clickable {
+  cursor: pointer;
+}
+
+/* active / focus 语义态：accent 20% 描边（与 hover 暗色态同源） */
+.eakis-kpi-card.is-active,
+.eakis-kpi-card.is-clickable:focus-visible {
+  border-color: var(--accent-alpha-20);
+  outline: none;
+}
+
+.eakis-kpi-card:hover {
+  border-color: var(--accent-alpha-20);
+}
+
+[data-theme='light'] .eakis-kpi-card {
+  box-shadow: var(--shadow-sm);
+  border-color: transparent;
+}
+
+[data-theme='light'] .eakis-kpi-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.eakis-kpi-card-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+/* 严重度语义小色点（由 color prop 注入 --severity-* 变量） */
+.eakis-kpi-card-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.eakis-kpi-card-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}

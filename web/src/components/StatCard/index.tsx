@@ -1,4 +1,4 @@
-import { Card } from 'antd';
+import './index.css';
 
 interface StatCardProps {
   title: string;
@@ -7,21 +7,24 @@ interface StatCardProps {
   onClick?: () => void;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, color = '#378ADD', onClick }) => (
-  <Card
-    size="small"
-    style={{
-      background: '#1a1a2e',
-      borderColor: '#2a2a4e',
-      borderLeft: `3px solid ${color}`,
-      cursor: onClick ? 'pointer' : 'default',
-      borderRadius: 6,
-    }}
+/**
+ * KPI 统计卡（规范 §06）
+ * - 结构：--bg-primary 底 + 1px --border-color 描边 + --radius-md 圆角；亮色轻投影分层
+ * - 排版：标签 12px --text-secondary；数值 22px/700 --text-primary
+ * - color prop 仅作为左侧小色点（严重度语义色，禁宽色条左描边）；调用方宜传 --severity-* 变量
+ * - hover：暗色描边亮化为 --accent-alpha-20；亮色上浮 1px + --shadow-md
+ */
+const StatCard: React.FC<StatCardProps> = ({ title, value, color, onClick }) => (
+  <div
+    className={`eakis-kpi-card${onClick ? ' is-clickable' : ''}`}
     onClick={onClick}
   >
-    <div style={{ color: '#888', fontSize: 12, marginBottom: 4 }}>{title}</div>
-    <div style={{ color: '#e2e8f0', fontSize: 22, fontWeight: 500 }}>{value}</div>
-  </Card>
+    <div className="eakis-kpi-card-label">
+      {color && <span className="eakis-kpi-card-dot" style={{ background: color }} />}
+      {title}
+    </div>
+    <div className="eakis-kpi-card-value">{value}</div>
+  </div>
 );
 
 export default StatCard;

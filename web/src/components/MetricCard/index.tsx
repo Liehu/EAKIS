@@ -1,5 +1,5 @@
-import { Card, Statistic } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import './index.css';
 
 interface MetricCardProps {
   title: string;
@@ -9,24 +9,26 @@ interface MetricCardProps {
   deltaType?: 'up' | 'down';
 }
 
+/**
+ * KPI 指标卡（规范 §06）：与 StatCard 同一卡片规范（.eakis-kpi-card）。
+ * delta 语义色：up → --success / 其余（down）→ --error，箭头方向跟随原逻辑。
+ */
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, suffix, delta, deltaType }) => (
-  <Card
-    size="small"
-    style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}
-    styles={{ body: { padding: '14px 16px' } }}
-  >
-    <Statistic
-      title={<span style={{ fontSize: 12, color: '#888' }}>{title}</span>}
-      value={value}
-      suffix={suffix}
-      valueStyle={{ fontSize: 22, fontWeight: 500, color: '#e0e0e0' }}
-    />
+  <div className="eakis-kpi-card">
+    <div className="eakis-kpi-card-label">{title}</div>
+    <div className="eakis-kpi-card-value">
+      {value}
+      {suffix && <span className="eakis-kpi-card-suffix">{suffix}</span>}
+    </div>
     {delta && (
-      <div style={{ fontSize: 11, marginTop: 4, color: deltaType === 'up' ? '#52c41a' : '#ff4d4f' }}>
+      <div
+        className="eakis-kpi-card-delta"
+        style={{ color: deltaType === 'up' ? 'var(--success)' : 'var(--error)' }}
+      >
         {deltaType === 'up' ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {delta}
       </div>
     )}
-  </Card>
+  </div>
 );
 
 export default MetricCard;

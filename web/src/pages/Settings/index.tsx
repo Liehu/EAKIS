@@ -86,13 +86,13 @@ const Settings: React.FC = () => {
   const healthTab = (
     <Row gutter={16}>
       <Col span={12}>
-        <Card title="健康状态" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}>
+        <Card title="健康状态" size="small" className="eakis-panel">
           {health ? (
             <Descriptions column={2} size="small">
               {Object.entries(health.components).map(([key, val]) => (
                 <Descriptions.Item key={key} label={key}>
                   <Tag color={val.status === 'healthy' ? 'green' : 'red'}>{val.status}</Tag>
-                  {val.latency_ms != null && <span style={{ color: '#888', fontSize: 11 }}>{val.latency_ms}ms</span>}
+                  {val.latency_ms != null && <span style={{ color: 'var(--text-muted)', fontSize: 12, marginLeft: 8 }}>{val.latency_ms}ms</span>}
                 </Descriptions.Item>
               ))}
             </Descriptions>
@@ -100,7 +100,7 @@ const Settings: React.FC = () => {
         </Card>
       </Col>
       <Col span={12}>
-        <Card title="系统指标" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}>
+        <Card title="系统指标" size="small" className="eakis-panel">
           {metrics ? (
             <Descriptions column={2} size="small">
               <Descriptions.Item label="活跃任务">{metrics.active_tasks}</Descriptions.Item>
@@ -119,14 +119,14 @@ const Settings: React.FC = () => {
       <Row gutter={16} style={{ marginBottom: 16 }}>
         {providerUsage.map((pu) => (
           <Col span={8} key={pu.provider_id}>
-            <Card size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}>
-              <Statistic title={<span style={{ color: '#888' }}>{pu.provider_name}</span>} value={`$${pu.cost_usd.toFixed(2)}`} valueStyle={{ fontSize: 18 }} />
-              <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>调用 {pu.total_calls} 次 · {pu.total_tokens.toLocaleString()} tokens</div>
+            <Card size="small" className="eakis-panel">
+              <Statistic title={<span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{pu.provider_name}</span>} value={`$${pu.cost_usd.toFixed(2)}`} valueStyle={{ fontSize: 18 }} />
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>调用 {pu.total_calls} 次 · {pu.total_tokens.toLocaleString()} tokens</div>
             </Card>
           </Col>
         ))}
       </Row>
-      <Card title="Provider 列表" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}
+      <Card title="Provider 列表" size="small" className="eakis-panel"
         extra={<Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => setProviderModalOpen(true)}>添加</Button>}>
         <Table size="small" dataSource={providers} rowKey="id" pagination={false}
           columns={[
@@ -140,7 +140,7 @@ const Settings: React.FC = () => {
           ]}
         />
       </Card>
-      <Card title="模型分配" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e', marginTop: 16 }}>
+      <Card title="模型分配" size="small" className="eakis-panel" style={{ marginTop: 16 }}>
         <Table size="small" dataSource={allocations} rowKey="agent_name" pagination={false}
           columns={[
             { title: 'Agent', dataIndex: 'agent_name', key: 'agent' },
@@ -155,11 +155,11 @@ const Settings: React.FC = () => {
 
   const searchSitesTab = (
     <div>
-      <Card title="搜索引擎配置" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}>
+      <Card title="搜索引擎配置" size="small" className="eakis-panel">
         <Table size="small" pagination={false} dataSource={[
-          { key: 'fofa', name: 'FOFA', api_key: '****xxxx', quota: '10000次/月', used: 3256, enabled: true },
-          { key: 'hunter', name: '鹰图 (Hunter)', api_key: '****yyyy', quota: '5000次/月', used: 1890, enabled: true },
-          { key: 'shodan', name: 'Shodan', api_key: '****zzzz', quota: '100次/月', used: 45, enabled: false },
+          { key: 'fofa', name: 'FOFA', api_key: '***', quota: '10000次/月', used: 3256, enabled: true },
+          { key: 'hunter', name: '鹰图 (Hunter)', api_key: '***', quota: '5000次/月', used: 1890, enabled: true },
+          { key: 'shodan', name: 'Shodan', api_key: '***', quota: '100次/月', used: 45, enabled: false },
         ]}
           columns={[
             { title: '引擎', dataIndex: 'name', key: 'name' },
@@ -171,7 +171,7 @@ const Settings: React.FC = () => {
           ]}
         />
       </Card>
-      <Card title="招投标网站" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e', marginTop: 16 }}>
+      <Card title="招投标网站" size="small" className="eakis-panel" style={{ marginTop: 16 }}>
         <Table size="small" pagination={false} dataSource={[
           { key: 'ccgp', name: '中国政府采购网', url: 'http://www.ccgp.gov.cn', enabled: true },
           { key: 'chinabidding', name: '中国招标网', url: 'https://www.chinabidding.cn', enabled: true },
@@ -188,7 +188,7 @@ const Settings: React.FC = () => {
   );
 
   const keywordTemplatesTab = (
-    <Card title="关键词模板" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}
+    <Card title="关键词模板" size="small" className="eakis-panel"
       extra={<Button size="small" type="primary" icon={<PlusOutlined />}>新建模板</Button>}>
       <Table size="small" pagination={false} dataSource={[
         { key: 'tpl_001', name: '金融科技通用模板', industry: 'fintech', keywords: 86, updated: '2024-01-01' },
@@ -207,13 +207,13 @@ const Settings: React.FC = () => {
   );
 
   const agentsTab = (
-    <Card title="Agent 配置" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}>
+    <Card title="Agent 配置" size="small" className="eakis-panel">
       <AgentConfigTable />
     </Card>
   );
 
   const webhooksTab = (
-    <Card title="Webhook 通知" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}
+    <Card title="Webhook 通知" size="small" className="eakis-panel"
       extra={<Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => setWebhookModalOpen(true)}>添加</Button>}>
       <Table size="small" dataSource={webhooks} rowKey="id" pagination={false}
         columns={[
@@ -236,7 +236,7 @@ const Settings: React.FC = () => {
   );
 
   const concurrencyTab = (
-    <Card title="并发与速率设置" size="small" style={{ background: '#1a1a2e', borderColor: '#2a2a4e' }}>
+    <Card title="并发与速率设置" size="small" className="eakis-panel">
       <Descriptions column={1} size="small" bordered>
         <Descriptions.Item label="全局最大并发任务数">5</Descriptions.Item>
         <Descriptions.Item label="单任务 Agent 并发数">3</Descriptions.Item>
@@ -261,7 +261,15 @@ const Settings: React.FC = () => {
 
   return (
     <>
-      <Tabs defaultActiveKey="health" items={tabItems} />
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+        {/* 页头：左标题（规范 §02） */}
+        <div className="eakis-page-header">
+          <span className="eakis-page-header-title">系统设置</span>
+        </div>
+        <div className="eakis-page-content">
+          <Tabs defaultActiveKey="health" items={tabItems} />
+        </div>
+      </div>
 
       {/* Modals rendered outside Tabs to avoid context issues */}
       <Modal title="添加 AI Provider" open={providerModalOpen} onCancel={() => setProviderModalOpen(false)} onOk={() => providerForm.submit()}>

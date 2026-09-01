@@ -42,34 +42,36 @@ const AppLayout: React.FC = () => {
       height: '100vh',
       width: '100%',
       overflow: 'hidden',
-      background: '#0d0d1a',
+      background: 'var(--bg-secondary)',
     }}>
       {/* 左侧菜单栏 */}
       <Sidebar />
 
-      {/* 右侧主体区域 */}
+      {/* 右侧主体区域：外层 padding/gap 按 4px 刻度收敛（16px） */}
       <div style={{
         flex: 1,
         display: 'flex',
-        padding: '20px 20px 20px 12px',
-        gap: showRight ? 20 : 0,
+        padding: 16,
+        gap: showRight ? 16 : 0,
         overflow: 'hidden',
+        minWidth: 0,
       }}>
-        {/* 中间数据面板 */}
-        <div style={{
-          flex: 1,
-          background: '#1a1a2e',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          transition: 'all 0.2s',
-          minWidth: 0,
-        }}>
+        {/* 中间数据面板：eakis-panel 语义（暗色 1px 描边分层 / 亮色轻投影），圆角 radius-md */}
+        <div
+          className="eakis-panel"
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            transition: 'background-color 0.2s ease, border-color 0.2s ease',
+            minWidth: 0,
+          }}
+        >
           <Outlet />
         </div>
 
-        {/* 右侧面板（关系图谱 or 详情预览） */}
+        {/* 右侧面板（关系图谱 or 详情预览）：min 280 / max 800 */}
         {showRight && (
           <>
             <ResizeHandle onResize={setRightWidth} />

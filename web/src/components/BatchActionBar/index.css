@@ -1,0 +1,20 @@
+/* BatchActionBar —— 批量操作条：accent 淡底强调容器（§06），40-44px 高度带 */
+.eakis-batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  background: var(--accent-alpha-04);
+  border: 1px solid var(--accent-alpha-20);
+  border-radius: var(--radius-sm);
+}
+
+.eakis-batch-bar-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent-color);
+  white-space: nowrap;
+  flex-shrink: 0;
+}

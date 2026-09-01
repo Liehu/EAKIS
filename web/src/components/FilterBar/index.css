@@ -1,0 +1,9 @@
+/* FilterBar —— 筛选工具栏：透明容器、无边框卡壳，间距走 4px 刻度（§05） */
+.eakis-filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  background: transparent;
+}

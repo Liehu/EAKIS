@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { Select, Badge, Spin } from 'antd';
 import {
   DashboardOutlined,
@@ -17,11 +18,16 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   TeamOutlined,
+  RightOutlined,
+  MonitorOutlined,
+  BulbOutlined,
+  MoonOutlined,
 } from '@ant-design/icons';
 import type { ReactNode } from 'react';
 import { useAppStore } from '@/store/appStore';
 import { useTaskStore } from '@/store/taskStore';
 import { useAuthStore } from '@/store/authStore';
+import { useThemeStore, type ThemePreference } from '@/store/themeStore';
 import { listTasks, getTask } from '@/api/tasks';
 import type { Task } from '@/types/task';
 
@@ -100,6 +106,100 @@ const menuItems: MenuItem[] = [
   },
 ];
 
+/* ── 主题三态切换（system → light → dark，图标均已核验存在于 @ant-design/icons v6） ── */
+const THEME_META: Record<ThemePreference, { icon: ReactNode; title: string; label: string }> = {
+  system: { icon: <MonitorOutlined />, title: '主题：跟随系统', label: '跟随系统' },
+  light: { icon: <BulbOutlined />, title: '主题：浅色', label: '浅色' },
+  dark: { icon: <MoonOutlined />, title: '主题：深色', label: '深色' },
+};
+
+/* ── 布局刻度（对齐 index.css 令牌） ── */
+const MENU_ITEM_HEIGHT = 36; // 规范：菜单项高 36-40px
+const POPUP_GAP = 8;         // 弹出子菜单与侧栏的间距
+
+/* ── 折叠态弹出子菜单（portal 渲染到 body，避免被侧栏 overflow 裁剪） ── */
+interface PopupState {
+  key: string;
+  top: number;
+  left: number;
+}
+
+function CollapsedSubmenu({
+  popup,
+  activeKey,
+  onKeep,
+  onScheduleClose,
+  onNavigate,
+}: {
+  popup: PopupState;
+  activeKey: string;
+  onKeep: () => void;
+  onScheduleClose: () => void;
+  onNavigate: (route: string) => void;
+}) {
+  const parent = menuItems.find((i): i is ParentMenuItem => isParent(i) && i.key === popup.key);
+  if (!parent) return null;
+
+  // 估算弹层高度，防止超出视口底部
+  const popupHeight = parent.children.length * (MENU_ITEM_HEIGHT + 2) + 12;
+  const top = Math.min(popup.top, Math.max(16, window.innerHeight - popupHeight - 16));
+
+  return createPortal(
+    <div
+      onMouseEnter={onKeep}
+      onMouseLeave={onScheduleClose}
+      style={{
+        position: 'fixed',
+        top,
+        left: popup.left,
+        zIndex: 1000,
+        minWidth: 168,
+        padding: 6,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        background: 'var(--bg-primary)',
+        border: '1px solid var(--border-color)',
+        borderRadius: 'var(--radius-md)',
+        boxShadow: 'var(--shadow-md)',
+      }}
+    >
+      {parent.children.map((child) => {
+        const active = activeKey === child.key;
+        return (
+          <div
+            key={child.key}
+            onClick={() => onNavigate(child.route)}
+            style={{
+              height: MENU_ITEM_HEIGHT,
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 10px',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: 13,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'background 0.2s ease, color 0.2s ease',
+              color: active ? 'var(--accent-color)' : 'var(--text-secondary)',
+              fontWeight: active ? 500 : 400,
+              background: active ? 'var(--accent-alpha-08)' : 'transparent',
+            }}
+            onMouseEnter={(e) => {
+              if (!active) e.currentTarget.style.background = 'var(--bg-tertiary)';
+            }}
+            onMouseLeave={(e) => {
+              if (!active) e.currentTarget.style.background = 'transparent';
+            }}
+          >
+            {child.label}
+          </div>
+        );
+      })}
+    </div>,
+    document.body
+  );
+}
+
 /* ── 状态标签映射 ── */
 const statusLabel = (status: string) => {
   const map: Record<string, string> = {
@@ -120,10 +220,18 @@ const Sidebar: React.FC = () => {
   const currentTask = useTaskStore((s) => s.currentTask);
   const setCurrentTask = useTaskStore((s) => s.setCurrentTask);
   const doLogout = useAuthStore((s) => s.logout);
+  // 主题三态：底部工具区循环切换；亮色补轻投影（暗色靠描边分层）
+  const themePreference = useThemeStore((s) => s.preference);
+  const cycleTheme = useThemeStore((s) => s.cycle);
+  const themeResolved = useThemeStore((s) => s.resolved);
 
   // 任务选择器状态
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // 折叠态弹出子菜单状态（锚定坐标 + 关闭延时器）
+  const [popup, setPopup] = useState<PopupState | null>(null);
+  const popupCloseTimer = useRef<number | null>(null);
 
   // 加载任务列表
   useEffect(() => {
@@ -140,6 +248,37 @@ const Sidebar: React.FC = () => {
       .catch(() => setTasks([]))
       .finally(() => setLoading(false));
   }, []);
+
+  // 展开态不保留弹出子菜单
+  useEffect(() => {
+    if (!collapsed) setPopup(null);
+  }, [collapsed]);
+
+  // 卸载时清理关闭延时器
+  useEffect(() => () => {
+    if (popupCloseTimer.current !== null) window.clearTimeout(popupCloseTimer.current);
+  }, []);
+
+  const openPopup = (key: string, el: HTMLElement) => {
+    if (popupCloseTimer.current !== null) {
+      window.clearTimeout(popupCloseTimer.current);
+      popupCloseTimer.current = null;
+    }
+    const rect = el.getBoundingClientRect();
+    setPopup({ key, top: rect.top, left: rect.right + POPUP_GAP });
+  };
+
+  const schedulePopupClose = () => {
+    if (popupCloseTimer.current !== null) window.clearTimeout(popupCloseTimer.current);
+    popupCloseTimer.current = window.setTimeout(() => setPopup(null), 150);
+  };
+
+  const keepPopupOpen = () => {
+    if (popupCloseTimer.current !== null) {
+      window.clearTimeout(popupCloseTimer.current);
+      popupCloseTimer.current = null;
+    }
+  };
 
   const handleTaskChange = (taskId: string) => {
     getTask(taskId).then(setCurrentTask).catch(() => {
@@ -193,16 +332,25 @@ const Sidebar: React.FC = () => {
     }
   }, [pathname]);
 
+  // 菜单项 hover 配色（激活项不参与 hover 变底）
+  const menuItemHoverIn = (active: boolean) => (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!active) e.currentTarget.style.background = 'var(--bg-tertiary)';
+  };
+  const menuItemHoverOut = (active: boolean) => (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!active) e.currentTarget.style.background = 'transparent';
+  };
+
   return (
     <div
       style={{
-        width: collapsed ? 80 : 280,
-        background: '#141422',
-        color: '#e2e8f0',
+        width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+        background: 'var(--bg-primary)',
+        borderRight: '1px solid var(--border-color)',
+        boxShadow: themeResolved === 'light' ? 'var(--shadow-sm)' : 'none',
+        color: 'var(--text-primary)',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'width 0.2s ease',
-        boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
+        transition: 'width 0.2s ease, background-color 0.2s ease, border-color 0.2s ease',
         zIndex: 20,
         overflow: 'hidden',
         flexShrink: 0,
@@ -211,14 +359,14 @@ const Sidebar: React.FC = () => {
     >
       {/* Logo 区 */}
       <div style={{
-        padding: collapsed ? '24px 0' : '24px 20px',
-        borderBottom: '1px solid #2a2a4e',
+        padding: collapsed ? '16px 0' : '16px 16px',
+        borderBottom: '1px solid var(--border-color)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: collapsed ? 'center' : 'space-between',
       }}>
         {!collapsed && (
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, whiteSpace: 'nowrap', color: '#378ADD' }}>
+          <div style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: 'var(--accent-color)' }}>
             <CustomerServiceOutlined style={{ marginRight: 8 }} />
             安鉴·天穹
           </div>
@@ -228,9 +376,9 @@ const Sidebar: React.FC = () => {
           style={{
             background: 'none',
             border: 'none',
-            color: '#94a3b8',
+            color: 'var(--text-secondary)',
             cursor: 'pointer',
-            fontSize: '1.1rem',
+            fontSize: 16,
             padding: 4,
             display: 'flex',
             alignItems: 'center',
@@ -244,7 +392,7 @@ const Sidebar: React.FC = () => {
       {/* 导航菜单区 */}
       <div style={{
         flex: 1,
-        padding: collapsed ? '20px 0' : '20px 12px',
+        padding: collapsed ? '12px 8px' : '12px 10px',
         overflowY: 'auto',
         overflowX: 'hidden',
       }}>
@@ -259,80 +407,90 @@ const Sidebar: React.FC = () => {
                 <div
                   onClick={() => {
                     if (!collapsed) toggleMenu(item.key);
-                    else navigate(item.children[0]?.route || '/');
+                    else {
+                      setPopup(null);
+                      navigate(item.children[0]?.route || '/');
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    if (collapsed) openPopup(item.key, e.currentTarget);
+                    menuItemHoverIn(isParentActive)(e);
+                  }}
+                  onMouseLeave={(e) => {
+                    if (collapsed) schedulePopupClose();
+                    menuItemHoverOut(isParentActive)(e);
                   }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 14,
-                    padding: collapsed ? '12px 0' : '10px 16px',
+                    gap: 12,
+                    height: MENU_ITEM_HEIGHT,
+                    padding: '0 10px',
                     marginBottom: 4,
-                    borderRadius: 12,
+                    borderRadius: 'var(--radius-sm)',
                     cursor: 'pointer',
-                    transition: '0.2s',
-                    color: isParentActive ? '#fff' : '#cbd5e6',
-                    fontWeight: 500,
+                    transition: 'background 0.2s ease, color 0.2s ease',
+                    fontSize: 13,
+                    color: isParentActive ? 'var(--accent-color)' : 'var(--text-secondary)',
+                    fontWeight: isParentActive ? 500 : 400,
                     whiteSpace: 'nowrap',
-                    background: isParentActive ? '#378ADD22' : 'transparent',
+                    background: isParentActive ? 'var(--accent-alpha-08)' : 'transparent',
                     justifyContent: collapsed ? 'center' : 'flex-start',
                   }}
-                  onMouseEnter={(e) => {
-                    if (!isParentActive) (e.currentTarget as HTMLDivElement).style.background = '#ffffff0a';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isParentActive) (e.currentTarget as HTMLDivElement).style.background = 'transparent';
-                  }}
                 >
-                  <span style={{ width: 24, fontSize: '1.1rem', textAlign: 'center', flexShrink: 0 }}>
+                  <span style={{ width: 24, fontSize: 16, textAlign: 'center', flexShrink: 0, display: 'inline-flex', justifyContent: 'center' }}>
                     {item.icon}
                   </span>
                   {!collapsed && (
                     <>
                       <span style={{ flex: 1 }}>{item.label}</span>
-                      <span style={{
-                        fontSize: 10,
-                        transition: 'transform 0.2s',
-                        transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                        color: '#666',
-                      }}>
-                        ▶
-                      </span>
+                      <RightOutlined
+                        style={{
+                          fontSize: 10,
+                          color: 'var(--text-muted)',
+                          transition: 'transform 0.2s ease',
+                          transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                        }}
+                      />
                     </>
                   )}
                 </div>
                 {/* 二级菜单 */}
                 {!collapsed && isExpanded && (
                   <div style={{
-                    marginLeft: 38,
+                    marginLeft: 34,
                     paddingLeft: 8,
-                    borderLeft: '1px solid #2a2a4e',
+                    borderLeft: '1px solid var(--border-color)',
                     marginBottom: 8,
                   }}>
-                    {item.children.map((child) => (
-                      <div
-                        key={child.key}
-                        onClick={() => navigate(child.route)}
-                        style={{
-                          padding: '8px 12px',
-                          margin: '4px 0',
-                          borderRadius: 10,
-                          cursor: 'pointer',
-                          fontSize: '0.8rem',
-                          color: activeKey === child.key ? '#fff' : '#b9c7d9',
-                          whiteSpace: 'nowrap',
-                          background: activeKey === child.key ? '#378ADD33' : 'transparent',
-                          transition: '0.15s',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (activeKey !== child.key) (e.currentTarget as HTMLDivElement).style.background = '#ffffff0a';
-                        }}
-                        onMouseLeave={(e) => {
-                          if (activeKey !== child.key) (e.currentTarget as HTMLDivElement).style.background = 'transparent';
-                        }}
-                      >
-                        {child.label}
-                      </div>
-                    ))}
+                    {item.children.map((child) => {
+                      const active = activeKey === child.key;
+                      return (
+                        <div
+                          key={child.key}
+                          onClick={() => navigate(child.route)}
+                          onMouseEnter={menuItemHoverIn(active)}
+                          onMouseLeave={menuItemHoverOut(active)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            height: MENU_ITEM_HEIGHT,
+                            padding: '0 10px',
+                            margin: '2px 0',
+                            borderRadius: 'var(--radius-sm)',
+                            cursor: 'pointer',
+                            fontSize: 13,
+                            color: active ? 'var(--accent-color)' : 'var(--text-secondary)',
+                            fontWeight: active ? 500 : 400,
+                            whiteSpace: 'nowrap',
+                            background: active ? 'var(--accent-alpha-08)' : 'transparent',
+                            transition: 'background 0.2s ease, color 0.2s ease',
+                          }}
+                        >
+                          {child.label}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -345,29 +503,27 @@ const Sidebar: React.FC = () => {
             <div
               key={item.key}
               onClick={() => navigate(item.route)}
+              onMouseEnter={menuItemHoverIn(isActive)}
+              onMouseLeave={menuItemHoverOut(isActive)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 14,
-                padding: collapsed ? '12px 0' : '10px 16px',
+                gap: 12,
+                height: MENU_ITEM_HEIGHT,
+                padding: '0 10px',
                 marginBottom: 4,
-                borderRadius: 12,
+                borderRadius: 'var(--radius-sm)',
                 cursor: 'pointer',
-                transition: '0.2s',
-                color: isActive ? '#fff' : '#cbd5e6',
-                fontWeight: 500,
+                transition: 'background 0.2s ease, color 0.2s ease',
+                fontSize: 13,
+                color: isActive ? 'var(--accent-color)' : 'var(--text-secondary)',
+                fontWeight: isActive ? 500 : 400,
                 whiteSpace: 'nowrap',
-                background: isActive ? '#378ADD22' : 'transparent',
+                background: isActive ? 'var(--accent-alpha-08)' : 'transparent',
                 justifyContent: collapsed ? 'center' : 'flex-start',
               }}
-              onMouseEnter={(e) => {
-                if (!isActive) (e.currentTarget as HTMLDivElement).style.background = '#ffffff0a';
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'transparent';
-              }}
             >
-              <span style={{ width: 24, fontSize: '1.1rem', textAlign: 'center', flexShrink: 0 }}>
+              <span style={{ width: 24, fontSize: 16, textAlign: 'center', flexShrink: 0, display: 'inline-flex', justifyContent: 'center' }}>
                 {item.icon}
               </span>
               {!collapsed && <span>{item.label}</span>}
@@ -378,14 +534,16 @@ const Sidebar: React.FC = () => {
 
       {/* Footer 区 */}
       <div style={{
-        padding: collapsed ? '16px 0' : '12px',
-        borderTop: '1px solid #2a2a4e',
-        fontSize: '0.8rem',
+        padding: collapsed ? '12px 8px' : '12px 10px',
+        borderTop: '1px solid var(--border-color)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
       }}>
         {/* 任务选择器（仅展开时显示） */}
         {!collapsed && (
-          <div style={{ padding: '4px 12px 12px' }}>
-            <div style={{ color: '#666', fontSize: 11, marginBottom: 6 }}>当前任务</div>
+          <div style={{ padding: '4px 10px 10px' }}>
+            <div style={{ color: 'var(--text-muted)', fontSize: 11, marginBottom: 6 }}>当前任务</div>
             <Select
               value={currentTask?.task_id}
               style={{ width: '100%' }}
@@ -395,7 +553,6 @@ const Sidebar: React.FC = () => {
               loading={loading}
               notFoundContent={loading ? <Spin size="small" /> : '暂无任务'}
               onChange={handleTaskChange}
-              dropdownStyle={{ background: '#1a1a2e' }}
             />
             {currentTask && (
               <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -404,7 +561,7 @@ const Sidebar: React.FC = () => {
                   text={(
                     <span style={{
                       fontSize: 11,
-                      color: currentTask.status === 'running' ? '#52c41a' : '#888',
+                      color: currentTask.status === 'running' ? 'var(--success)' : 'var(--text-muted)',
                     }}>
                       {statusLabel(currentTask.status)}
                     </span>
@@ -415,30 +572,62 @@ const Sidebar: React.FC = () => {
           </div>
         )}
 
+        {/* 主题三态循环切换（system → light → dark） */}
+        <div
+          onClick={cycleTheme}
+          title={THEME_META[themePreference].title}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            height: MENU_ITEM_HEIGHT,
+            padding: '0 10px',
+            borderRadius: 'var(--radius-sm)',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)',
+            fontSize: 13,
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            transition: 'background 0.2s ease, color 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--bg-tertiary)';
+            e.currentTarget.style.color = 'var(--text-primary)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--text-secondary)';
+          }}
+        >
+          {THEME_META[themePreference].icon}
+          {!collapsed && <span>{THEME_META[themePreference].label}</span>}
+        </div>
+
         {/* Footer 菜单项 */}
         <div
           onClick={() => navigate('/settings')}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
-            padding: collapsed ? '8px 0' : '8px 12px',
-            borderRadius: 10,
+            gap: 12,
+            height: MENU_ITEM_HEIGHT,
+            padding: '0 10px',
+            borderRadius: 'var(--radius-sm)',
             cursor: 'pointer',
-            color: '#94a3b8',
+            color: 'var(--text-secondary)',
+            fontSize: 13,
             justifyContent: collapsed ? 'center' : 'flex-start',
-            transition: '0.15s',
+            transition: 'background 0.2s ease, color 0.2s ease',
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLDivElement).style.background = '#ffffff0a';
-            (e.currentTarget as HTMLDivElement).style.color = '#fff';
+            e.currentTarget.style.background = 'var(--bg-tertiary)';
+            e.currentTarget.style.color = 'var(--text-primary)';
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLDivElement).style.background = 'transparent';
-            (e.currentTarget as HTMLDivElement).style.color = '#94a3b8';
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--text-secondary)';
           }}
         >
-          <SettingOutlined style={{ fontSize: '0.95rem' }} />
+          <SettingOutlined style={{ fontSize: 15 }} />
           {!collapsed && <span>系统设置</span>}
         </div>
         <div
@@ -446,24 +635,26 @@ const Sidebar: React.FC = () => {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
-            padding: collapsed ? '8px 0' : '8px 12px',
-            borderRadius: 10,
+            gap: 12,
+            height: MENU_ITEM_HEIGHT,
+            padding: '0 10px',
+            borderRadius: 'var(--radius-sm)',
             cursor: 'pointer',
-            color: '#94a3b8',
+            color: 'var(--text-secondary)',
+            fontSize: 13,
             justifyContent: collapsed ? 'center' : 'flex-start',
-            transition: '0.15s',
+            transition: 'background 0.2s ease, color 0.2s ease',
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLDivElement).style.background = '#ffffff0a';
-            (e.currentTarget as HTMLDivElement).style.color = '#fff';
+            e.currentTarget.style.background = 'var(--bg-tertiary)';
+            e.currentTarget.style.color = 'var(--text-primary)';
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLDivElement).style.background = 'transparent';
-            (e.currentTarget as HTMLDivElement).style.color = '#94a3b8';
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--text-secondary)';
           }}
         >
-          <LogoutOutlined style={{ fontSize: '0.95rem' }} />
+          <LogoutOutlined style={{ fontSize: 15 }} />
           {!collapsed && <span>用户退出</span>}
         </div>
         <div
@@ -471,27 +662,43 @@ const Sidebar: React.FC = () => {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
-            padding: collapsed ? '8px 0' : '8px 12px',
-            borderRadius: 10,
+            gap: 12,
+            height: MENU_ITEM_HEIGHT,
+            padding: '0 10px',
+            borderRadius: 'var(--radius-sm)',
             cursor: 'pointer',
-            color: '#94a3b8',
+            color: 'var(--text-secondary)',
+            fontSize: 13,
             justifyContent: collapsed ? 'center' : 'flex-start',
-            transition: '0.15s',
+            transition: 'background 0.2s ease, color 0.2s ease',
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLDivElement).style.background = '#ffffff0a';
-            (e.currentTarget as HTMLDivElement).style.color = '#fff';
+            e.currentTarget.style.background = 'var(--bg-tertiary)';
+            e.currentTarget.style.color = 'var(--text-primary)';
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLDivElement).style.background = 'transparent';
-            (e.currentTarget as HTMLDivElement).style.color = '#94a3b8';
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--text-secondary)';
           }}
         >
-          <CustomerServiceOutlined style={{ fontSize: '0.95rem' }} />
+          <CustomerServiceOutlined style={{ fontSize: 15 }} />
           {!collapsed && <span>系统状态</span>}
         </div>
       </div>
+
+      {/* 折叠态弹出子菜单（portal，避免被侧栏 overflow 裁剪） */}
+      {popup && collapsed && (
+        <CollapsedSubmenu
+          popup={popup}
+          activeKey={activeKey}
+          onKeep={keepPopupOpen}
+          onScheduleClose={schedulePopupClose}
+          onNavigate={(route) => {
+            setPopup(null);
+            navigate(route);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -1,21 +1,69 @@
 import { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Drawer, Descriptions } from 'antd';
+import { CopyOutlined } from '@ant-design/icons';
 import { getVulns, createVuln, updateVuln, deleteVuln, reviewVuln, getFingerprints } from '@/api/knowledge';
 import type { VulnKnowledge, Fingerprint } from '@/types/knowledge';
+import type { RiskLevel } from '@/types/asset';
 import { useRightPanelStore } from '@/store/rightPanelStore';
+import RiskTag from '@/components/RiskTag';
+import FilterBar from '@/components/FilterBar';
 
-const severityColor: Record<string, string> = {
-  critical: 'red', high: 'orange', medium: 'gold', low: 'blue', info: 'default',
-};
 const severityLabel: Record<string, string> = {
   critical: '严重', high: '高危', medium: '中危', low: '低危', info: '信息',
 };
-const statusColor: Record<string, string> = {
-  draft: 'default', pending_review: 'processing', published: 'success', deprecated: 'error',
+
+// 知识状态语义令牌（规范 §06 状态徽章：10% 同色底 + 同色字 / 500 字重）
+// draft=中性 · pending_review=accent（流转中）· published=success · deprecated=弱化
+const STATUS_TOKENS: Record<string, { label: string; token: string }> = {
+  draft: { label: '草稿', token: 'var(--text-secondary)' },
+  pending_review: { label: '待审核', token: 'var(--accent-color)' },
+  published: { label: '已发布', token: 'var(--success)' },
+  deprecated: { label: '已弃用', token: 'var(--text-muted)' },
 };
-const statusLabel: Record<string, string> = {
-  draft: '草稿', pending_review: '待审核', published: '已发布', deprecated: '已弃用',
+
+// 状态徽章：10% 同色底 + 同色字（形态对齐 .severity-badge：4px 12px / r12 / 12px）
+const KnowledgeStatusBadge: React.FC<{ status: string }> = ({ status }) => {
+  const cfg = STATUS_TOKENS[status];
+  if (!cfg) return <Tag>{status}</Tag>;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      padding: '4px 12px', borderRadius: 12, fontSize: 12, fontWeight: 500,
+      lineHeight: 1.2, whiteSpace: 'nowrap',
+      color: cfg.token, background: 'color-mix(in srgb, currentColor 10%, transparent)',
+    }}>{cfg.label}</span>
+  );
 };
+
+// 代码块规范：bg-secondary + 1px var(--border-color) + r6 + mono 12px/1.5（规范 §05/§06）
+const codeBlockStyle: React.CSSProperties = {
+  margin: 0,
+  padding: 12,
+  background: 'var(--bg-secondary)',
+  border: '1px solid var(--border-color)',
+  borderRadius: 'var(--radius-sm)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 12,
+  lineHeight: 1.5,
+  color: 'var(--text-primary)',
+  overflow: 'auto',
+  whiteSpace: 'pre-wrap',
+};
+
+// 代码块复制按钮（type=text size=small）
+const CopyButton: React.FC<{ text: string }> = ({ text }) => (
+  <Button
+    type="text"
+    size="small"
+    icon={<CopyOutlined />}
+    onClick={(e) => {
+      e.stopPropagation();
+      navigator.clipboard?.writeText(text)
+        .then(() => message.success('已复制'))
+        .catch(() => message.error('复制失败'));
+    }}
+  />
+);
 
 const VulnKnowledgePage: React.FC = () => {
   const [vulns, setVulns] = useState<VulnKnowledge[]>([]);
@@ -120,64 +168,77 @@ const VulnKnowledgePage: React.FC = () => {
     setPanelItem('knowledge', v as unknown as Record<string, unknown>, 'vuln');
   };
 
+  // 行操作统一 type=link size=small（规范 §02 表格页）
   const reviewActions = (v: VulnKnowledge) => {
     const btns: React.ReactNode[] = [];
-    if (v.status === 'draft') btns.push(<Button size="small" onClick={() => handleReview(v, 'submit')}>提交审核</Button>);
+    if (v.status === 'draft') btns.push(<Button key="submit" type="link" size="small" onClick={() => handleReview(v, 'submit')}>提交审核</Button>);
     if (v.status === 'pending_review') {
-      btns.push(<Button size="small" type="primary" onClick={() => handleReview(v, 'approve')}>通过</Button>);
-      btns.push(<Button size="small" danger onClick={() => handleReview(v, 'reject')}>驳回</Button>);
+      btns.push(<Button key="approve" type="link" size="small" onClick={() => handleReview(v, 'approve')}>通过</Button>);
+      btns.push(<Button key="reject" type="link" size="small" danger onClick={() => handleReview(v, 'reject')}>驳回</Button>);
     }
-    if (v.status === 'published') btns.push(<Button size="small" danger onClick={() => handleReview(v, 'deprecate')}>弃用</Button>);
+    if (v.status === 'published') btns.push(<Button key="deprecate" type="link" size="small" danger onClick={() => handleReview(v, 'deprecate')}>弃用</Button>);
     return <Space size="small">{btns}</Space>;
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>漏洞知识库</span>
-        <Space>
-          <Select placeholder="严重度" allowClear size="small" style={{ width: 100 }}
-            value={filters.severity} onChange={(v) => setFilters({ ...filters, severity: v })}
-            options={Object.entries(severityLabel).map(([k, l]) => ({ value: k, label: l }))} />
-          <Select placeholder="状态" allowClear size="small" style={{ width: 110 }}
-            value={filters.status} onChange={(v) => setFilters({ ...filters, status: v })}
-            options={Object.entries(statusLabel).map(([k, l]) => ({ value: k, label: l }))} />
-          <Input.Search placeholder="名称/编号/厂商" allowClear size="small" style={{ width: 180 }}
-            onSearch={(v) => setFilters({ ...filters, q: v })} />
-          <Button type="primary" size="small" onClick={openCreate}>新增</Button>
-        </Space>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">漏洞知识库</span>
+        <FilterBar
+          searchPlaceholder="名称/编号/厂商"
+          onSearch={(v) => setFilters({ ...filters, q: v })}
+          filters={[
+            {
+              key: 'severity',
+              label: '严重度',
+              value: filters.severity,
+              onChange: (v) => setFilters({ ...filters, severity: v }),
+              options: Object.entries(severityLabel).map(([k, l]) => ({ value: k, label: l })),
+            },
+            {
+              key: 'status',
+              label: '状态',
+              value: filters.status,
+              onChange: (v) => setFilters({ ...filters, status: v }),
+              options: Object.entries(STATUS_TOKENS).map(([k, v]) => ({ value: k, label: v.label })),
+            },
+          ]}
+          extra={<Button type="primary" size="small" onClick={openCreate}>新增</Button>}
+        />
       </div>
-
-      <Table
-        size="small" loading={loading} dataSource={vulns} rowKey="id"
-        pagination={{ current: page, pageSize: 20, total, onChange: setPage, showTotal: (t) => `共 ${t} 条` }}
-        onRow={(r) => ({ onClick: () => openDetail(r), style: { cursor: 'pointer' } })}
-        columns={[
-          { title: '漏洞名称', dataIndex: 'name', key: 'name', ellipsis: true },
-          { title: '编号', dataIndex: 'vuln_id', key: 'vuln_id', width: 130, render: (v: string) => v || '—' },
-          { title: '类型', dataIndex: 'vuln_type', key: 'type', width: 120, render: (v: string) => v || '—' },
-          { title: '厂商', dataIndex: 'vendor', key: 'vendor', width: 100, render: (v: string) => v || '—' },
-          {
-            title: '严重度', dataIndex: 'severity', key: 'severity', width: 80,
-            render: (v: string) => <Tag color={severityColor[v]}>{severityLabel[v]}</Tag>,
-          },
-          {
-            title: '状态', dataIndex: 'status', key: 'status', width: 90,
-            render: (v: string) => <Tag color={statusColor[v]}>{statusLabel[v]}</Tag>,
-          },
-          { title: '标签', dataIndex: 'tags', key: 'tags', width: 140, render: (t: string[]) => t?.map((x) => <Tag key={x}>{x}</Tag>) || '—' },
-          {
-            title: '操作', key: 'action', width: 220,
-            render: (_, r) => (
-              <Space size="small" onClick={(e) => e.stopPropagation()}>
-                {reviewActions(r)}
-                <Button size="small" onClick={() => openEdit(r)}>编辑</Button>
-                <Button size="small" danger onClick={() => handleDelete(r)}>删除</Button>
-              </Space>
-            ),
-          },
-        ]}
-      />
+      <div className="eakis-page-content">
+        <Table
+          size="small" loading={loading} dataSource={vulns} rowKey="id"
+          pagination={{ current: page, pageSize: 20, total, onChange: setPage, showTotal: (t) => `共 ${t} 条` }}
+          onRow={(r) => ({ onClick: () => openDetail(r), style: { cursor: 'pointer' } })}
+          columns={[
+            { title: '漏洞名称', dataIndex: 'name', key: 'name', ellipsis: true },
+            { title: '编号', dataIndex: 'vuln_id', key: 'vuln_id', width: 130, render: (v: string) => v || '—' },
+            { title: '类型', dataIndex: 'vuln_type', key: 'type', width: 120, render: (v: string) => v || '—' },
+            { title: '厂商', dataIndex: 'vendor', key: 'vendor', width: 100, render: (v: string) => v || '—' },
+            {
+              // 严重度列：全局 .severity-badge + sev-* 五级（中文标签保留，规范 §06）
+              title: '严重度', dataIndex: 'severity', key: 'severity', width: 90,
+              render: (v: string) => <RiskTag level={v as RiskLevel} />,
+            },
+            {
+              title: '状态', dataIndex: 'status', key: 'status', width: 100,
+              render: (v: string) => <KnowledgeStatusBadge status={v} />,
+            },
+            { title: '标签', dataIndex: 'tags', key: 'tags', width: 140, render: (t: string[]) => t?.map((x) => <Tag key={x}>{x}</Tag>) || '—' },
+            {
+              title: '操作', key: 'action', width: 220,
+              render: (_, r) => (
+                <Space size="small" onClick={(e) => e.stopPropagation()}>
+                  {reviewActions(r)}
+                  <Button type="link" size="small" onClick={() => openEdit(r)}>编辑</Button>
+                  <Button type="link" size="small" danger onClick={() => handleDelete(r)}>删除</Button>
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </div>
 
       <Modal
         title={editing ? `编辑: ${editing.name}` : '新增漏洞知识'}
@@ -227,12 +288,14 @@ const VulnKnowledgePage: React.FC = () => {
       <Drawer title="漏洞详情" open={drawerOpen} onClose={() => setDrawerOpen(false)} width={560}>
         {detail && (
           <>
-            <Descriptions column={1} size="small" bordered>
+            <Descriptions column={1} size="small" bordered
+              labelStyle={{ background: 'var(--bg-thead)', color: 'var(--text-secondary)', width: 90 }}
+              contentStyle={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
               <Descriptions.Item label="名称">{detail.name}</Descriptions.Item>
               <Descriptions.Item label="编号">{detail.vuln_id || '—'}</Descriptions.Item>
               <Descriptions.Item label="类型">{detail.vuln_type || '—'}</Descriptions.Item>
-              <Descriptions.Item label="严重度"><Tag color={severityColor[detail.severity]}>{severityLabel[detail.severity]}</Tag></Descriptions.Item>
-              <Descriptions.Item label="状态"><Tag color={statusColor[detail.status]}>{statusLabel[detail.status]}</Tag></Descriptions.Item>
+              <Descriptions.Item label="严重度"><RiskTag level={detail.severity} /></Descriptions.Item>
+              <Descriptions.Item label="状态"><KnowledgeStatusBadge status={detail.status} /></Descriptions.Item>
               <Descriptions.Item label="厂商/产品">{[detail.vendor, detail.product].filter(Boolean).join(' / ') || '—'}</Descriptions.Item>
               <Descriptions.Item label="影响版本">{detail.version_range || '—'}</Descriptions.Item>
               <Descriptions.Item label="影响范围">{detail.affected_scope || '—'}</Descriptions.Item>
@@ -242,14 +305,17 @@ const VulnKnowledgePage: React.FC = () => {
             </Descriptions>
             {detail.poc && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>POC/Payload</div>
-                <pre style={{ background: '#1a1a2e', padding: 12, borderRadius: 8, fontSize: 12, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{detail.poc}</pre>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>POC/Payload</span>
+                  <CopyButton text={detail.poc} />
+                </div>
+                <pre style={codeBlockStyle}>{detail.poc}</pre>
               </div>
             )}
             {detail.remediation && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>修复方案</div>
-                <div style={{ color: '#cbd5e1' }}>{detail.remediation}</div>
+                <div style={{ marginBottom: 8, color: 'var(--text-secondary)', fontSize: 12 }}>修复方案</div>
+                <div style={{ color: 'var(--text-secondary)' }}>{detail.remediation}</div>
               </div>
             )}
             <div style={{ marginTop: 16 }}>

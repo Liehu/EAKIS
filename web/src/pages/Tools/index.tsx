@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Table, Tag, Button, Modal, Form, Input, Drawer, Descriptions, Tabs, message, Space, Empty, Spin } from 'antd';
+import { Table, Button, Modal, Form, Input, Drawer, Descriptions, Tabs, message, Space, Empty, Spin } from 'antd';
 import { PlayCircleOutlined, ToolOutlined, HistoryOutlined } from '@ant-design/icons';
 import { getTools, runTool, getToolExecutions } from '@/api/tools';
 import type { ToolInfo, ToolExecution, RunToolRequest } from '@/types/tool';
@@ -8,12 +8,43 @@ import { useRightPanelStore } from '@/store/rightPanelStore';
 const categoryLabel: Record<string, string> = {
   recon: '侦察', dns: 'DNS', portscan: '端口扫描', vulnscan: '漏洞扫描', cert: '证书查询',
 };
-const categoryColor: Record<string, string> = {
-  recon: 'blue', dns: 'cyan', portscan: 'orange', vulnscan: 'red', cert: 'gold',
+// 类型标签语义令牌（§03/06：原 antd preset blue/cyan/orange/red/gold 按色相就近映射语义 token）
+const categoryTokens: Record<string, string> = {
+  recon: 'var(--accent-color)', dns: 'var(--severity-low)', portscan: 'var(--severity-high)',
+  vulnscan: 'var(--error)', cert: 'var(--warning)',
 };
-const statusColor: Record<string, string> = {
-  success: 'green', failed: 'red', timeout: 'orange', unavailable: 'default', invalid_input: 'volcano',
+// 执行状态语义令牌（§06 状态徽章）：成功=success · 失败/输入拒绝=error · 超时=warning · 未安装=中性 muted
+const execStatusTokens: Record<string, string> = {
+  success: 'var(--success)', failed: 'var(--error)', timeout: 'var(--warning)',
+  unavailable: 'var(--text-muted)', invalid_input: 'var(--error)',
 };
+// 工具状态徽章（契约：启用=success · 停用=text-muted · 异常=error；当前 ToolInfo 无异常态，error 预留）
+const toolStatusMeta: Record<string, { text: string; token: string }> = {
+  enabled: { text: '启用', token: 'var(--success)' },
+  disabled: { text: '停用', token: 'var(--text-muted)' },
+  error: { text: '异常', token: 'var(--error)' },
+};
+
+/** 语义令牌徽章：10% 同色底 + 同色字（§06 徽章形态，对齐 ExportRecords/Companies 的 TokenBadge） */
+const TokenBadge: React.FC<{ color: string; children?: React.ReactNode }> = ({ color, children }) => (
+  <span
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '4px 12px',
+      borderRadius: 'var(--radius-lg)',
+      fontSize: 12,
+      fontWeight: 500,
+      lineHeight: 1.2,
+      color,
+      background: `color-mix(in srgb, ${color} 10%, transparent)`,
+      whiteSpace: 'nowrap',
+    }}
+  >
+    {children}
+  </span>
+);
 
 const ToolManagement: React.FC = () => {
   const [tools, setTools] = useState<ToolInfo[]>([]);
@@ -89,30 +120,32 @@ const ToolManagement: React.FC = () => {
     }
   };
 
-  // ── 工具列表 Tab ──
+  // ── 工具列表 Tab（工具卡 .eakis-panel + padding 16；状态/类型徽章走语义令牌）──
   const toolsTab = (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
-      {tools.map((t) => (
-        <Card key={t.name} size="small" style={{ background: '#141422', borderColor: '#2a2a4e' }}
-          actions={[
-            <Button type="link" size="small" icon={<PlayCircleOutlined />} disabled={!t.enabled}
-              onClick={() => openRun(t)}>{t.enabled ? '执行' : '未启用'}</Button>,
-            <Button size="small" type="link" onClick={(e) => { e.stopPropagation(); setPanelItem('tool', t as unknown as Record<string, unknown>, 'info'); }}>详情</Button>,
-          ]}>
-          <Card.Meta
-            title={<Space><ToolOutlined /><span style={{ color: '#e2e8f0' }}>{t.name}</span><Tag color={categoryColor[t.category]}>{categoryLabel[t.category]}</Tag></Space>}
-            description={
-              <div>
-                <div style={{ color: '#94a3b8', fontSize: 12, minHeight: 32 }}>{t.description}</div>
-                <div style={{ marginTop: 8 }}>
-                  <span style={{ color: '#64748b', fontSize: 11 }}>二进制: {t.binary}</span>
-                  <span style={{ color: '#64748b', fontSize: 11, marginLeft: 12 }}>参数: {t.params.map((p) => p.name).join(', ') || '无'}</span>
-                </div>
-              </div>
-            }
-          />
-        </Card>
-      ))}
+      {tools.map((t) => {
+        const statusMeta = toolStatusMeta[t.enabled ? 'enabled' : 'disabled'];
+        return (
+          <div key={t.name} className="eakis-panel" style={{ padding: 16, display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <Space wrap>
+              <ToolOutlined />
+              <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{t.name}</span>
+              <TokenBadge color={categoryTokens[t.category] || 'var(--text-secondary)'}>{categoryLabel[t.category] || t.category}</TokenBadge>
+              <TokenBadge color={statusMeta.token}>{statusMeta.text}</TokenBadge>
+            </Space>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 12, minHeight: 32, marginTop: 8 }}>{t.description}</div>
+            <div style={{ marginTop: 8 }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>二进制: {t.binary}</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 12 }}>参数: {t.params.map((p) => p.name).join(', ') || '无'}</span>
+            </div>
+            <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border-color)', display: 'flex', gap: 4 }}>
+              <Button type="link" size="small" icon={<PlayCircleOutlined />} disabled={!t.enabled}
+                onClick={() => openRun(t)}>{t.enabled ? '执行' : '未启用'}</Button>
+              <Button size="small" type="link" onClick={(e) => { e.stopPropagation(); setPanelItem('tool', t as unknown as Record<string, unknown>, 'info'); }}>详情</Button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -123,9 +156,9 @@ const ToolManagement: React.FC = () => {
       onRow={(r) => ({ onClick: () => { setExecDetail(r); setDrawerOpen(true); setPanelItem('tool', r as unknown as Record<string, unknown>, 'execution'); }, style: { cursor: 'pointer' } })}
       columns={[
         { title: '工具', dataIndex: 'tool_name', key: 'tool', width: 110 },
-        { title: '类别', dataIndex: 'category', key: 'cat', width: 90, render: (v: string) => v ? <Tag color={categoryColor[v]}>{categoryLabel[v] || v}</Tag> : '—' },
+        { title: '类别', dataIndex: 'category', key: 'cat', width: 110, render: (v: string) => v ? <TokenBadge color={categoryTokens[v] || 'var(--text-secondary)'}>{categoryLabel[v] || v}</TokenBadge> : '—' },
         { title: '输入', dataIndex: 'inputs', key: 'inputs', ellipsis: true, render: (v: object) => JSON.stringify(v).slice(0, 60) },
-        { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (v: string) => <Tag color={statusColor[v] || 'default'}>{v}</Tag> },
+        { title: '状态', dataIndex: 'status', key: 'status', width: 110, render: (v: string) => <TokenBadge color={execStatusTokens[v] || 'var(--text-secondary)'}>{v}</TokenBadge> },
         { title: '耗时', dataIndex: 'duration_s', key: 'dur', width: 70, render: (v: number) => v != null ? `${v}s` : '—' },
         { title: '结果数', key: 'cnt', width: 70, render: (_: unknown, r: ToolExecution) => Array.isArray(r.parsed) ? r.parsed.length : '—' },
         { title: '时间', dataIndex: 'created_at', key: 'time', width: 150, render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '—' },
@@ -134,19 +167,25 @@ const ToolManagement: React.FC = () => {
   );
 
   return (
-    <div>
-      <Tabs activeKey={tab} onChange={setTab} items={[
-        { key: 'tools', label: <span><ToolOutlined /> 工具列表 ({tools.length})</span> },
-        { key: 'history', label: <span><HistoryOutlined /> 执行历史</span> },
-      ]} />
-      {loading ? <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div> : tab === 'tools' ? toolsTab : historyTab}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      {/* 页头（规范 §02） */}
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">工具管理</span>
+      </div>
+      <div className="eakis-page-content">
+        <Tabs activeKey={tab} onChange={setTab} items={[
+          { key: 'tools', label: <span><ToolOutlined /> 工具列表 ({tools.length})</span> },
+          { key: 'history', label: <span><HistoryOutlined /> 执行历史</span> },
+        ]} />
+        {loading ? <div style={{ textAlign: 'center', padding: 48 }}><Spin /></div> : tab === 'tools' ? toolsTab : historyTab}
+      </div>
 
       {/* 执行工具 Modal */}
       <Modal title={`执行 ${activeTool?.name}`} open={runModalOpen} onCancel={() => setRunModalOpen(false)}
         onOk={handleRun} okText="执行" cancelText="取消" confirmLoading={running} width={520}>
         {activeTool && (
           <Form form={form} layout="vertical">
-            <div style={{ marginBottom: 12, color: '#94a3b8', fontSize: 12 }}>{activeTool.description}</div>
+            <div style={{ marginBottom: 12, color: 'var(--text-secondary)', fontSize: 12 }}>{activeTool.description}</div>
             {activeTool.params.map((p) => (
               <Form.Item key={p.name} name={['inputs', p.name]} label={`${p.name} (${p.input_type}${p.required ? ', 必填' : ''})`} rules={p.required ? [{ required: true, message: `请输入 ${p.name}` }] : []}>
                 <Input.TextArea rows={p.multiple ? 3 : 1} placeholder={p.multiple ? `多${p.input_type}, 换行或逗号分隔` : `输入${p.input_type}, 如 example.com`} />
@@ -155,7 +194,7 @@ const ToolManagement: React.FC = () => {
             <Form.Item name="timeout" label="超时 (秒)">
               <Input type="number" placeholder={String(activeTool.default_timeout)} />
             </Form.Item>
-            <div style={{ color: '#64748b', fontSize: 11 }}>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 11 }}>
               输入经白名单校验防注入 (domain/ip/url 正则), 恶意输入将被拒绝。
             </div>
           </Form>
@@ -168,24 +207,24 @@ const ToolManagement: React.FC = () => {
           <>
             <Descriptions column={1} size="small" bordered>
               <Descriptions.Item label="工具">{execDetail.tool_name}</Descriptions.Item>
-              <Descriptions.Item label="状态"><Tag color={statusColor[execDetail.status]}>{execDetail.status}</Tag></Descriptions.Item>
+              <Descriptions.Item label="状态"><TokenBadge color={execStatusTokens[execDetail.status] || 'var(--text-secondary)'}>{execDetail.status}</TokenBadge></Descriptions.Item>
               <Descriptions.Item label="退出码">{execDetail.exit_code ?? '—'}</Descriptions.Item>
               <Descriptions.Item label="耗时">{execDetail.duration_s != null ? `${execDetail.duration_s}s` : '—'}</Descriptions.Item>
-              <Descriptions.Item label="输入"><pre style={{ margin: 0 }}>{JSON.stringify(execDetail.inputs, null, 2)}</pre></Descriptions.Item>
+              <Descriptions.Item label="输入"><pre style={{ margin: 0, fontFamily: 'var(--font-mono)' }}>{JSON.stringify(execDetail.inputs, null, 2)}</pre></Descriptions.Item>
               {execDetail.error && <Descriptions.Item label="错误">{execDetail.error}</Descriptions.Item>}
             </Descriptions>
             {Array.isArray(execDetail.parsed) && execDetail.parsed.length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>解析结果 ({execDetail.parsed.length} 条)</div>
-                <pre style={{ background: '#1a1a2e', padding: 12, borderRadius: 8, fontSize: 11, overflow: 'auto', maxHeight: 300 }}>
+                <div style={{ marginBottom: 8, color: 'var(--text-secondary)', fontSize: 12 }}>解析结果 ({execDetail.parsed.length} 条)</div>
+                <pre style={{ background: 'var(--bg-tertiary)', padding: 12, borderRadius: 'var(--radius-md)', fontSize: 11, fontFamily: 'var(--font-mono)', overflow: 'auto', maxHeight: 300 }}>
                   {JSON.stringify(execDetail.parsed.slice(0, 20), null, 2)}
                 </pre>
               </div>
             )}
             {execDetail.stdout && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>原始输出</div>
-                <pre style={{ background: '#1a1a2e', padding: 12, borderRadius: 8, fontSize: 11, overflow: 'auto', maxHeight: 300, whiteSpace: 'pre-wrap' }}>{execDetail.stdout.slice(0, 5000)}</pre>
+                <div style={{ marginBottom: 8, color: 'var(--text-secondary)', fontSize: 12 }}>原始输出</div>
+                <pre style={{ background: 'var(--bg-tertiary)', padding: 12, borderRadius: 'var(--radius-md)', fontSize: 11, fontFamily: 'var(--font-mono)', overflow: 'auto', maxHeight: 300, whiteSpace: 'pre-wrap' }}>{execDetail.stdout.slice(0, 5000)}</pre>
               </div>
             )}
           </>

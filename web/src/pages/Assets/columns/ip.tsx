@@ -12,9 +12,9 @@ const sourceLabels: Record<string, { text: string; color: string }> = {
 
 const renderVulnCount = (vc: VulnCount, assetId: string, navigate: (url: string) => void) => {
   const total = vc.critical + vc.high + vc.medium + vc.low;
-  if (total === 0) return <span style={{ color: '#666' }}>0</span>;
+  if (total === 0) return <span style={{ color: 'var(--text-muted)' }}>0</span>;
   return (
-    <a onClick={(e) => { e.stopPropagation(); navigate(`/vulnerabilities?asset_id=${assetId}`); }} style={{ color: '#378ADD', cursor: 'pointer' }}>
+    <a onClick={(e) => { e.stopPropagation(); navigate(`/vulnerabilities?asset_id=${assetId}`); }} style={{ color: 'var(--accent-color)', cursor: 'pointer' }}>
       {total}
     </a>
   );

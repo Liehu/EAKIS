@@ -1,0 +1,48 @@
+/* MetricCard —— KPI 卡规范（§06），与 StatCard 共用 .eakis-kpi-card 形态（同名同定义，双目录各自持有） */
+.eakis-kpi-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: all 0.2s ease;
+}
+
+.eakis-kpi-card:hover {
+  border-color: var(--accent-alpha-20);
+}
+
+[data-theme='light'] .eakis-kpi-card {
+  box-shadow: var(--shadow-sm);
+  border-color: transparent;
+}
+
+[data-theme='light'] .eakis-kpi-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.eakis-kpi-card-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.eakis-kpi-card-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.eakis-kpi-card-suffix {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.eakis-kpi-card-delta {
+  font-size: 12px;
+  margin-top: 4px;
+  line-height: 1.45;
+}

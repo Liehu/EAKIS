@@ -1,19 +1,51 @@
 import { useEffect, useState } from 'react';
-import { Table, Tabs, Tag, Button, Drawer, Descriptions, Space, Input, Select, message, Popconfirm } from 'antd';
+import { Table, Tabs, Tag, Button, Drawer, Descriptions, message, Popconfirm } from 'antd';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getTypedAssets, getAssetFull } from '@/api/assets';
 import RiskTag from '@/components/RiskTag';
+import FilterBar from '@/components/FilterBar';
+import BatchActionBar from '@/components/BatchActionBar';
 import type { TypedAsset, TypedAssetType, AssetFull, VulnCount } from '@/types/asset';
 
+// 资产类型语义令牌（双主题自动换肤；映射决定见改造报告）：
+// web=accent · ip=success · domain=brand-ai-end · app=warning · miniprogram=severity-low · certificate=severity-info
+const TYPE_TOKENS: Record<TypedAssetType, string> = {
+  web: 'var(--accent-color)',
+  ip: 'var(--success)',
+  domain: 'var(--brand-ai-end)',
+  app: 'var(--warning)',
+  miniprogram: 'var(--severity-low)',
+  certificate: 'var(--severity-info)',
+};
+
+const TYPE_LABELS: Record<TypedAssetType, string> = {
+  ip: 'IP', domain: '域名', web: 'Web', app: 'APP', miniprogram: '小程序', certificate: '证书',
+};
+
 // 6 类资产 Tab 配置
-const TABS: { key: TypedAssetType; label: string; color: string }[] = [
-  { key: 'ip', label: 'IP', color: 'blue' },
-  { key: 'domain', label: '域名', color: 'green' },
-  { key: 'web', label: 'Web', color: 'orange' },
-  { key: 'app', label: 'APP', color: 'purple' },
-  { key: 'miniprogram', label: '小程序', color: 'cyan' },
-  { key: 'certificate', label: '证书', color: 'gold' },
+const TABS: { key: TypedAssetType; label: string }[] = [
+  { key: 'ip', label: 'IP' },
+  { key: 'domain', label: '域名' },
+  { key: 'web', label: 'Web' },
+  { key: 'app', label: 'APP' },
+  { key: 'miniprogram', label: '小程序' },
+  { key: 'certificate', label: '证书' },
 ];
+
+// 资产类型徽章：状态徽章形态（10% 同色底 + 同色字，500 字重，4px 12px / r12，§06）
+const AssetTypeBadge: React.FC<{ type: string; label?: string }> = ({ type, label }) => {
+  const token = TYPE_TOKENS[type as TypedAssetType] || 'var(--text-secondary)';
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      padding: '4px 12px', borderRadius: 12, fontSize: 12, fontWeight: 500,
+      lineHeight: 1.2, whiteSpace: 'nowrap',
+      color: token, background: 'color-mix(in srgb, currentColor 10%, transparent)',
+    }}>
+      {label || TYPE_LABELS[type as TypedAssetType] || type}
+    </span>
+  );
+};
 
 const vulnTotal = (vc?: VulnCount) => (vc ? vc.critical + vc.high + vc.medium + vc.low : 0);
 
@@ -83,8 +115,8 @@ const Assets: React.FC = () => {
       render: (_: unknown, r: TypedAsset) => {
         const c = vulnTotal(r.vuln_count);
         return c > 0
-          ? <a onClick={(e) => handleVulnCountClick(e, r.id)} style={{ color: '#ff4d4f' }}>{c}</a>
-          : <span style={{ color: '#666' }}>0</span>;
+          ? <a onClick={(e) => handleVulnCountClick(e, r.id)} style={{ color: 'var(--error)' }}>{c}</a>
+          : <span style={{ color: 'var(--text-muted)' }}>0</span>;
       },
     },
     { title: '关联单位', dataIndex: 'company_name', key: 'company', width: 140, render: (v: string) => v || '—' },
@@ -127,7 +159,7 @@ const Assets: React.FC = () => {
       { title: '版本', key: 'version', width: 70, render: (_: any, r: TypedAsset) => (r.type_specific as any).version || '—' },
       { title: '下载链接', key: 'dl', width: 80, render: (_: any, r: TypedAsset) => {
         const d = (r.type_specific as any).download_source;
-        return d ? <a href={d} target="_blank" rel="noreferrer" style={{ color: '#378ADD' }}>下载</a> : '—';
+        return d ? <a href={d} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-color)' }}>下载</a> : '—';
       }},
     ],
     miniprogram: [
@@ -164,49 +196,63 @@ const Assets: React.FC = () => {
   ];
 
   return (
-    <div>
-      <Tabs
-        activeKey={type}
-        onChange={(k) => setType(k as TypedAssetType)}
-        items={TABS.map((t) => ({ key: t.key, label: <Tag color={t.color}>{t.label}</Tag> }))}
-      />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>{TABS.find((t) => t.key === type)?.label}资产</span>
-        <Space>
-          <Input.Search placeholder="搜索 IP/域名" allowClear size="small" style={{ width: 180 }} onSearch={setQ} />
-          <Select placeholder="风险等级" allowClear size="small" style={{ width: 110 }}
-            value={riskFilter} onChange={setRiskFilter}
-            options={[{value:'critical',label:'严重'},{value:'high',label:'高危'},{value:'medium',label:'中危'},{value:'low',label:'低危'}]} />
-          {selectedRowKeys.length > 0 && (
-            <>
-              <span style={{ color: '#378ADD', fontSize: 12 }}>已选 {selectedRowKeys.length}</span>
-              <Button size="small" onClick={handleBatchEdit}>批量编辑</Button>
-              <Popconfirm title={`删除 ${selectedRowKeys.length} 项?`} onConfirm={handleBatchDelete}>
-                <Button size="small" danger>批量删除</Button>
-              </Popconfirm>
-            </>
-          )}
-        </Space>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">资产管理</span>
+        <FilterBar
+          searchPlaceholder="搜索 IP/域名"
+          onSearch={setQ}
+          filters={[
+            {
+              key: 'risk',
+              label: '风险等级',
+              value: riskFilter,
+              onChange: (v) => setRiskFilter(v),
+              options: [
+                { value: 'critical', label: '严重' },
+                { value: 'high', label: '高危' },
+                { value: 'medium', label: '中危' },
+                { value: 'low', label: '低危' },
+              ],
+            },
+          ]}
+        />
+      </div>
+      <div className="eakis-page-content">
+        <Tabs
+          activeKey={type}
+          onChange={(k) => setType(k as TypedAssetType)}
+          items={TABS.map((t) => ({ key: t.key, label: <AssetTypeBadge type={t.key} label={t.label} /> }))}
+        />
+
+        <BatchActionBar
+          selectedCount={selectedRowKeys.length}
+          actions={[{ label: '批量编辑', onClick: handleBatchEdit }]}
+        >
+          <Popconfirm title={`删除 ${selectedRowKeys.length} 项?`} onConfirm={handleBatchDelete}>
+            <Button size="small" danger>批量删除</Button>
+          </Popconfirm>
+        </BatchActionBar>
+
+        <Table
+          size="small" loading={loading} dataSource={assets} rowKey="id"
+          rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+          pagination={{ current: page, pageSize: 20, total, onChange: setPage, showTotal: (t) => `共 ${t} 条` }}
+          onRow={(r) => ({ onClick: () => viewDetail(r), style: { cursor: 'pointer' } })}
+          columns={columns}
+        />
       </div>
 
-      <Table
-        size="small" loading={loading} dataSource={assets} rowKey="id"
-        rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
-        pagination={{ current: page, pageSize: 20, total, onChange: setPage, showTotal: (t) => `共 ${t} 条` }}
-        onRow={(r) => ({ onClick: () => viewDetail(r), style: { cursor: 'pointer' } })}
-        columns={columns}
-      />
-
-      <Drawer title={`${type.toUpperCase()} 资产详情`} open={drawerOpen} onClose={() => { setDrawerOpen(false); setDetail(null); }} width={560}>
+      <Drawer title={`${TYPE_LABELS[type] || type.toUpperCase()} 资产详情`} open={drawerOpen} onClose={() => { setDrawerOpen(false); setDetail(null); }} width={560}>
         {detail && (
           <>
             <Descriptions column={1} size="small" bordered>
-              <Descriptions.Item label="类型"><Tag>{detail.asset_type}</Tag></Descriptions.Item>
+              <Descriptions.Item label="类型"><AssetTypeBadge type={detail.asset_type} /></Descriptions.Item>
               <Descriptions.Item label="域名/IP">{detail.domain || detail.ip_address || '—'}</Descriptions.Item>
               <Descriptions.Item label="风险"><RiskTag level={detail.risk_level as any} /></Descriptions.Item>
               <Descriptions.Item label="关联单位">
                 {detail.company_id ? (
-                  <a style={{ color: '#378ADD' }} onClick={() => navigate(`/companies?company=${detail.company_id}`)}>
+                  <a style={{ color: 'var(--accent-color)' }} onClick={() => navigate(`/companies?company=${detail.company_id}`)}>
                     {detail.company_name || '查看企业'} →
                   </a>
                 ) : (detail.company_name || '—')}
@@ -220,18 +266,18 @@ const Assets: React.FC = () => {
             </Descriptions>
             {Object.keys(detail.type_specific || {}).length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>类型专属字段</div>
-                <pre style={{ background: '#1a1a2e', padding: 12, borderRadius: 8, fontSize: 11, overflow: 'auto' }}>{JSON.stringify(detail.type_specific, null, 2)}</pre>
+                <div style={{ marginBottom: 8, color: 'var(--text-secondary)', fontSize: 12 }}>类型专属字段</div>
+                <pre style={{ background: 'var(--bg-tertiary)', padding: 12, borderRadius: 'var(--radius-sm)', fontSize: 11, fontFamily: 'var(--font-mono)', overflow: 'auto' }}>{JSON.stringify(detail.type_specific, null, 2)}</pre>
               </div>
             )}
             {detail.vulnerabilities && detail.vulnerabilities.length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>关联漏洞 ({detail.vulnerabilities.length})（点击查看详情）</div>
+                <div style={{ marginBottom: 8, color: 'var(--text-secondary)', fontSize: 12 }}>关联漏洞 ({detail.vulnerabilities.length})（点击查看详情）</div>
                 {detail.vulnerabilities.map((v) => (
                   <div key={v.id} onClick={() => navigate(`/vulnerabilities?asset_id=${detail.id}`)}
-                    style={{ padding: '6px 0', borderBottom: '1px solid #1f2937', cursor: 'pointer' }}>
-                    <RiskTag level={v.severity as any} /> <a style={{ color: '#e2e8f0' }}>{v.title || '未命名'}</a>
-                    <span style={{ color: '#666', fontSize: 11, marginLeft: 8 }}>{v.vuln_type || ''}</span>
+                    style={{ padding: '6px 0', borderBottom: '1px solid var(--border-color)', cursor: 'pointer' }}>
+                    <RiskTag level={v.severity as any} /> <a style={{ color: 'var(--text-primary)' }}>{v.title || '未命名'}</a>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 11, marginLeft: 8 }}>{v.vuln_type || ''}</span>
                   </div>
                 ))}
               </div>

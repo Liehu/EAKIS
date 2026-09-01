@@ -6,6 +6,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 const { Text } = Typography;
 
+// Descriptions 令牌化样式（antd v6 semantic styles；label 用表头底色 / content 用主面板底色）
+const descriptionsStyles: { label: React.CSSProperties; content: React.CSSProperties } = {
+  label: { background: 'var(--bg-thead)', color: 'var(--text-secondary)', width: 100, whiteSpace: 'nowrap' },
+  content: { background: 'var(--bg-primary)', color: 'var(--text-primary)' },
+};
+
 function statusColor(status: string): string {
   const map: Record<string, string> = {
     running: 'processing', completed: 'success', failed: 'error',
@@ -21,7 +27,8 @@ function DocPreview({ content, label }: { content: string | null | undefined; la
   if (!content) return <Empty description={`暂无${label}内容`} />;
   return (
     <pre style={{
-      background: '#0d0d1a', color: '#cbd5e1', padding: 12, borderRadius: 6,
+      background: 'var(--bg-secondary)', color: 'var(--text-secondary)', padding: 12,
+      borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-mono)',
       fontSize: 12, lineHeight: 1.6, maxHeight: '70vh', overflow: 'auto',
       whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0,
     }}>
@@ -42,27 +49,25 @@ function TaskDetail({ item }: { item: Record<string, any> }) {
   // 可跳转的统计卡片（无 companyId 时不可跳转）
   const statCards = [
     {
-      label: '关联企业', value: stats.assets_found || 0, color: '#378ADD',
+      label: '关联企业', value: stats.assets_found || 0, color: 'var(--accent-color)',
       clickable: !!companyId, onClick: () => navigate(`/companies?company=${companyId}`),
     },
     {
-      label: '情报文档', value: stats.interfaces_crawled || 0, color: '#639922',
+      label: '情报文档', value: stats.interfaces_crawled || 0, color: 'var(--success)',
       clickable: !!companyId, onClick: () => navigate(`/companies?company=${companyId}`),
     },
     {
-      label: '关键词', value: stats.vulns_detected || 0, color: '#BA7517',
+      label: '关键词', value: stats.vulns_detected || 0, color: 'var(--warning)',
       clickable: !!companyId, onClick: () => navigate(`/knowledge/keywords?company_id=${companyId}`),
     },
     {
-      label: '漏洞', value: stats.vulns_confirmed || 0, color: '#e74c3c',
+      label: '漏洞', value: stats.vulns_confirmed || 0, color: 'var(--error)',
       clickable: !!companyId, onClick: () => navigate(`/vulnerabilities?company=${companyId}`),
     },
   ];
   return (
     <div>
-      <Descriptions column={1} size="small" bordered
-        labelStyle={{ background: '#141422', color: '#888', width: 100, whiteSpace: 'nowrap' }}
-        contentStyle={{ background: '#1a1a2e', color: '#e2e8f0' }}>
+      <Descriptions column={1} size="small" bordered styles={descriptionsStyles}>
         <Descriptions.Item label="任务ID">{(item.task_id || '').slice(0, 12)}...</Descriptions.Item>
         <Descriptions.Item label="企业">{item.company_name || '-'}</Descriptions.Item>
         <Descriptions.Item label="状态">
@@ -96,15 +101,15 @@ function TaskDetail({ item }: { item: Record<string, any> }) {
               key={card.label}
               onClick={card.clickable ? card.onClick : undefined}
               style={{
-                background: '#141422', borderRadius: 6, padding: '8px 12px', textAlign: 'center',
+                background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', textAlign: 'center',
                 cursor: card.clickable ? 'pointer' : 'default',
-                transition: 'background 0.2s',
+                transition: 'background 0.2s, border-color 0.2s',
                 border: '1px solid transparent',
               }}
-              onMouseEnter={(e) => { if (card.clickable) { e.currentTarget.style.background = '#1e1e3a'; e.currentTarget.style.borderColor = '#3a3a5e'; } }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#141422'; e.currentTarget.style.borderColor = 'transparent'; }}
+              onMouseEnter={(e) => { if (card.clickable) { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.borderColor = 'var(--border-color)'; } }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-tertiary)'; e.currentTarget.style.borderColor = 'transparent'; }}
             >
-              <div style={{ color: '#888', fontSize: 11 }}>{card.label}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 11 }}>{card.label}</div>
               <div style={{ color: card.color, fontSize: 20, fontWeight: 600 }}>{card.value}</div>
             </div>
           ))}
@@ -112,9 +117,7 @@ function TaskDetail({ item }: { item: Record<string, any> }) {
       </div>
 
       {/* 时间信息 */}
-      <Descriptions column={1} size="small" bordered style={{ marginTop: 16 }}
-        labelStyle={{ background: '#141422', color: '#888', width: 100, whiteSpace: 'nowrap' }}
-        contentStyle={{ background: '#1a1a2e', color: '#e2e8f0' }}>
+      <Descriptions column={1} size="small" bordered style={{ marginTop: 16 }} styles={descriptionsStyles}>
         <Descriptions.Item label="创建时间">{item.created_at?.slice(0, 19).replace('T', ' ') || '-'}</Descriptions.Item>
         {item.started_at && (
           <Descriptions.Item label="开始时间">{item.started_at.slice(0, 19).replace('T', ' ')}</Descriptions.Item>
@@ -126,7 +129,11 @@ function TaskDetail({ item }: { item: Record<string, any> }) {
 
       {/* 错误信息 */}
       {item.error_message && (
-        <div style={{ marginTop: 12, padding: 10, background: '#3d1a1a', borderRadius: 6, border: '1px solid #5a2a2a' }}>
+        <div style={{
+          marginTop: 12, padding: 10, borderRadius: 'var(--radius-sm)',
+          background: 'color-mix(in srgb, var(--error) 10%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--error) 30%, transparent)',
+        }}>
           <Text type="danger" style={{ fontSize: 12 }}>错误: {item.error_message}</Text>
         </div>
       )}
@@ -142,9 +149,7 @@ function KnowledgeDetail({ item, subtype }: { item: Record<string, any>; subtype
   const field = (subtype && previewField[subtype]) || 'content';
   return (
     <div>
-      <Descriptions column={1} size="small" bordered
-        labelStyle={{ background: '#141422', color: '#888', width: 100, whiteSpace: 'nowrap' }}
-        contentStyle={{ background: '#1a1a2e', color: '#e2e8f0' }}>
+      <Descriptions column={1} size="small" bordered styles={descriptionsStyles}>
         <Descriptions.Item label="名称">{item.name || item.title || '-'}</Descriptions.Item>
         {item.severity && <Descriptions.Item label="严重度"><Tag color={statusColor(item.severity)}>{item.severity}</Tag></Descriptions.Item>}
         {item.category && <Descriptions.Item label="分类">{item.category}</Descriptions.Item>}
@@ -173,9 +178,7 @@ function TemplateDetail({ item }: { item: Record<string, any> }) {
   const content = item.content;
   return (
     <div>
-      <Descriptions column={1} size="small" bordered
-        labelStyle={{ background: '#141422', color: '#888', width: 100, whiteSpace: 'nowrap' }}
-        contentStyle={{ background: '#1a1a2e', color: '#e2e8f0' }}>
+      <Descriptions column={1} size="small" bordered styles={descriptionsStyles}>
         <Descriptions.Item label="名称">{item.name || '-'}</Descriptions.Item>
         {item.description && <Descriptions.Item label="描述"><Text type="secondary">{item.description}</Text></Descriptions.Item>}
         {item.scope && <Descriptions.Item label="可见域">{item.scope}</Descriptions.Item>}
@@ -200,9 +203,7 @@ function ToolDetail({ item, subtype }: { item: Record<string, any>; subtype: str
   if (subtype === 'execution') {
     return (
       <div>
-        <Descriptions column={1} size="small" bordered
-          labelStyle={{ background: '#141422', color: '#888', width: 100, whiteSpace: 'nowrap' }}
-          contentStyle={{ background: '#1a1a2e', color: '#e2e8f0' }}>
+        <Descriptions column={1} size="small" bordered styles={descriptionsStyles}>
           <Descriptions.Item label="工具">{item.tool_name || '-'}</Descriptions.Item>
           <Descriptions.Item label="状态">
             {item.status ? <Tag color={statusColor(item.status)}>{item.status}</Tag> : '-'}
@@ -227,9 +228,7 @@ function ToolDetail({ item, subtype }: { item: Record<string, any>; subtype: str
   }
   // 工具信息
   return (
-    <Descriptions column={1} size="small" bordered
-      labelStyle={{ background: '#141422', color: '#888', width: 100, whiteSpace: 'nowrap' }}
-      contentStyle={{ background: '#1a1a2e', color: '#e2e8f0' }}>
+    <Descriptions column={1} size="small" bordered styles={descriptionsStyles}>
       <Descriptions.Item label="名称">{item.name || '-'}</Descriptions.Item>
       <Descriptions.Item label="二进制">{item.binary || '-'}</Descriptions.Item>
       {item.description && <Descriptions.Item label="描述"><Text type="secondary">{item.description}</Text></Descriptions.Item>}
@@ -242,9 +241,7 @@ function ToolDetail({ item, subtype }: { item: Record<string, any>; subtype: str
 function ReportDetail({ item }: { item: Record<string, any> }) {
   return (
     <div>
-      <Descriptions column={1} size="small" bordered
-        labelStyle={{ background: '#141422', color: '#888', width: 100, whiteSpace: 'nowrap' }}
-        contentStyle={{ background: '#1a1a2e', color: '#e2e8f0' }}>
+      <Descriptions column={1} size="small" bordered styles={descriptionsStyles}>
         <Descriptions.Item label="报告ID">{item.report_id || '-'}</Descriptions.Item>
         <Descriptions.Item label="状态">
           {item.status ? <Tag color={statusColor(item.status)}>{item.status}</Tag> : '-'}
@@ -291,19 +288,21 @@ const RightPanel: React.FC = () => {
   const title = PANEL_TITLES[kind] || '详情';
 
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%',
-      background: '#1a1a2e', borderRadius: 28, overflow: 'hidden',
-    }}>
+    <div
+      className="eakis-panel"
+      style={{
+        display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden',
+      }}
+    >
       <div style={{
-        padding: '16px 20px', fontWeight: 700, borderBottom: '1px solid #2a2a4e',
+        padding: '12px 16px', fontSize: 14, fontWeight: 600, borderBottom: '1px solid var(--border-color)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        color: '#e2e8f0', flexShrink: 0,
+        color: 'var(--text-primary)', flexShrink: 0,
       }}>
         <span>{title}</span>
-        {subtype && <span style={{ fontSize: 11, color: '#666' }}>{subtype}</span>}
+        {subtype && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{subtype}</span>}
       </div>
-      <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: 16, fontSize: 13, color: 'var(--text-secondary)' }}>
         {kind === 'graph' ? (
           <div style={{ height: '100%', margin: -16 }}>
             <GraphPanel />

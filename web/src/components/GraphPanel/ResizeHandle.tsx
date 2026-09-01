@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface ResizeHandleProps {
   onResize: (width: number) => void;
@@ -10,9 +10,13 @@ const ResizeHandle: React.FC<ResizeHandleProps> = ({ onResize, minWidth = 200, m
   const isDragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
+  // 仅用于拖拽态/hover 配色（accent 令牌），不影响交互逻辑
+  const [dragging, setDragging] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true;
+    setDragging(true);
     startX.current = e.clientX;
     startWidth.current = (e.target as HTMLElement).nextElementSibling?.clientWidth || 400;
     document.addEventListener('mousemove', handleMouseMove);
@@ -30,6 +34,7 @@ const ResizeHandle: React.FC<ResizeHandleProps> = ({ onResize, minWidth = 200, m
 
   const handleMouseUp = () => {
     isDragging.current = false;
+    setDragging(false);
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
     document.body.style.cursor = '';
@@ -46,15 +51,15 @@ const ResizeHandle: React.FC<ResizeHandleProps> = ({ onResize, minWidth = 200, m
   return (
     <div
       onMouseDown={handleMouseDown}
+      onMouseEnter={() => { setHovered(true); }}
+      onMouseLeave={() => { setHovered(false); }}
       style={{
         width: 6,
-        background: '#2a2a4e',
+        background: dragging ? 'var(--accent-alpha-20)' : (hovered ? 'var(--accent-color)' : 'var(--border-color)'),
         cursor: 'col-resize',
         transition: 'background 0.1s',
         flexShrink: 0,
       }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#378ADD'; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '#2a2a4e'; }}
     />
   );
 };

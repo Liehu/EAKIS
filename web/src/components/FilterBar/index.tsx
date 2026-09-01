@@ -1,4 +1,5 @@
-import { Input, Select, Space } from 'antd';
+import { Input, Select } from 'antd';
+import './index.css';
 
 interface FilterItem {
   key: string;
@@ -15,8 +16,12 @@ interface FilterBarProps {
   extra?: React.ReactNode;
 }
 
+/**
+ * 列表筛选工具栏：容器透明无边框卡壳；flex gap 8px（4px 刻度）；
+ * 控件保持 antd 默认形态，随 ConfigProvider 设计令牌换肤（placeholder 字号/色由令牌承接）。
+ */
 const FilterBar: React.FC<FilterBarProps> = ({ searchPlaceholder, onSearch, filters = [], extra }) => (
-  <Space size="small" wrap style={{ marginBottom: 12 }}>
+  <div className="eakis-filterbar">
     <Input.Search
       placeholder={searchPlaceholder}
       allowClear
@@ -37,7 +42,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ searchPlaceholder, onSearch, filt
       />
     ))}
     {extra}
-  </Space>
+  </div>
 );
 
 export default FilterBar;

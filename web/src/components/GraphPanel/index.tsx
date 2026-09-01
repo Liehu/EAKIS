@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import * as echarts from 'echarts';
 import { useGraphStore } from '@/store/graphStore';
+import { useThemeStore } from '@/store/themeStore';
 import { ProjectOutlined } from '@ant-design/icons';
 
 interface GraphNode {
@@ -43,9 +44,66 @@ const assetLinks: GraphLink[] = [
   { source: 'asset_root', target: 'app' },
 ];
 
+/**
+ * ECharts 画布（canvas）不解析 CSS 变量：按 useThemeStore.resolved 订阅主题，
+ * 维护两套具体色板（规范 §03 锚点色）。系列色 5 档 / 关系线 accent 35% 透明。
+ */
+const CHART_PALETTES = {
+  light: {
+    canvasBg: '#ffffff',
+    axisLine: '#e9ecef',
+    axisLabel: '#6c757d',
+    tooltipBg: '#ffffff',
+    tooltipText: '#1a1a1a',
+    tooltipBorder: '#e9ecef',
+    series: ['#0066ff', '#7c3aed', '#20c997', '#ffc107', '#fd7e14'],
+    edge: 'rgba(0, 102, 255, 0.35)',
+    /** 中性普通节点（无分类语义）：亮色阶 */
+    neutralFill: '#adb5bd',
+    neutralBorder: '#ced4da',
+    /** accent 节点描边同相亮一档（根节点/选中环） */
+    accentRing: '#3385ff',
+  },
+  dark: {
+    canvasBg: '#111827',
+    axisLine: '#263244',
+    axisLabel: '#a7b0c0',
+    tooltipBg: '#1f2937',
+    tooltipText: '#e5e7eb',
+    tooltipBorder: '#263244',
+    series: ['#60a5fa', '#a78bfa', '#2dd4bf', '#fbbf24', '#fb923c'],
+    edge: 'rgba(96, 165, 250, 0.35)',
+    /** 中性普通节点：暗色阶（保留原 #4a5568 系） */
+    neutralFill: '#4a5568',
+    neutralBorder: '#5a6577',
+    accentRing: '#93c5fd',
+  },
+} as const;
+
+/**
+ * 节点分类色索引（取当前主题 series 色板，与资产页 TYPE_TOKENS 决策同源）：
+ * - 资产占位图：总览/Web=accent(0) · 域名=brand-ai 紫系(1) · IP/小程序=低危青绿系(2) · APP=warning 黄系(3) · 证书=橙(4)
+ * - 5 档系列色承载 6+ 语义分类，近似语义共用同档；无红档，漏洞取最接近高危语义的橙(4)
+ * - 企业股权拓扑按层级区分：根主体=accent / 上级母公司=紫 / 普通子公司=中性（见 renderChart）
+ */
+const NODE_SERIES_INDEX: Record<string, number> = {
+  asset_root: 0,
+  web: 0,
+  demo: 0,
+  domain: 1,
+  ip: 2,
+  miniprogram: 2,
+  app: 3,
+  cert: 4,
+  vuln: 4,
+};
+
 const GraphPanel: React.FC<GraphPanelProps> = ({ nodes = [], links = [] }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
+
+  // 主题解析结果：进 renderChart deps，主题切换时重绘
+  const resolved = useThemeStore((s) => s.resolved);
 
   const graphType = useGraphStore((s) => s.graphType);
   const selectedNodeId = useGraphStore((s) => s.selectedNodeId);
@@ -56,6 +114,7 @@ const GraphPanel: React.FC<GraphPanelProps> = ({ nodes = [], links = [] }) => {
 
   const renderChart = useCallback(() => {
     if (!chartInstance.current) return;
+    const palette = CHART_PALETTES[resolved];
 
     // 优先用 store 数据（业务页推入）；其次用 props；最后用类型默认数据
     let renderNodes = storeNodes.length ? storeNodes : nodes;
@@ -84,11 +143,12 @@ const GraphPanel: React.FC<GraphPanelProps> = ({ nodes = [], links = [] }) => {
     const repulsion = isEnterprise ? Math.max(60, 400 - n * 8) : 300;
     const edgeLength = isEnterprise ? (n > 20 ? [40, 80] : [80, 140]) : 120;
     const option: echarts.EChartsOption = {
+      backgroundColor: palette.canvasBg,
       tooltip: {
         trigger: 'item',
-        backgroundColor: '#1a1a2e',
-        borderColor: '#2a2a4e',
-        textStyle: { color: '#e2e8f0' },
+        backgroundColor: palette.tooltipBg,
+        borderColor: palette.tooltipBorder,
+        textStyle: { color: palette.tooltipText },
         formatter: (p: any) => {
           if (p.dataType === 'node') {
             const ratio = p.data.holding_ratio != null ? ` (持股 ${p.data.holding_ratio}%)` : '';
@@ -117,8 +177,14 @@ const GraphPanel: React.FC<GraphPanelProps> = ({ nodes = [], links = [] }) => {
           const isRoot = isEnterprise && node.depth === 0;
           const isParent = isEnterprise && (node.depth ?? 0) < 0; // 上级母公司
           const isSelected = node.id === selectedNodeId;
-          // 根节点(当前主体)=蓝色加大；上级母公司=青色；子公司=灰色
           const baseSize = n > 20 ? 16 : 28;
+          // 分类色：企业拓扑按层级（根=accent / 上级=紫 / 普通=中性）；占位图按节点 id 取系列色
+          const seriesIdx = NODE_SERIES_INDEX[node.id];
+          const fill = isRoot || isSelected
+            ? palette.series[0]
+            : isParent
+              ? palette.series[1]
+              : (!isEnterprise && seriesIdx != null ? palette.series[seriesIdx] : palette.neutralFill);
           return {
             id: node.id,
             name: node.name,
@@ -126,13 +192,14 @@ const GraphPanel: React.FC<GraphPanelProps> = ({ nodes = [], links = [] }) => {
             depth: node.depth,
             holding_ratio: node.holding_ratio ?? null,
             itemStyle: {
-              color: isSelected ? '#378ADD' : (isRoot ? '#378ADD' : (isParent ? '#6399AA' : '#4a5568')),
-              borderColor: isSelected || isRoot ? '#5fa0e8' : (isParent ? '#7ab5c7' : '#5a6577'),
-              borderWidth: isRoot ? 2 : 0,
+              color: fill,
+              borderColor: isSelected ? palette.accentRing : (isRoot ? palette.accentRing : (isParent ? palette.series[1] : palette.neutralBorder)),
+              borderWidth: isRoot ? 2 : (isSelected ? 2 : 0),
             },
             label: {
               show: true,
-              color: isRoot ? '#fff' : (isParent ? '#a0d4e0' : '#cbd5e1'),
+              position: 'bottom' as const,
+              color: isRoot || isSelected || isParent ? palette.tooltipText : palette.axisLabel,
               fontWeight: isRoot ? 700 : (isParent ? 600 : 400),
               fontSize: isRoot ? 13 : (n > 20 ? 9 : 11),
             },
@@ -142,22 +209,22 @@ const GraphPanel: React.FC<GraphPanelProps> = ({ nodes = [], links = [] }) => {
           source: l.source,
           target: l.target,
           holding_ratio: l.holding_ratio ?? null,
-          lineStyle: { color: '#4a5568', width: 1, curveness: 0.1 },
+          lineStyle: { color: palette.edge, width: 1, curveness: 0.1 },
           label: isEnterprise && l.holding_ratio != null
-            ? { show: n <= 25, formatter: `${l.holding_ratio}%`, color: '#888', fontSize: 9 }
-            : { show: !!l.label, formatter: l.label, color: '#e2e8f0', fontSize: 10 },
+            ? { show: n <= 25, formatter: `${l.holding_ratio}%`, color: palette.axisLabel, fontSize: 9 }
+            : { show: !!l.label, formatter: l.label, color: palette.axisLabel, fontSize: 10 },
         })),
-        lineStyle: { color: '#4a5568', curveness: 0.1 },
+        lineStyle: { color: palette.edge, curveness: 0.1 },
         emphasis: {
           focus: 'adjacency',
-          lineStyle: { width: 3, color: '#378ADD' },
+          lineStyle: { width: 3, color: palette.series[0] },
           label: { show: true },
         },
       }],
     };
 
     chartInstance.current.setOption(option, true);
-  }, [nodes, links, storeNodes, storeLinks, graphType, selectedNodeId]);
+  }, [nodes, links, storeNodes, storeLinks, graphType, selectedNodeId, resolved]);
 
   // 初始化 echarts 实例（仅一次）+ 卸载时销毁。合并到一个 effect 避免竞态。
   useEffect(() => {
@@ -221,28 +288,30 @@ const GraphPanel: React.FC<GraphPanelProps> = ({ nodes = [], links = [] }) => {
   }, [handleNodeClick]);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      background: '#1a1a2e',
-      borderRadius: 28,
-      overflow: 'hidden',
-    }}>
+    <div
+      className="eakis-panel"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        overflow: 'hidden',
+      }}
+    >
       <div style={{
         padding: '16px 20px',
-        fontWeight: 700,
-        borderBottom: '1px solid #2a2a4e',
+        fontWeight: 600,
+        fontSize: 13,
+        borderBottom: '1px solid var(--border-color)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        color: '#e2e8f0',
+        color: 'var(--text-primary)',
         flexShrink: 0,
       }}>
         <span><ProjectOutlined style={{ marginRight: 8 }} />关系图谱</span>
-        {graphHint && <span style={{ fontSize: 12, color: '#666' }}>{graphHint}</span>}
+        {graphHint && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{graphHint}</span>}
       </div>
-      <div style={{ flex: 1, width: '100%', position: 'relative', background: '#141422' }}>
+      <div style={{ flex: 1, width: '100%', position: 'relative', background: CHART_PALETTES[resolved].canvasBg }}>
         {/* echarts 容器：React 不管理其子节点，避免 removeChild 冲突 */}
         <div ref={chartRef} style={{ position: 'absolute', inset: 0 }} />
         {/* 空状态提示：作为兄弟节点覆盖，不放进 echarts 容器内 */}
@@ -250,7 +319,7 @@ const GraphPanel: React.FC<GraphPanelProps> = ({ nodes = [], links = [] }) => {
           <div style={{
             position: 'absolute', inset: 0, display: 'flex',
             alignItems: 'center', justifyContent: 'center',
-            color: '#555', fontSize: 13, textAlign: 'center', pointerEvents: 'none',
+            color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', pointerEvents: 'none',
           }}>
             选择或采集企业后<br />在此显示股权控制链
           </div>

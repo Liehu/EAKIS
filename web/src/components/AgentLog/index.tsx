@@ -1,12 +1,17 @@
 import { useRef, useEffect } from 'react';
 import type { TaskEvent } from '@/types/task';
+import './index.css';
 
-const logColors: Record<string, string> = {
-  stage_progress: '#378ADD',
-  agent_log: '#52c41a',
-  vuln_found: '#faad14',
-  task_complete: '#52c41a',
-  error: '#ff4d4f',
+/**
+ * 日志级别语义色（设计令牌）：stage_progress=accent · agent_log/task_complete=success ·
+ * vuln_found=warning · error=error；未知类型回退 --text-secondary。
+ */
+const logColorVar: Record<string, string> = {
+  stage_progress: 'var(--accent-color)',
+  agent_log: 'var(--success)',
+  vuln_found: 'var(--warning)',
+  task_complete: 'var(--success)',
+  error: 'var(--error)',
 };
 
 const logIcons: Record<string, string> = {
@@ -22,6 +27,11 @@ interface AgentLogProps {
   maxHeight?: number;
 }
 
+/**
+ * 智能体日志块（规范 §06）：--bg-secondary 底 + 1px --border-color + --radius-sm，
+ * --font-mono 12px / 行高 1.5；时间戳 --text-muted、消息 --text-secondary；
+ * 横向滚动兜底（行内 white-space: pre），maxHeight 滚动逻辑保持不变。
+ */
 const AgentLog: React.FC<AgentLogProps> = ({ events, maxHeight = 160 }) => {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -30,16 +40,19 @@ const AgentLog: React.FC<AgentLogProps> = ({ events, maxHeight = 160 }) => {
   }, [events.length]);
 
   return (
-    <div style={{ fontFamily: 'monospace', fontSize: 11, maxHeight, overflowY: 'auto', lineHeight: 1.8 }}>
+    <div className="eakis-agent-log" style={{ maxHeight }}>
       {events.map((event, i) => (
-        <div key={i} style={{ display: 'flex', gap: 8 }}>
-          <span style={{ color: '#666', flexShrink: 0 }}>
+        <div key={i} className="eakis-agent-log-row">
+          <span className="eakis-agent-log-time">
             {new Date(event.timestamp).toLocaleTimeString('zh-CN', { hour12: false })}
           </span>
-          <span style={{ color: logColors[event.event_type] || '#888' }}>
+          <span
+            className="eakis-agent-log-icon"
+            style={{ color: logColorVar[event.event_type] || 'var(--text-secondary)' }}
+          >
             {logIcons[event.event_type] || '[·]'}
           </span>
-          <span style={{ color: '#bbb' }}>{event.data.message}</span>
+          <span className="eakis-agent-log-msg">{event.data.message}</span>
         </div>
       ))}
       <div ref={bottomRef} />

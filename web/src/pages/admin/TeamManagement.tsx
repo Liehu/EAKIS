@@ -147,37 +147,43 @@ const TeamManagement: React.FC = () => {
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>团队管理</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      {/* 页头：左标题 + 右操作区（规范 §02） */}
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">团队管理</span>
         <Button type="primary" size="small" onClick={openCreate}>新建团队</Button>
       </div>
-      <Table
-        size="small"
-        loading={loading}
-        dataSource={teams}
-        rowKey="id"
-        pagination={{ pageSize: 20 }}
-        columns={[
-          { title: '团队名称', dataIndex: 'name', key: 'name' },
-          { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true },
-          { title: '成员数', dataIndex: 'member_count', key: 'member_count', width: 80 },
-          {
-            title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 180,
-            render: (v: string) => new Date(v).toLocaleString('zh-CN'),
-          },
-          {
-            title: '操作', key: 'action', width: 220,
-            render: (_, record) => (
-              <Space>
-                <Button size="small" onClick={() => openMembers(record)}>成员</Button>
-                <Button size="small" onClick={() => openEdit(record)}>编辑</Button>
-                <Button size="small" danger onClick={() => handleDelete(record)}>删除</Button>
-              </Space>
-            ),
-          },
-        ]}
-      />
+      <div className="eakis-page-content">
+        <Table
+          size="small"
+          loading={loading}
+          dataSource={teams}
+          rowKey="id"
+          pagination={{ pageSize: 20 }}
+          columns={[
+            { title: '团队名称', dataIndex: 'name', key: 'name' },
+            { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true },
+            {
+              title: '成员数', dataIndex: 'member_count', key: 'member_count', width: 80,
+              render: (v: number) => <span style={{ fontSize: 13, fontWeight: 500 }}>{v}</span>,
+            },
+            {
+              title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 180,
+              render: (v: string) => new Date(v).toLocaleString('zh-CN'),
+            },
+            {
+              title: '操作', key: 'action', width: 200,
+              render: (_, record) => (
+                <Space size={4}>
+                  <Button type="link" size="small" onClick={() => openMembers(record)}>成员</Button>
+                  <Button type="link" size="small" onClick={() => openEdit(record)}>编辑</Button>
+                  <Button type="link" size="small" danger onClick={() => handleDelete(record)}>删除</Button>
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </div>
 
       <Modal
         title={editing ? `编辑团队: ${editing.name}` : '新建团队'}
@@ -204,8 +210,8 @@ const TeamManagement: React.FC = () => {
         width={520}
       >
         {/* 添加成员 */}
-        <div style={{ marginBottom: 16, padding: 12, background: '#1a1a2e', borderRadius: 8 }}>
-          <div style={{ marginBottom: 8, fontWeight: 600, color: '#e2e8f0' }}>添加成员</div>
+        <div style={{ marginBottom: 16, padding: 12, background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ marginBottom: 8, fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>添加成员</div>
           <Form form={memberForm} layout="inline" initialValues={{ role_name: 'engineer' }}>
             <Form.Item name="user_id" label="用户ID" rules={[{ required: true }]}>
               <Input placeholder="user_xxx" style={{ width: 140 }} />

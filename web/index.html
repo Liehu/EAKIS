@@ -1,10 +1,36 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>EAKIS</title>
+    <script>
+      /* 防闪白内联脚本（规范 §3.1）：必须内联且在 bundle 加载前同步执行。
+         读 localStorage('eakis-theme-preference')，合法值 light/dark/system，
+         非法值或读取出错一律回落 dark；system 用 prefers-color-scheme 解析。 */
+      (function () {
+        try {
+          var v = localStorage.getItem('eakis-theme-preference');
+          var pref = v === 'light' || v === 'dark' || v === 'system' ? v : 'dark';
+          var resolved;
+          if (pref === 'system') {
+            resolved =
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark';
+          } else {
+            resolved = pref;
+          }
+          document.documentElement.setAttribute('data-theme', resolved);
+          document.documentElement.style.colorScheme = resolved;
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.style.colorScheme = 'dark';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Switch, Drawer, Form, InputNumber, Input, Button, message } from 'antd';
+import { Table, Switch, Drawer, Form, InputNumber, Input, Button, message, Space } from 'antd';
 import { getAgentConfigs, updateAgentConfig } from '@/api/system';
 import type { AgentConfig } from '@/api/system';
 
@@ -10,6 +10,34 @@ const agentDescriptions: Record<string, string> = {
   'PENTEST-AUTO': '自动渗透 Agent',
   'REPORT-GEN': '报告生成 Agent',
 };
+
+// Agent 状态徽章（契约：启用=success · 停用=text-muted · 异常=error；当前数据仅 enabled 布尔，error 预留）
+const agentStatusMeta: Record<string, { text: string; token: string }> = {
+  enabled: { text: '启用', token: 'var(--success)' },
+  disabled: { text: '停用', token: 'var(--text-muted)' },
+  error: { text: '异常', token: 'var(--error)' },
+};
+
+/** 语义令牌徽章：10% 同色底 + 同色字（§06 徽章形态，对齐 ExportRecords/Tools 的 TokenBadge） */
+const TokenBadge: React.FC<{ color: string; children?: React.ReactNode }> = ({ color, children }) => (
+  <span
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '4px 12px',
+      borderRadius: 'var(--radius-lg)',
+      fontSize: 12,
+      fontWeight: 500,
+      lineHeight: 1.2,
+      color,
+      background: `color-mix(in srgb, ${color} 10%, transparent)`,
+      whiteSpace: 'nowrap',
+    }}
+  >
+    {children}
+  </span>
+);
 
 const AgentManagement: React.FC = () => {
   const [agents, setAgents] = useState<Record<string, AgentConfig>>({});
@@ -45,23 +73,37 @@ const AgentManagement: React.FC = () => {
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>Agent 管理</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      {/* 页头（规范 §02） */}
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">Agent 管理</span>
       </div>
-      <Table size="small" loading={loading}
-        dataSource={Object.entries(agents).map(([name, config]) => ({ key: name, name, ...config }))}
-        pagination={false}
-        columns={[
-          { title: 'Agent', dataIndex: 'name', key: 'name', render: (v: string) => <div><strong>{v}</strong><br /><span style={{ fontSize: 11, color: '#888' }}>{agentDescriptions[v] || ''}</span></div> },
-          { title: '模型', dataIndex: 'model', key: 'model' },
-          { title: 'Temperature', dataIndex: 'temperature', key: 'temp', width: 100 },
-          { title: 'Max Tokens', dataIndex: 'max_tokens', key: 'tokens', width: 100 },
-          { title: '超时(s)', dataIndex: 'timeout_s', key: 'timeout', width: 80 },
-          { title: '状态', dataIndex: 'enabled', key: 'enabled', width: 70, render: (v: boolean, record) => <Switch size="small" checked={v} onChange={(val) => handleToggle(record.name, val)} /> },
-          { title: '操作', key: 'action', width: 80, render: (_, record) => <Button size="small" onClick={() => openEdit(record.name, record)}>配置</Button> },
-        ]}
-      />
+      <div className="eakis-page-content">
+        {/* Agent 配置表：.eakis-panel 卡片承载 + padding 16 */}
+        <div className="eakis-panel" style={{ padding: 16 }}>
+          <Table size="small" loading={loading}
+            dataSource={Object.entries(agents).map(([name, config]) => ({ key: name, name, ...config }))}
+            pagination={false}
+            columns={[
+              { title: 'Agent', dataIndex: 'name', key: 'name', render: (v: string) => <div><strong>{v}</strong><br /><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{agentDescriptions[v] || ''}</span></div> },
+              { title: '模型', dataIndex: 'model', key: 'model' },
+              { title: 'Temperature', dataIndex: 'temperature', key: 'temp', width: 100 },
+              { title: 'Max Tokens', dataIndex: 'max_tokens', key: 'tokens', width: 100 },
+              { title: '超时(s)', dataIndex: 'timeout_s', key: 'timeout', width: 80 },
+              { title: '状态', dataIndex: 'enabled', key: 'enabled', width: 120, render: (v: boolean, record) => {
+                const meta = agentStatusMeta[v ? 'enabled' : 'disabled'];
+                return (
+                  <Space size={8}>
+                    <TokenBadge color={meta.token}>{meta.text}</TokenBadge>
+                    <Switch size="small" checked={v} onChange={(val) => handleToggle(record.name, val)} />
+                  </Space>
+                );
+              } },
+              { title: '操作', key: 'action', width: 80, render: (_, record) => <Button type="link" size="small" onClick={() => openEdit(record.name, record)}>配置</Button> },
+            ]}
+          />
+        </div>
+      </div>
 
       <Drawer title={`编辑 Agent: ${editing}`} open={!!editing} onClose={() => setEditing(null)} width={400}
         extra={<Button type="primary" size="small" onClick={handleSave}>保存</Button>}>

@@ -1,11 +1,73 @@
 import { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Drawer, Descriptions } from 'antd';
+import { CopyOutlined } from '@ant-design/icons';
 import { getFingerprints, createFingerprint, updateFingerprint, deleteFingerprint } from '@/api/knowledge';
 import type { Fingerprint } from '@/types/knowledge';
 import { useRightPanelStore } from '@/store/rightPanelStore';
+import FilterBar from '@/components/FilterBar';
 
-const statusColor: Record<string, string> = { draft: 'default', pending_review: 'processing', published: 'success', deprecated: 'error' };
-const statusLabel: Record<string, string> = { draft: '草稿', pending_review: '待审核', published: '已发布', deprecated: '已弃用' };
+// 知识状态语义令牌（规范 §06 状态徽章：10% 同色底 + 同色字 / 500 字重）
+// draft=中性 · pending_review=accent（流转中）· published=success · deprecated=弱化
+const STATUS_TOKENS: Record<string, { label: string; token: string }> = {
+  draft: { label: '草稿', token: 'var(--text-secondary)' },
+  pending_review: { label: '待审核', token: 'var(--accent-color)' },
+  published: { label: '已发布', token: 'var(--success)' },
+  deprecated: { label: '已弃用', token: 'var(--text-muted)' },
+};
+
+// 状态徽章：10% 同色底 + 同色字（形态对齐 .severity-badge：4px 12px / r12 / 12px）
+const KnowledgeStatusBadge: React.FC<{ status: string }> = ({ status }) => {
+  const cfg = STATUS_TOKENS[status];
+  if (!cfg) return <Tag>{status}</Tag>;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      padding: '4px 12px', borderRadius: 12, fontSize: 12, fontWeight: 500,
+      lineHeight: 1.2, whiteSpace: 'nowrap',
+      color: cfg.token, background: 'color-mix(in srgb, currentColor 10%, transparent)',
+    }}>{cfg.label}</span>
+  );
+};
+
+// 分类/平台标签（语义令牌）：accent 8% 底 + accent 字，999px 胶囊（规范 §05 圆角胶囊）
+const TokenTag: React.FC<{ text: string }> = ({ text }) => (
+  <span style={{
+    display: 'inline-flex', alignItems: 'center',
+    padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 500,
+    lineHeight: 1.2, whiteSpace: 'nowrap',
+    color: 'var(--accent-color)', background: 'var(--accent-alpha-08)',
+  }}>{text}</span>
+);
+
+// 代码块规范：bg-secondary + 1px var(--border-color) + r6 + mono 12px/1.5（规范 §05/§06）
+const codeBlockStyle: React.CSSProperties = {
+  margin: 0,
+  padding: 12,
+  background: 'var(--bg-secondary)',
+  border: '1px solid var(--border-color)',
+  borderRadius: 'var(--radius-sm)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: 12,
+  lineHeight: 1.5,
+  color: 'var(--text-primary)',
+  overflow: 'auto',
+  whiteSpace: 'pre-wrap',
+};
+
+// 代码块复制按钮（type=text size=small）
+const CopyButton: React.FC<{ text: string }> = ({ text }) => (
+  <Button
+    type="text"
+    size="small"
+    icon={<CopyOutlined />}
+    onClick={(e) => {
+      e.stopPropagation();
+      navigator.clipboard?.writeText(text)
+        .then(() => message.success('已复制'))
+        .catch(() => message.error('复制失败'));
+    }}
+  />
+);
 
 const FingerprintPage: React.FC = () => {
   const [items, setItems] = useState<Fingerprint[]>([]);
@@ -46,36 +108,40 @@ const FingerprintPage: React.FC = () => {
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>指纹库</span>
-        <Space>
-          <Input.Search placeholder="搜索名称/组件" allowClear size="small" style={{ width: 180 }} onSearch={setQ} />
-          <Button type="primary" size="small" onClick={() => { setEditing(null); form.resetFields(); setModalOpen(true); }}>新增</Button>
-        </Space>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">指纹库</span>
+        <FilterBar
+          searchPlaceholder="搜索名称/组件"
+          onSearch={setQ}
+          extra={<Button type="primary" size="small" onClick={() => { setEditing(null); form.resetFields(); setModalOpen(true); }}>新增</Button>}
+        />
       </div>
-      <Table size="small" loading={loading} dataSource={items} rowKey="id"
-        pagination={{ current: page, pageSize: 20, total, onChange: setPage }}
-        onRow={(r) => ({ onClick: () => { setDetail(r); setPanelItem('knowledge', r as unknown as Record<string, unknown>, 'fingerprint'); }, style: { cursor: 'pointer' } })}
-        columns={[
-          { title: '名称', dataIndex: 'name', key: 'name', ellipsis: true },
-          { title: '组件', dataIndex: 'component', key: 'component', width: 120 },
-          { title: '版本', dataIndex: 'version', key: 'version', width: 90, render: (v: string) => v || '—' },
-          { title: '分类', dataIndex: 'category', key: 'category', width: 90, render: (v: string) => v ? <Tag>{v}</Tag> : '—' },
-          { title: '匹配方式', dataIndex: 'match_type', key: 'match', width: 90 },
-          { title: '关联漏洞', dataIndex: 'vuln_count', key: 'vuln_count', width: 90, render: (v: number) => v || 0 },
-          { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (v: string) => <Tag color={statusColor[v]}>{statusLabel[v]}</Tag> },
-          {
-            title: '操作', key: 'action', width: 140,
-            render: (_, r) => (
-              <Space size="small" onClick={(e) => e.stopPropagation()}>
-                <Button size="small" onClick={() => { setEditing(r); form.setFieldsValue(r); setModalOpen(true); }}>编辑</Button>
-                <Button size="small" danger onClick={() => handleDelete(r)}>删除</Button>
-              </Space>
-            ),
-          },
-        ]}
-      />
+      <div className="eakis-page-content">
+        <Table size="small" loading={loading} dataSource={items} rowKey="id"
+          pagination={{ current: page, pageSize: 20, total, onChange: setPage }}
+          onRow={(r) => ({ onClick: () => { setDetail(r); setPanelItem('knowledge', r as unknown as Record<string, unknown>, 'fingerprint'); }, style: { cursor: 'pointer' } })}
+          columns={[
+            { title: '名称', dataIndex: 'name', key: 'name', ellipsis: true },
+            { title: '组件', dataIndex: 'component', key: 'component', width: 120 },
+            { title: '版本', dataIndex: 'version', key: 'version', width: 90, render: (v: string) => v || '—' },
+            { title: '分类', dataIndex: 'category', key: 'category', width: 100, render: (v: string) => v ? <TokenTag text={v} /> : '—' },
+            { title: '匹配方式', dataIndex: 'match_type', key: 'match', width: 90 },
+            { title: '关联漏洞', dataIndex: 'vuln_count', key: 'vuln_count', width: 90, render: (v: number) => v || 0 },
+            { title: '状态', dataIndex: 'status', key: 'status', width: 100, render: (v: string) => <KnowledgeStatusBadge status={v} /> },
+            {
+              // 行操作统一 type=link size=small（规范 §02 表格页）
+              title: '操作', key: 'action', width: 140,
+              render: (_, r) => (
+                <Space size="small" onClick={(e) => e.stopPropagation()}>
+                  <Button type="link" size="small" onClick={() => { setEditing(r); form.setFieldsValue(r); setModalOpen(true); }}>编辑</Button>
+                  <Button type="link" size="small" danger onClick={() => handleDelete(r)}>删除</Button>
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </div>
       <Modal title={editing ? `编辑: ${editing.name}` : '新增指纹'} open={modalOpen} onCancel={() => setModalOpen(false)} onOk={handleSubmit} okText="保存" cancelText="取消" width={560}>
         <Form form={form} layout="vertical">
           <Form.Item name="name" label="名称" rules={[{ required: true }]}><Input /></Form.Item>
@@ -89,20 +155,29 @@ const FingerprintPage: React.FC = () => {
           <Form.Item name="match_type" label="匹配方式">
             <Select allowClear options={[{ value: 'header', label: 'Header' }, { value: 'body', label: 'Body' }, { value: 'favicon', label: 'Favicon' }, { value: 'cookie', label: 'Cookie' }]} />
           </Form.Item>
-          <Form.Item name="match_rule" label="匹配规则" rules={[{ required: true }]}><Input.TextArea rows={3} placeholder="正则/字符串/hash" /></Form.Item>
+          <Form.Item name="match_rule" label="匹配规则" rules={[{ required: true }]}><Input.TextArea rows={3} placeholder="正则/字符串/hash" style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} /></Form.Item>
           <Form.Item name="description" label="描述"><Input.TextArea rows={2} /></Form.Item>
         </Form>
       </Modal>
       <Drawer title="指纹详情" open={!!detail} onClose={() => setDetail(null)} width={440}>
         {detail && (
-          <Descriptions column={1} size="small" bordered>
+          <Descriptions column={1} size="small" bordered
+            labelStyle={{ background: 'var(--bg-thead)', color: 'var(--text-secondary)', width: 90 }}
+            contentStyle={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             <Descriptions.Item label="名称">{detail.name}</Descriptions.Item>
             <Descriptions.Item label="组件/版本">{[detail.component, detail.version].filter(Boolean).join(' / ') || '—'}</Descriptions.Item>
             <Descriptions.Item label="分类">{detail.category || '—'}</Descriptions.Item>
             <Descriptions.Item label="匹配方式">{detail.match_type || '—'}</Descriptions.Item>
-            <Descriptions.Item label="匹配规则"><pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{detail.match_rule}</pre></Descriptions.Item>
+            <Descriptions.Item label="匹配规则">
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+                  <CopyButton text={detail.match_rule} />
+                </div>
+                <pre style={codeBlockStyle}>{detail.match_rule}</pre>
+              </div>
+            </Descriptions.Item>
             <Descriptions.Item label="关联漏洞">{detail.vuln_count}</Descriptions.Item>
-            <Descriptions.Item label="状态"><Tag color={statusColor[detail.status]}>{statusLabel[detail.status]}</Tag></Descriptions.Item>
+            <Descriptions.Item label="状态"><KnowledgeStatusBadge status={detail.status} /></Descriptions.Item>
             <Descriptions.Item label="描述">{detail.description || '—'}</Descriptions.Item>
           </Descriptions>
         )}

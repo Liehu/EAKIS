@@ -9,10 +9,32 @@ import { useRightPanelStore } from '@/store/rightPanelStore';
 const typeLabel: Record<TemplateType, string> = {
   task: '任务模板', report: '报告模板', prompt: '提示词', attack_path: '攻击路径',
 };
+// 模板类型语义令牌（规范 §03）：task=accent · report=success · prompt=品牌AI渐变端 · attack_path=warning
 const typeColor: Record<TemplateType, string> = {
-  task: 'blue', report: 'green', prompt: 'purple', attack_path: 'orange',
+  task: 'var(--accent-color)', report: 'var(--success)', prompt: 'var(--brand-ai-end)', attack_path: 'var(--warning)',
 };
 const scopeLabel: Record<string, string> = { org: '组织', team: '团队', private: '个人' };
+
+/** 语义令牌徽章：10% 同色底 + 同色字（规范 §06 徽章形态，禁止 hex 徽章） */
+const TokenBadge: React.FC<{ color: string; children?: React.ReactNode }> = ({ color, children }) => (
+  <span
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      padding: '4px 12px',
+      borderRadius: 'var(--radius-lg)',
+      fontSize: 12,
+      fontWeight: 500,
+      lineHeight: 1.2,
+      color,
+      background: `color-mix(in srgb, ${color} 10%, transparent)`,
+      whiteSpace: 'nowrap',
+    }}
+  >
+    {children}
+  </span>
+);
 
 // 报告可选字段
 const REPORT_FIELDS = ['ip', 'domain', 'port', 'tech_stack', 'risk_level', 'icp_entity', 'open_ports',
@@ -96,12 +118,12 @@ const TemplateManagement: React.FC = () => {
             ]} />
           </Form.Item>
           <Form.Item name={['content', 'target_depth']} label="穿透深度"><InputNumber min={1} max={10} /></Form.Item>
-          <Form.Item label="M0 采集配置" colon={false}><span style={{ color: '#666', fontSize: 12 }}>企业主体关联信息采集</span></Form.Item>
+          <Form.Item label="M0 采集配置" colon={false}><span style={{ color: 'var(--text-muted)', fontSize: 12 }}>企业主体关联信息采集</span></Form.Item>
           <Form.Item name={['content', 'enrich_provider']} label="采集数据源">
             <Select options={[{value:'yuntu',label:'云图'},{value:'tianyancha',label:'天眼查(预留)'}]} />
           </Form.Item>
           <Form.Item name={['content', 'holding_min']} label="持股阈值(%)"><InputNumber min={0} max={100} /></Form.Item>
-          <Form.Item label="M1 情报配置" colon={false}><span style={{ color: '#666', fontSize: 12 }}>开源情报采集</span></Form.Item>
+          <Form.Item label="M1 情报配置" colon={false}><span style={{ color: 'var(--text-muted)', fontSize: 12 }}>开源情报采集</span></Form.Item>
           <Form.Item name={['content', 'intel_categories']} label="情报源类别">
             <Checkbox.Group options={[
               {label:'新闻',value:'news'},{label:'官网',value:'official'},
@@ -138,7 +160,7 @@ const TemplateManagement: React.FC = () => {
             <Select options={[{value:'M2',label:'M2 关键词'},{value:'M3',label:'M3 资产'},{value:'M4',label:'M4 接口'},{value:'M6',label:'M6 报告'}]} />
           </Form.Item>
           <Form.Item name={['content', 'template']} label="提示词 (Jinja2, 支持 {{var}})" rules={[{ required: true }]}>
-            <Input.TextArea rows={6} style={{ fontFamily: 'monospace' }} placeholder="你是一个...请根据 {{input}} ..." />
+            <Input.TextArea rows={6} style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} placeholder="你是一个...请根据 {{input}} ..." />
           </Form.Item>
         </>
       );
@@ -146,47 +168,50 @@ const TemplateManagement: React.FC = () => {
     // attack_path: JSON 编辑器
     return (
       <Form.Item name={['content']} label="DAG 内容 (JSON)">
-        <Input.TextArea rows={10} style={{ fontFamily: 'monospace' }}
+        <Input.TextArea rows={10} style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}
           placeholder='{"nodes":[{"id":"n1","type":"recon","label":"信息收集"}],"edges":[{"source":"n1","target":"n2","action":"auto"}]}' />
       </Form.Item>
     );
   };
 
   return (
-    <div>
-      <Tabs
-        activeKey={type}
-        onChange={(k) => setType(k as TemplateType)}
-        items={(Object.keys(typeLabel) as TemplateType[]).map((t) => ({ key: t, label: <Tag color={typeColor[t]}>{typeLabel[t]}</Tag> }))}
-      />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>{typeLabel[type]}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      {/* 页头：左标题 + 右操作区（规范 §02） */}
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">{typeLabel[type]}</span>
         <Space>
           <Input.Search placeholder="搜索名称" allowClear size="small" style={{ width: 180 }} onSearch={setQ} />
           <Button type="primary" size="small" onClick={openCreate}>新增</Button>
         </Space>
       </div>
+      <div className="eakis-page-content">
+      <Tabs
+        activeKey={type}
+        onChange={(k) => setType(k as TemplateType)}
+        items={(Object.keys(typeLabel) as TemplateType[]).map((t) => ({ key: t, label: <TokenBadge color={typeColor[t]}>{typeLabel[t]}</TokenBadge> }))}
+      />
       <Table size="small" loading={loading} dataSource={items} rowKey="id"
         pagination={{ current: page, pageSize: 20, total, onChange: setPage, showTotal: (t) => `共 ${t} 条` }}
         onRow={(r) => ({ onClick: () => { setDetail(r); setDrawerOpen(true); setPanelItem('template', r as unknown as Record<string, unknown>, seg); }, style: { cursor: 'pointer' } })}
         columns={[
           { title: '名称', dataIndex: 'name', key: 'name', ellipsis: true,
-            render: (v: string, r: Template) => <span>{v} {r.parent_name && <Tag color="cyan" style={{fontSize:10}}>继承 {r.parent_name}</Tag>}</span> },
+            render: (v: string, r: Template) => <span>{v} {r.parent_name && <TokenBadge color="var(--text-secondary)">继承 {r.parent_name}</TokenBadge>}</span> },
           { title: '描述', dataIndex: 'description', key: 'desc', ellipsis: true, render: (v: string) => v || '—' },
           { title: '可见域', dataIndex: 'scope', key: 'scope', width: 80, render: (v: string) => <Tag>{scopeLabel[v]}</Tag> },
           { title: '版本', dataIndex: 'version', key: 'ver', width: 60 },
-          { title: '种子', dataIndex: 'is_seed', key: 'seed', width: 60, render: (v: number) => v ? <Tag color="gold">种子</Tag> : null },
+          { title: '种子', dataIndex: 'is_seed', key: 'seed', width: 60, render: (v: number) => v ? <TokenBadge color="var(--warning)">种子</TokenBadge> : null },
           {
             title: '操作', key: 'action', width: 140,
             render: (_, r) => (
               <Space size="small" onClick={(e) => e.stopPropagation()}>
-                <Button size="small" onClick={() => openEdit(r)}>编辑</Button>
-                <Button size="small" danger onClick={() => handleDelete(r)}>删除</Button>
+                <Button type="link" size="small" onClick={() => openEdit(r)}>编辑</Button>
+                <Button type="link" size="small" danger onClick={() => handleDelete(r)}>删除</Button>
               </Space>
             ),
           },
         ]}
       />
+      </div>
 
       <Modal title={editing ? `编辑: ${editing.name}` : `新增${typeLabel[type]}`} open={modalOpen}
         onCancel={() => setModalOpen(false)} onOk={handleSubmit} okText="保存" cancelText="取消" width={640} destroyOnClose>
@@ -201,7 +226,7 @@ const TemplateManagement: React.FC = () => {
               <Select allowClear placeholder="无 (顶级)" options={items.filter((i) => i.template_type === type).map((i) => ({ value: i.id, label: i.name }))} />
             </Form.Item>
           </Space>
-          <div style={{ marginTop: 8, marginBottom: 8, color: '#94a3b8', fontSize: 12, fontWeight: 600 }}>类型专属内容</div>
+          <div style={{ marginTop: 8, marginBottom: 8, color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600 }}>类型专属内容</div>
           {renderContentEditor()}
         </Form>
       </Modal>
@@ -209,25 +234,26 @@ const TemplateManagement: React.FC = () => {
       <Drawer title={detail?.name} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={560}>
         {detail && (
           <>
-            <p><strong>类型:</strong> <Tag color={typeColor[detail.template_type]}>{typeLabel[detail.template_type]}</Tag> <strong>可见域:</strong> <Tag>{scopeLabel[detail.scope]}</Tag> <strong>版本:</strong> {detail.version}</p>
-            {detail.parent_name && <p><strong>继承自:</strong> <Tag color="cyan">{detail.parent_name}</Tag></p>}
+            <p><strong>类型:</strong> <TokenBadge color={typeColor[detail.template_type]}>{typeLabel[detail.template_type]}</TokenBadge> <strong>可见域:</strong> <Tag>{scopeLabel[detail.scope]}</Tag> <strong>版本:</strong> {detail.version}</p>
+            {detail.parent_name && <p><strong>继承自:</strong> <TokenBadge color="var(--text-secondary)">{detail.parent_name}</TokenBadge></p>}
             {detail.description && <p><strong>描述:</strong> {detail.description}</p>}
             {detail.template_type === 'attack_path' ? (
               <div style={{ marginTop: 12 }}>
-                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>攻击路径 DAG</div>
+                <div style={{ marginBottom: 8, color: 'var(--text-secondary)', fontSize: 12 }}>攻击路径 DAG</div>
                 <DAGViewer nodes={(detail.content as any).nodes || []} edges={(detail.content as any).edges || []} />
                 <details style={{ marginTop: 12 }}>
-                  <summary style={{ cursor: 'pointer', color: '#94a3b8', fontSize: 12 }}>原始 JSON</summary>
-                  <pre style={{ background: '#1a1a2e', padding: 12, borderRadius: 8, fontSize: 11, overflow: 'auto' }}>{JSON.stringify(detail.content, null, 2)}</pre>
+                  <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 12 }}>原始 JSON</summary>
+                  {/* JSON 展示块：bg-secondary + 1px 描边 + radius-sm + mono 12px（规范 §06） */}
+                  <pre style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: 12, fontFamily: 'var(--font-mono)', fontSize: 12, overflow: 'auto' }}>{JSON.stringify(detail.content, null, 2)}</pre>
                 </details>
               </div>
             ) : (
               <div style={{ marginTop: 12 }}>
-                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>内容</div>
+                <div style={{ marginBottom: 8, color: 'var(--text-secondary)', fontSize: 12 }}>内容</div>
                 {detail.template_type === 'prompt' ? (
-                  <pre style={{ background: '#1a1a2e', padding: 12, borderRadius: 8, fontSize: 11, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{(detail.content as any).template}</pre>
+                  <pre style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: 12, fontFamily: 'var(--font-mono)', fontSize: 12, overflow: 'auto', whiteSpace: 'pre-wrap' }}>{(detail.content as any).template}</pre>
                 ) : (
-                  <pre style={{ background: '#1a1a2e', padding: 12, borderRadius: 8, fontSize: 11, overflow: 'auto' }}>{JSON.stringify(detail.content, null, 2)}</pre>
+                  <pre style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: 12, fontFamily: 'var(--font-mono)', fontSize: 12, overflow: 'auto' }}>{JSON.stringify(detail.content, null, 2)}</pre>
                 )}
               </div>
             )}

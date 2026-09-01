@@ -11,6 +11,44 @@ const statusCodeColor = (code?: number) => {
   return 'red';
 };
 
+// 操作类型徽章令牌：创建=success · 更新=accent · 删除=error · 登录/其他=text-secondary
+const actionToken = (action: string) => {
+  if (action.includes('CREATE')) return 'var(--success)';
+  if (action.includes('DELETE')) return 'var(--error)';
+  if (action.includes('UPDATE')) return 'var(--accent-color)';
+  return 'var(--text-secondary)';
+};
+
+// 徽章：语义令牌同色系底 + 同色字（规范 §06 徽章形态：r12 / 12px / 500）
+const TokenBadge: React.FC<{ text: string; color: string }> = ({ text, color }) => (
+  <span
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      padding: '4px 12px',
+      borderRadius: 12,
+      fontSize: 12,
+      fontWeight: 500,
+      lineHeight: 1.2,
+      whiteSpace: 'nowrap',
+      color,
+      background: 'color-mix(in srgb, currentColor 10%, transparent)',
+    }}
+  >
+    {text}
+  </span>
+);
+
+// 操作类型徽章（创建/更新/删除/登录按语义令牌 10% 同色底）
+const ActionBadge: React.FC<{ action: string }> = ({ action }) => (
+  <TokenBadge text={action} color={actionToken(action)} />
+);
+
+// 等宽数据列（时间/IP：--font-mono 12px）
+const MonoCell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{children}</span>
+);
+
 const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [total, setTotal] = useState(0);
@@ -53,9 +91,10 @@ const AuditLogs: React.FC = () => {
   );
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>审计日志</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      {/* 页头：左标题 + 右操作区（规范 §02） */}
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">审计日志</span>
         <Space>
           <Select
             placeholder="操作类型"
@@ -95,44 +134,49 @@ const AuditLogs: React.FC = () => {
           <Input.Search placeholder="搜索用户/路径/IP" allowClear size="small" style={{ width: 200 }} onSearch={setSearch} />
         </Space>
       </div>
-      <Table
-        size="small"
-        loading={loading}
-        dataSource={filtered}
-        rowKey="id"
-        onRow={(record) => ({ onClick: () => setSelected(record), style: { cursor: 'pointer' } })}
-        pagination={{
-          current: page,
-          pageSize: 20,
-          total,
-          onChange: setPage,
-          showTotal: (t) => `共 ${t} 条`,
-        }}
-        columns={[
-          {
-            title: '时间', dataIndex: 'created_at', key: 'time', width: 180,
-            render: (v: string) => new Date(v).toLocaleString('zh-CN'),
-          },
-          { title: '用户', dataIndex: 'username', key: 'user', width: 180, render: (v: string) => v || '—' },
-          { title: '操作', dataIndex: 'action', key: 'action', width: 140, render: (v: string) => <Tag color="blue">{v}</Tag> },
-          { title: '资源', dataIndex: 'resource_type', key: 'resource', width: 120 },
-          {
-            title: '请求', key: 'request',
-            render: (_, r) => (
-              <span>
-                <Tag>{r.request_method}</Tag>
-                <span style={{ color: '#94a3b8', fontSize: 12 }}>{r.request_path}</span>
-              </span>
-            ),
-          },
-          {
-            title: '状态码', dataIndex: 'status_code', key: 'status', width: 80,
-            render: (v?: number) => (v ? <Tag color={statusCodeColor(v)}>{v}</Tag> : '—'),
-          },
-          { title: '耗时', dataIndex: 'duration_ms', key: 'duration', width: 80, render: (v?: number) => (v ? `${v}ms` : '—') },
-          { title: 'IP', dataIndex: 'ip_address', key: 'ip', width: 120, render: (v: string) => v || '—' },
-        ]}
-      />
+      <div className="eakis-page-content">
+        <Table
+          size="small"
+          loading={loading}
+          dataSource={filtered}
+          rowKey="id"
+          onRow={(record) => ({ onClick: () => setSelected(record), style: { cursor: 'pointer' } })}
+          pagination={{
+            current: page,
+            pageSize: 20,
+            total,
+            onChange: setPage,
+            showTotal: (t) => `共 ${t} 条`,
+          }}
+          columns={[
+            {
+              title: '时间', dataIndex: 'created_at', key: 'time', width: 180,
+              render: (v: string) => <MonoCell>{new Date(v).toLocaleString('zh-CN')}</MonoCell>,
+            },
+            { title: '用户', dataIndex: 'username', key: 'user', width: 180, render: (v: string) => v || '—' },
+            {
+              title: '操作', dataIndex: 'action', key: 'action', width: 150,
+              render: (v: string) => <ActionBadge action={v} />,
+            },
+            { title: '资源', dataIndex: 'resource_type', key: 'resource', width: 120 },
+            {
+              title: '请求', key: 'request',
+              render: (_, r) => (
+                <span>
+                  <Tag>{r.request_method}</Tag>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{r.request_path}</span>
+                </span>
+              ),
+            },
+            {
+              title: '状态码', dataIndex: 'status_code', key: 'status', width: 80,
+              render: (v?: number) => (v ? <Tag color={statusCodeColor(v)}>{v}</Tag> : '—'),
+            },
+            { title: '耗时', dataIndex: 'duration_ms', key: 'duration', width: 80, render: (v?: number) => (v ? `${v}ms` : '—') },
+            { title: 'IP', dataIndex: 'ip_address', key: 'ip', width: 120, render: (v: string) => (v ? <MonoCell>{v}</MonoCell> : '—') },
+          ]}
+        />
+      </div>
 
       <Drawer
         title="日志详情"
@@ -158,8 +202,17 @@ const AuditLogs: React.FC = () => {
             </Descriptions>
             {selected.detail && Object.keys(selected.detail).length > 0 && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ marginBottom: 8, color: '#94a3b8', fontSize: 12 }}>详情</div>
-                <pre style={{ background: '#1a1a2e', padding: 12, borderRadius: 8, fontSize: 12, overflow: 'auto' }}>
+                <div style={{ marginBottom: 8, color: 'var(--text-secondary)', fontSize: 12 }}>详情</div>
+                <pre
+                  style={{
+                    background: 'var(--bg-tertiary)',
+                    padding: 12,
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: 12,
+                    fontFamily: 'var(--font-mono)',
+                    overflow: 'auto',
+                  }}
+                >
                   {JSON.stringify(selected.detail, null, 2)}
                 </pre>
               </div>

@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Space, Select, Tag, Modal, Form, Input, message, Popconfirm, AutoComplete } from 'antd';
+import { Table, Button, Space, Select, Tag, Modal, Form, Input, message, Popconfirm, AutoComplete, Progress } from 'antd';
 import { PlusOutlined, PauseCircleOutlined, PlayCircleOutlined, CloseCircleOutlined, ReloadOutlined, RocketOutlined } from '@ant-design/icons';
 import { listTasks, createTask, startTask, getTask, pauseTask, resumeTask, cancelTask, retryTask, batchCancelTasks, batchResumeTasks } from '@/api/tasks';
 import { searchCompanies } from '@/api/companies';
 import { getTemplates } from '@/api/templates';
 import type { Task, TaskStatus } from '@/types/task';
+import StatusBadge from '@/components/StatusBadge';
+import BatchActionBar from '@/components/BatchActionBar';
 import { useRightPanelStore } from '@/store/rightPanelStore';
-
-const statusColors: Record<TaskStatus, string> = {
-  pending: 'default', running: 'processing', paused: 'warning', completed: 'success', failed: 'error', cancelled: 'default',
-};
 
 const taskTypeLabels: Record<string, string> = {
   enterprise_penetration: '企业渗透', asset_detection: '资产探测', risk_assessment: '风险评估', company_info_collection: '企业信息采集',
@@ -108,67 +106,74 @@ const TaskManagement: React.FC = () => {
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>任务管理</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      {/* 页头：左标题 + 右操作区（规范 §02） */}
+      <div className="eakis-page-header">
+        <span className="eakis-page-header-title">任务管理</span>
         <Space>
           <Select placeholder="状态筛选" allowClear size="small" style={{ width: 120 }} value={statusFilter} onChange={setStatusFilter}
             options={['pending', 'running', 'paused', 'completed', 'failed', 'cancelled'].map((s) => ({ value: s, label: s }))} />
-          {selectedRowKeys.length > 0 && (
-            <>
-              <Popconfirm title={`确认批量取消 ${selectedRowKeys.length} 个任务?`} onConfirm={() => handleBatch('cancel')}>
-                <Button size="small" danger>批量取消</Button>
-              </Popconfirm>
-              <Button size="small" onClick={() => handleBatch('resume')}>批量恢复</Button>
-            </>
-          )}
-          <Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>新建任务</Button>
+          <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>新建任务</Button>
         </Space>
       </div>
-      <Table size="small" loading={loading} dataSource={tasks} rowKey="task_id" pagination={{ pageSize: 20 }}
-        rowSelection={{ selectedRowKeys, onChange: (keys) => setSelectedRowKeys(keys as string[]) }}
-        onRow={(record) => ({ onClick: async () => {
-          // 请求完整任务详情（含 stats + company_id），推入右侧面板
-          try {
-            const detail = await getTask(record.task_id);
-            setPanelItem('task', detail as unknown as Record<string, unknown>);
-          } catch {
-            setPanelItem('task', record as unknown as Record<string, unknown>);
-          }
-        }, style: { cursor: 'pointer' } })}
-        columns={[
-          { title: '任务ID', dataIndex: 'task_id', key: 'id', width: 140, ellipsis: true },
-          { title: '企业', dataIndex: 'company_name', key: 'company', ellipsis: true },
-          { title: '类型', key: 'type', width: 100, render: (_: any, r: any) => {
-            const tt = r.config?.task_type || r.metadata?.task_type || 'enterprise_penetration';
-            return <Tag>{taskTypeLabels[tt] || tt}</Tag>;
-          }},
-          { title: '状态', dataIndex: 'status', key: 'status', width: 90, render: (v: TaskStatus) => <Tag color={statusColors[v]}>{v}</Tag> },
-          { title: '当前阶段', dataIndex: 'current_stage', key: 'stage', width: 110 },
-          { title: '进度', key: 'progress', width: 70, render: (_, r) => `${Math.round(r.progress * 100)}%` },
-          { title: '资产/漏洞', key: 'stats', width: 90, render: (_, r) => {
-            const s = r.stats || {};
-            return `${s.assets_found || 0} / ${s.vulns_detected || 0}`;
-          }},
-          { title: '创建时间', dataIndex: 'created_at', key: 'created', width: 145, render: (v: string) => v?.slice(0, 16).replace('T', ' ') },
-          {
-            title: '操作', key: 'action', width: 170, render: (_, r) => (
-              <Space size={4}>
-                {r.status === 'pending' && (
-                  <Popconfirm title="确认下发执行此任务？" onConfirm={() => handleStart(r.task_id)}>
-                    <Button size="small" type="primary" ghost icon={<RocketOutlined />} loading={startingId === r.task_id}
-                      onClick={(e) => e.stopPropagation()}>下发</Button>
-                  </Popconfirm>
-                )}
-                {r.status === 'running' && <Button size="small" type="text" icon={<PauseCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'pause'); }} />}
-                {r.status === 'paused' && <Button size="small" type="text" icon={<PlayCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'resume'); }} />}
-                {(r.status === 'running' || r.status === 'paused') && <Button size="small" type="text" danger icon={<CloseCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'cancel'); }} />}
-                {r.status === 'failed' && <Button size="small" type="text" icon={<ReloadOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'retry'); }} />}
-              </Space>
-            ),
-          },
-        ]}
-      />
+      <div className="eakis-page-content">
+        {/* 批量操作条（规范 §06：accent 淡底容器；危险操作保留 Popconfirm） */}
+        <BatchActionBar
+          selectedCount={selectedRowKeys.length}
+          actions={[{ label: '批量恢复', onClick: () => handleBatch('resume') }]}
+        >
+          <Popconfirm title={`确认批量取消 ${selectedRowKeys.length} 个任务?`} onConfirm={() => handleBatch('cancel')}>
+            <Button size="small" danger>批量取消</Button>
+          </Popconfirm>
+        </BatchActionBar>
+
+        <Table size="small" loading={loading} dataSource={tasks} rowKey="task_id" pagination={{ pageSize: 20 }}
+          rowSelection={{ selectedRowKeys, onChange: (keys) => setSelectedRowKeys(keys as string[]) }}
+          onRow={(record) => ({ onClick: async () => {
+            // 请求完整任务详情（含 stats + company_id），推入右侧面板
+            try {
+              const detail = await getTask(record.task_id);
+              setPanelItem('task', detail as unknown as Record<string, unknown>);
+            } catch {
+              setPanelItem('task', record as unknown as Record<string, unknown>);
+            }
+          }, style: { cursor: 'pointer' } })}
+          columns={[
+            { title: '任务ID', dataIndex: 'task_id', key: 'id', width: 140, ellipsis: true },
+            { title: '企业', dataIndex: 'company_name', key: 'company', ellipsis: true },
+            { title: '类型', key: 'type', width: 100, render: (_: any, r: any) => {
+              const tt = r.config?.task_type || r.metadata?.task_type || 'enterprise_penetration';
+              return <Tag>{taskTypeLabels[tt] || tt}</Tag>;
+            }},
+            { title: '状态', dataIndex: 'status', key: 'status', width: 96, render: (v: TaskStatus) => <StatusBadge status={v} /> },
+            { title: '当前阶段', dataIndex: 'current_stage', key: 'stage', width: 110 },
+            { title: '进度', key: 'progress', width: 110, render: (_, r) => (
+              <Progress percent={Math.round((r.progress || 0) * 100)} size="small" strokeColor="var(--accent-color)" />
+            )},
+            { title: '资产/漏洞', key: 'stats', width: 90, render: (_, r) => {
+              const s = r.stats || {};
+              return `${s.assets_found || 0} / ${s.vulns_detected || 0}`;
+            }},
+            { title: '创建时间', dataIndex: 'created_at', key: 'created', width: 145, render: (v: string) => v?.slice(0, 16).replace('T', ' ') },
+            {
+              title: '操作', key: 'action', width: 170, render: (_, r) => (
+                <Space size={4}>
+                  {r.status === 'pending' && (
+                    <Popconfirm title="确认下发执行此任务？" onConfirm={() => handleStart(r.task_id)}>
+                      <Button type="link" size="small" icon={<RocketOutlined />} loading={startingId === r.task_id}
+                        onClick={(e) => e.stopPropagation()}>下发</Button>
+                    </Popconfirm>
+                  )}
+                  {r.status === 'running' && <Button type="link" size="small" icon={<PauseCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'pause'); }}>暂停</Button>}
+                  {r.status === 'paused' && <Button type="link" size="small" icon={<PlayCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'resume'); }}>恢复</Button>}
+                  {(r.status === 'running' || r.status === 'paused') && <Button type="link" size="small" danger icon={<CloseCircleOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'cancel'); }}>取消</Button>}
+                  {r.status === 'failed' && <Button type="link" size="small" icon={<ReloadOutlined />} onClick={(e) => { e.stopPropagation(); handleAction(r.task_id, 'retry'); }}>重试</Button>}
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </div>
 
       <Modal title="新建任务" open={createOpen} onCancel={() => setCreateOpen(false)} onOk={() => form.submit()} confirmLoading={creating} width={600}>
         <Form form={form} layout="vertical" onFinish={handleCreate} initialValues={{ task_type: 'company_info_collection' }}>

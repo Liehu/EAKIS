@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Tag, Progress, Modal, Form, Select, Switch, message, Drawer, Descriptions, Empty, Spin } from 'antd';
+import { Table, Button, Progress, Modal, Form, Select, Switch, message, Drawer, Descriptions, Empty, Spin } from 'antd';
 import { DownloadOutlined, FileTextOutlined, EyeOutlined } from '@ant-design/icons';
 import { listReports, generateReport, getReport } from '@/api/reports';
 import { getTemplates } from '@/api/templates';
@@ -8,8 +8,31 @@ import type { Report } from '@/api/reports';
 import type { Template } from '@/types/template';
 import { useRightPanelStore } from '@/store/rightPanelStore';
 
-const statusColor: Record<string, string> = {
-  completed: 'green', generating: 'blue', failed: 'red', pending: 'default',
+/**
+ * 报告中心（规范 §02 页面骨架 / §06 徽章形态）：
+ * - 页面根节点 flex column + height 100%；页头 .eakis-page-header + 内容区 .eakis-page-content
+ * - 表格走 antd 默认 + 令牌（表头/行悬浮已由 App.tsx components.Table 承接，页面内不再覆盖）
+ * - 报告状态徽章复用 .severity-badge 基类 + 语义令牌（10% 同色底 / r12 / 600，禁 hex 自绘）：
+ *   生成中=accent / 完成=success / 失败=error / 等待=中性 secondary
+ * - 详情抽屉/弹窗内表单走 antd 默认；数据获取/交互逻辑保持不变
+ */
+
+// 报告状态 → 语义令牌 + 10% 同色底（与 index.css sev-* 的 color-mix 方案同源）
+const statusMeta: Record<string, { token: string; bg: string }> = {
+  completed: { token: 'var(--success)', bg: 'color-mix(in srgb, var(--success) 10%, transparent)' },
+  generating: { token: 'var(--accent-color)', bg: 'var(--accent-alpha-08)' },
+  failed: { token: 'var(--error)', bg: 'color-mix(in srgb, var(--error) 10%, transparent)' },
+  pending: { token: 'var(--text-secondary)', bg: 'color-mix(in srgb, var(--text-secondary) 10%, transparent)' },
+};
+
+// 状态徽章：.severity-badge 自带大写变换，此处复位以原样保留状态文案
+const renderReportStatus = (status?: string) => {
+  const meta = statusMeta[status || ''] || statusMeta.pending;
+  return (
+    <span className="severity-badge" style={{ color: meta.token, background: meta.bg, textTransform: 'none' }}>
+      {status || '—'}
+    </span>
+  );
 };
 
 const Reports: React.FC = () => {
@@ -105,48 +128,52 @@ const Reports: React.FC = () => {
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0' }}>报告中心</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className="eakis-page-header">
+        <div className="eakis-page-header-title">报告中心</div>
         <Button size="small" type="primary" icon={<FileTextOutlined />} onClick={openGenerate}>生成报告</Button>
       </div>
-      <Table size="small" loading={loading} dataSource={reports} rowKey="report_id" pagination={{ pageSize: 20 }}
-        columns={[
-          { title: '报告 ID', dataIndex: 'report_id', key: 'id', width: 120, render: (v: string) => v?.slice(0, 8) },
-          {
-            title: '状态', dataIndex: 'status', key: 'status', width: 90,
-            render: (v: string) => <Tag color={statusColor[v] || 'default'}>{v || '—'}</Tag>,
-          },
-          {
-            title: '质量评分', key: 'quality', width: 120,
-            render: (_, r) => r.quality_score ? (
-              <div>
-                <Progress percent={Math.round(r.quality_score.overall * 100)} size="small" style={{ width: 90 }} />
-              </div>
-            ) : '—',
-          },
-          { title: '页数', dataIndex: 'page_count', key: 'pages', width: 60 },
-          { title: '字数', dataIndex: 'word_count', key: 'words', width: 80, render: (v: number) => v || '—' },
-          {
-            title: '耗时', key: 'duration', width: 80,
-            render: (_, r) => r.generation_duration_minutes != null ? `${r.generation_duration_minutes} 分` : '—',
-          },
-          {
-            title: '生成时间', dataIndex: 'generated_at', key: 'gen_at', width: 160,
-            render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '—',
-          },
-          {
-            title: '操作', key: 'action', width: 180,
-            render: (_, r) => (
-              <>
-                <Button size="small" type="link" icon={<EyeOutlined />} onClick={() => viewReport(r)}>查看</Button>
-                {r.content && <Button size="small" type="link" icon={<DownloadOutlined />} onClick={() => downloadContent(r)}>MD</Button>}
-                {r.files?.pdf && <Button size="small" type="link" icon={<DownloadOutlined />}>PDF</Button>}
-              </>
-            ),
-          },
-        ]}
-      />
+      <div className="eakis-page-content">
+        <div className="eakis-panel" style={{ padding: 16 }}>
+          <Table size="small" loading={loading} dataSource={reports} rowKey="report_id" pagination={{ pageSize: 20 }}
+            columns={[
+              { title: '报告 ID', dataIndex: 'report_id', key: 'id', width: 120, render: (v: string) => v?.slice(0, 8) },
+              {
+                title: '状态', dataIndex: 'status', key: 'status', width: 90,
+                render: (v: string) => renderReportStatus(v),
+              },
+              {
+                title: '质量评分', key: 'quality', width: 120,
+                render: (_, r) => r.quality_score ? (
+                  <div>
+                    <Progress percent={Math.round(r.quality_score.overall * 100)} size="small" style={{ width: 90 }} />
+                  </div>
+                ) : '—',
+              },
+              { title: '页数', dataIndex: 'page_count', key: 'pages', width: 60 },
+              { title: '字数', dataIndex: 'word_count', key: 'words', width: 80, render: (v: number) => v || '—' },
+              {
+                title: '耗时', key: 'duration', width: 80,
+                render: (_, r) => r.generation_duration_minutes != null ? `${r.generation_duration_minutes} 分` : '—',
+              },
+              {
+                title: '生成时间', dataIndex: 'generated_at', key: 'gen_at', width: 160,
+                render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '—',
+              },
+              {
+                title: '操作', key: 'action', width: 180,
+                render: (_, r) => (
+                  <>
+                    <Button size="small" type="link" icon={<EyeOutlined />} onClick={() => viewReport(r)}>查看</Button>
+                    {r.content && <Button size="small" type="link" icon={<DownloadOutlined />} onClick={() => downloadContent(r)}>MD</Button>}
+                    {r.files?.pdf && <Button size="small" type="link" icon={<DownloadOutlined />}>PDF</Button>}
+                  </>
+                ),
+              },
+            ]}
+          />
+        </div>
+      </div>
 
       <Modal
         title="生成报告"
@@ -168,7 +195,7 @@ const Reports: React.FC = () => {
           <Form.Item name="use_llm" label="LLM 执行摘要" valuePropName="checked" tooltip="使用 LLM 生成执行摘要 (可选, 失败自动降级模板模式)">
             <Switch />
           </Form.Item>
-          <div style={{ color: '#64748b', fontSize: 12 }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
             报告将聚合当前任务的资产/漏洞/接口/情报数据，按所选模板字段渲染为 Markdown。
           </div>
         </Form>
@@ -186,7 +213,7 @@ const Reports: React.FC = () => {
           <>
             <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
               <Descriptions.Item label="报告 ID">{viewing.report_id?.slice(0, 8)}</Descriptions.Item>
-              <Descriptions.Item label="状态"><Tag color={statusColor[viewing.status] || 'default'}>{viewing.status}</Tag></Descriptions.Item>
+              <Descriptions.Item label="状态">{renderReportStatus(viewing.status)}</Descriptions.Item>
               <Descriptions.Item label="质量评分">{viewing.quality_score ? `${Math.round(viewing.quality_score.overall * 100)}%` : '—'}</Descriptions.Item>
               <Descriptions.Item label="字数/页数">{viewing.word_count || 0} / {viewing.page_count || 0}</Descriptions.Item>
               {viewing.quality_score && (
@@ -203,13 +230,14 @@ const Reports: React.FC = () => {
             {viewing.content ? (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <span style={{ color: '#94a3b8', fontSize: 12 }}>报告内容 (Markdown)</span>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>报告内容 (Markdown)</span>
                   <Button size="small" icon={<DownloadOutlined />} onClick={() => downloadContent(viewing)}>下载 .md</Button>
                 </div>
                 <pre style={{
-                  background: '#0f172a', padding: 16, borderRadius: 8,
+                  background: 'var(--bg-tertiary)', padding: 16, borderRadius: 'var(--radius-md)',
+                  fontFamily: 'var(--font-mono)',
                   fontSize: 12, overflow: 'auto', whiteSpace: 'pre-wrap',
-                  maxHeight: '70vh', color: '#e2e8f0', lineHeight: 1.6,
+                  maxHeight: '70vh', color: 'var(--text-primary)', lineHeight: 1.6,
                 }}>
                   {viewing.content}
                 </pre>

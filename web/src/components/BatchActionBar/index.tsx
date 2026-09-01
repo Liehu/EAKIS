@@ -1,4 +1,5 @@
-import { Space, Button, Tag } from 'antd';
+import { Space, Button } from 'antd';
+import './index.css';
 
 interface BatchAction {
   label: string;
@@ -14,24 +15,17 @@ interface BatchActionBarProps {
   children?: React.ReactNode;
 }
 
+/**
+ * 批量操作条（规范 §06）：--accent-alpha-04 底 + 1px --accent-alpha-20 描边 + --radius-sm，
+ * 高度 40-44px；选中计数 13px/500 accent 色；危险操作保持 antd danger。
+ */
 const BatchActionBar: React.FC<BatchActionBarProps> = ({ selectedCount, actions, children }) => {
   if (selectedCount === 0) return null;
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '8px 12px',
-        marginBottom: 12,
-        background: '#378ADD11',
-        border: '1px solid #378ADD33',
-        borderRadius: 6,
-      }}
-    >
-      <Tag color="blue">已选择 {selectedCount} 项</Tag>
-      <Space size="small">
+    <div className="eakis-batch-bar">
+      <span className="eakis-batch-bar-count">已选择 {selectedCount} 项</span>
+      <Space size={8}>
         {actions.map((action, i) => (
           <Button
             key={i}

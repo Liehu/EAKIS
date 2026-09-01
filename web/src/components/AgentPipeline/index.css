@@ -1,0 +1,47 @@
+/* AgentPipeline —— 流水线节点/连线令牌重涂（§06）：节点三级态 + 连线 --border-color */
+.eakis-pipeline-node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.eakis-pipeline-node.is-active {
+  background: var(--accent-alpha-08);
+  border-color: var(--accent-alpha-20);
+  color: var(--accent-color);
+}
+
+.eakis-pipeline-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.eakis-pipeline-title.is-active {
+  color: var(--text-primary);
+}
+
+/* meta 统计：数字等宽展示（中文回退系统字体），12px --text-secondary */
+.eakis-pipeline-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* 连线令牌重涂：antd v6 vertical Steps 尾线为 .ant-steps-item-rail（border 实现）；
+   .ant-steps-item-tail::after 为 v5 结构兜底，选择器不匹配时零成本 */
+.eakis-pipeline.ant-steps-vertical .ant-steps-item-rail {
+  border-color: var(--border-color);
+}
+
+.eakis-pipeline .ant-steps-item-tail::after {
+  background: var(--border-color);
+}

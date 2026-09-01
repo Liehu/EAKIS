@@ -3,11 +3,21 @@ import { Card, Form, Input, Button, message, Typography, Alert, Space } from 'an
 import { UserOutlined, LockOutlined, MailOutlined, SafetyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { useThemeStore } from '@/store/themeStore';
 import { login, getMe, getSystemStatus, initAdmin } from '@/api/auth';
 
 const { Title, Text } = Typography;
 
 type Mode = 'loading' | 'login' | 'setup';
+
+/* ── 品牌渐变字（规范 --brand-ai 135deg：--brand-ai-start → --brand-ai-end） ── */
+const brandGradientText: React.CSSProperties = {
+  backgroundImage: 'linear-gradient(135deg, var(--brand-ai-start), var(--brand-ai-end))',
+  WebkitBackgroundClip: 'text',
+  backgroundClip: 'text',
+  color: 'transparent',
+  WebkitTextFillColor: 'transparent',
+};
 
 const LoginPage: React.FC = () => {
   const [mode, setMode] = useState<Mode>('loading');
@@ -15,6 +25,8 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const authLogin = useAuthStore((s) => s.login);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // 暗色氛围光按解析主题条件渲染（inline style 无法用 [data-theme] 选择器）
+  const isDark = useThemeStore((s) => s.resolved) === 'dark';
 
   // 已登录则跳转
   useEffect(() => {
@@ -105,20 +117,38 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  /* ── 页面背景：bg-secondary；暗色主题加规范式氛围光（左上主光 + 右下弱光） ── */
+  const pageBackground: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '100vh',
+    background: 'var(--bg-secondary)',
+    ...(isDark
+      ? {
+          backgroundImage:
+            'radial-gradient(circle at top left, var(--accent-alpha-12), transparent 28rem), radial-gradient(circle at bottom right, var(--accent-alpha-04), transparent 24rem)',
+        }
+      : {}),
+  };
+
+  /* ── 登录卡：eakis-panel 语义 + radius-lg + 32-40px 内边距；亮色 shadow-md，暗色描边分层 ── */
+  const loginCardStyle: React.CSSProperties = {
+    width: 420,
+    background: 'var(--bg-primary)',
+    border: '1px solid var(--border-color)',
+    borderRadius: 'var(--radius-lg)',
+    boxShadow: isDark ? undefined : 'var(--shadow-md)',
+  };
+
   if (mode === 'loading') {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        background: '#0d0d1a',
-      }}>
+      <div style={pageBackground}>
         <Card
-          style={{ width: 380, background: '#1a1a2e', borderColor: '#2a2a4e', borderRadius: 12 }}
+          style={{ ...loginCardStyle, width: 380 }}
           styles={{ body: { padding: '40px 32px', textAlign: 'center' } }}
         >
-          <Title level={3} style={{ color: '#378ADD', margin: 0 }}>安鉴·天穹</Title>
+          <Title level={3} style={{ ...brandGradientText, margin: 0, fontWeight: 700 }}>安鉴·天穹</Title>
           <Text type="secondary" style={{ fontSize: 13 }}>正在检测系统状态...</Text>
         </Card>
       </div>
@@ -126,24 +156,11 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      background: '#0d0d1a',
-    }}>
-      <Card
-        style={{
-          width: 420,
-          background: '#1a1a2e',
-          borderColor: '#2a2a4e',
-          borderRadius: 12,
-        }}
-        styles={{ body: { padding: '40px 32px' } }}
-      >
+    <div style={pageBackground}>
+      <Card style={loginCardStyle} styles={{ body: { padding: '40px 32px' } }}>
+        {/* 品牌标识区 */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Title level={3} style={{ color: '#378ADD', margin: 0 }}>安鉴·天穹</Title>
+          <Title level={3} style={{ ...brandGradientText, margin: 0, fontWeight: 700 }}>安鉴·天穹</Title>
           <Text type="secondary" style={{ fontSize: 13 }}>企业攻击面管理平台</Text>
         </div>
 
@@ -154,7 +171,7 @@ const LoginPage: React.FC = () => {
             icon={<SafetyOutlined />}
             message="初始化系统"
             description="检测到系统尚未初始化，请创建第一个管理员账户。"
-            style={{ marginBottom: 24, background: '#162447', border: '1px solid #2a2a4e' }}
+            style={{ marginBottom: 24 }}
           />
         )}
 
@@ -168,7 +185,7 @@ const LoginPage: React.FC = () => {
               rules={[{ required: true, message: '请输入姓名' }]}
             >
               <Input
-                prefix={<UserOutlined style={{ color: '#666' }} />}
+                prefix={<UserOutlined style={{ color: 'var(--text-muted)' }} />}
                 placeholder="管理员姓名"
                 size="large"
               />
@@ -180,7 +197,7 @@ const LoginPage: React.FC = () => {
             rules={[{ required: true, message: mode === 'setup' ? '请输入邮箱' : '请输入用户名' }]}
           >
             <Input
-              prefix={<MailOutlined style={{ color: '#666' }} />}
+              prefix={<MailOutlined style={{ color: 'var(--text-muted)' }} />}
               placeholder={mode === 'setup' ? '管理员邮箱' : '用户名'}
               size="large"
             />
@@ -194,7 +211,7 @@ const LoginPage: React.FC = () => {
             ]}
           >
             <Input.Password
-              prefix={<LockOutlined style={{ color: '#666' }} />}
+              prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />}
               placeholder={mode === 'setup' ? '设置管理员密码（至少8位）' : '密码'}
               size="large"
             />
